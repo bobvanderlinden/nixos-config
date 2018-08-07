@@ -216,14 +216,14 @@
     enableFontDir = true;
     enableGhostscriptFonts = true;
     fonts = with pkgs; [
-       corefonts
-       dejavu_fonts
-       inconsolata
-       liberation_ttf
-       terminus_font
-       ttf_bitstream_vera
-       vistafonts
-       powerline-fonts
+      corefonts
+      dejavu_fonts
+      inconsolata
+      liberation_ttf
+      terminus_font
+      ttf_bitstream_vera
+      vistafonts
+      powerline-fonts
     ];
   };
 

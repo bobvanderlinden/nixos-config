@@ -2,10 +2,10 @@
 # reboot to Windows.
 { pkgs, ... }:
 let
-	towindows = pkgs.towindows;
+  towindows = pkgs.towindows;
 in
 {
-	environment.systemPackages = [ towindows ];
+  environment.systemPackages = [ towindows ];
   security.wrappers = {
     towindows = {
       program = "towindows";
