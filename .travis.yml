@@ -1,0 +1,2 @@
+language: nix
+script: nix build -f '<nixpkgs/nixos>' system -I nixpkgs=https://nixos.org/channels/nixos-18.03/nixexprs.tar.xz -I nixos-config=$PWD/configuration.nix
