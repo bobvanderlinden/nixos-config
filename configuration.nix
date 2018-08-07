@@ -37,6 +37,7 @@
 
   swapDevices = [{
     device = "/swap";
+    size = 10 * 1024; # 10GB
   }];
 
   powerManagement.enable = true;
