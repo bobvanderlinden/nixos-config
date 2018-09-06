@@ -45,9 +45,13 @@
   # systemd.services.systemd-udev-settle.enable = false;
 
 
+  hardware.bluetooth.enable = true;
   hardware.pulseaudio = {
     enable = true;
     support32Bit = true;
+
+    # Enable bluetooth (among others) in Pulseaudio
+    package = pkgs.pulseaudioFull;
   };
   # Make sure pulseaudio is being used as sound system
   # for the different applications as well.
