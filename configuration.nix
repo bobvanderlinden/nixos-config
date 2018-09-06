@@ -188,12 +188,6 @@
   };
 
   nixpkgs.config.allowUnfree = true;
-  nixpkgs.config.chromium.enableAdobeFlash = true;
-  nixpkgs.config.packageOverrides = pkgs: {
-    xdg-open = pkgs.xdg-open.override {
-      mimiSupport = true;
-    };
-  };
 
   nix = {
     gc.automatic = true;
