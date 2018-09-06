@@ -187,22 +187,6 @@
     useDefaultShell = true;
   };
 
-  fonts = {
-    enableCoreFonts = true;
-    enableFontDir = true;
-    enableGhostscriptFonts = true;
-    fonts = with pkgs; [
-      corefonts
-      dejavu_fonts
-      inconsolata
-      liberation_ttf
-      terminus_font
-      ttf_bitstream_vera
-      vistafonts
-      powerline-fonts
-    ];
-  };
-
   nixpkgs.config.allowUnfree = true;
   nixpkgs.config.chromium.enableAdobeFlash = true;
   nixpkgs.config.packageOverrides = pkgs: {
