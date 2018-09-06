@@ -85,7 +85,6 @@
     hicolor_icon_theme
     inetutils
     efibootmgr
-    jq
     openvpn
     ntfs3g
     bridge-utils
@@ -93,39 +92,12 @@
     wirelesstools
     iptables
     tunctl
-    mono
 
-    dmenu
-    i3status
-    scrot
     gtk_engines
-    pavucontrol
-    volumeicon
-    chromium
-    speedcrunch
-    keepassx-community
-    gnome3.file-roller
-    leafpad
-    viewnior
-    libreoffice
-
-    jdk
-
-    gnome3.dconf
 
     docker
     
-    networkmanagerapplet
     networkmanager_openvpn
-    dropbox
-    vscode
-    sublime3
-    xfce.thunar
-    ffmpegthumbnailer
-    roxterm
-    aws
-    pgcli
-    platformio
     usbutils
     avahi
   ];
