@@ -13,8 +13,6 @@
 
   time.timeZone = "Europe/Amsterdam";
 
-  hardware.enableAllFirmware = true;
-
   boot = {
     # Use the gummiboot efi boot loader.
     loader = {
@@ -44,7 +42,7 @@
 
   # systemd.services.systemd-udev-settle.enable = false;
 
-
+  hardware.enableAllFirmware = true;
   hardware.bluetooth.enable = true;
   hardware.pulseaudio = {
     enable = true;
