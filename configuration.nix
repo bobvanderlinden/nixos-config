@@ -194,4 +194,6 @@
     useSandbox = true;
     package = pkgs.nixUnstable;
   };
+
+  system.stateVersion = "18.03";
 }
