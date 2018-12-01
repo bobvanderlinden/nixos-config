@@ -125,6 +125,7 @@
   services.locate.enable = true;
   services.openssh.enable = true;
   services.postgresql.enable = true;
+  # services.neo4j.enable = true;
 
   services.gnome3 = {
     gnome-keyring.enable = true;
