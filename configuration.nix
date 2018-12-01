@@ -126,6 +126,9 @@
   services.openssh.enable = true;
   services.postgresql.enable = true;
   # services.neo4j.enable = true;
+  services.kubernetes.roles = ["master" "node"];
+  services.kubernetes.kubelet.extraOpts = "--fail-swap-on=false";
+  services.kubernetes.kubelet.nodeIp = "192.168.1.88";
 
   services.gnome3 = {
     gnome-keyring.enable = true;
