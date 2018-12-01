@@ -73,6 +73,8 @@
     networkmanager.enable = true;
   };
 
+  fonts.fontconfig.ultimate.enable = true;
+
   environment.systemPackages = with pkgs; [
     bash
     binutils
