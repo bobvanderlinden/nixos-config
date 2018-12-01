@@ -173,6 +173,10 @@
     };
     desktopManager.default = "none";
     desktopManager.xterm.enable = false;
+
+    autoRepeatDelay = 145;
+    autoRepeatInterval = 60;
+
     synaptics.enable = false;
     libinput.enable = true;
     libinput.clickMethod = "clickfinger";
