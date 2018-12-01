@@ -5,7 +5,7 @@
       ./hardware-configuration.nix
       ./modules/towindows.nix
       ./modules/emojione.nix
-      ./modules/synaptics.nix
+      # ./modules/synaptics.nix
     ];
   nixpkgs.overlays = [
     (import ./pkgs/overlay.nix)
@@ -166,6 +166,10 @@
     };
     desktopManager.default = "none";
     desktopManager.xterm.enable = false;
+    synaptics.enable = false;
+    libinput.enable = true;
+    libinput.clickMethod = "clickfinger";
+    libinput.disableWhileTyping = true;
   };
 
 

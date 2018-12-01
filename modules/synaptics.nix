@@ -1,7 +1,7 @@
 { config, pkgs, ... }:
 {
   services.xserver = {
-        synaptics = {
+    synaptics = {
       enable = true;
       accelFactor = "0.05";
       minSpeed = "1";
