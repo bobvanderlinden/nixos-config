@@ -67,10 +67,9 @@
   
   networking = {
     hostName = "bob-laptop";
-    enableIPv6 = false;
 
     firewall = {
-      enable = false;
+      enable = true;
       allowedTCPPorts = [ 8080 ];
       allowPing = true;
     };
@@ -132,7 +131,7 @@
   '';
 
   services.locate.enable = true;
-  services.openssh.enable = true;
+  services.openssh.enable = false;
   services.postgresql.enable = true;
   # services.neo4j.enable = true;
   services.kubernetes.roles = ["master" "node"];
