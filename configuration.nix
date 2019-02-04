@@ -113,12 +113,7 @@
 
   services.acpid.enable = true;
   security.polkit.enable = true;
-  services.logind.extraConfig = ''
-    HandlePowerKey=hibernate
-    HandleSuspendKey=suspend
-    HandleHibernateKey=hibernate
-    HandleLidSwitch=suspend
-  '';
+  services.logind.lidSwitch = "suspend-then-hibernate";
 
   services.udev.extraRules = ''
     SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="0925", ATTR{idProduct}=="3881", MODE="0666"
