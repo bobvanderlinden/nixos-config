@@ -199,7 +199,7 @@
     uid = 1000;
     createHome = true;
     home = "/home/bob";
-    extraGroups = [ "wheel" "network" "uucp" "dialout" "vboxusers" "networkmanager" "docker" "audio" ];
+    extraGroups = [ "wheel" "network" "uucp" "dialout" "vboxusers" "networkmanager" "docker" "audio" "video" "input" ];
     useDefaultShell = true;
   };
 
