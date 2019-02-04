@@ -191,6 +191,7 @@
   programs.zsh.enable = true;
   programs.bash.enableCompletion = true;
   programs.tmux.enable = true;
+  programs.adb.enable = true;
 
   virtualisation.virtualbox.host.enable = true;
   virtualisation.docker.enable = true;
