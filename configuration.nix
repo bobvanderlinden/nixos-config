@@ -87,6 +87,7 @@
   environment.systemPackages = with pkgs; [
     bash
     binutils
+    findutils
     unzip
     vim
     wget
