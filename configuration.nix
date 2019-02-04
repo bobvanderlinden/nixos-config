@@ -6,6 +6,7 @@
       ./modules/towindows.nix
       ./modules/emojione.nix
       # ./modules/synaptics.nix
+      ./modules/steam.nix
     ];
   nixpkgs.overlays = [
     (import ./pkgs/overlay.nix)
