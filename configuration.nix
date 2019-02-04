@@ -49,6 +49,14 @@
   hardware.pulseaudio = {
     enable = true;
     support32Bit = true;
+    extraConfig = ''
+      # Automatically switch to newly connected devices.
+      # load-module module-switch-on-connect
+
+      # Discover Apple iTunes devices on network.
+      load-module module-raop-discover
+    '';
+    zeroconf.discovery.enable = true;
 
     # Enable bluetooth (among others) in Pulseaudio
     package = pkgs.pulseaudioFull;
