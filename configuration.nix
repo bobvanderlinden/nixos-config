@@ -130,9 +130,9 @@
   services.openssh.enable = false;
   services.postgresql.enable = true;
   # services.neo4j.enable = true;
-  services.kubernetes.roles = ["master" "node"];
-  services.kubernetes.kubelet.extraOpts = "--fail-swap-on=false";
-  services.kubernetes.kubelet.nodeIp = "192.168.1.88";
+  # services.kubernetes.roles = ["master" "node"];
+  # services.kubernetes.kubelet.extraOpts = "--fail-swap-on=false";
+  # services.kubernetes.kubelet.nodeIp = "192.168.1.88";
 
   services.gnome3 = {
     gnome-keyring.enable = true;
@@ -193,8 +193,8 @@
   programs.tmux.enable = true;
   programs.adb.enable = true;
 
-  virtualisation.virtualbox.host.enable = true;
-  virtualisation.docker.enable = true;
+  # virtualisation.virtualbox.host.enable = true;
+  # virtualisation.docker.enable = true;
 
   users.defaultUserShell = "/var/run/current-system/sw/bin/zsh";
   users.extraUsers.bob = {
