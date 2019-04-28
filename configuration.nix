@@ -205,7 +205,7 @@
   programs.adb.enable = true;
 
   # virtualisation.virtualbox.host.enable = true;
-  # virtualisation.docker.enable = true;
+  virtualisation.docker.enable = true;
 
   users.defaultUserShell = "/var/run/current-system/sw/bin/zsh";
   users.extraUsers.bob = {
