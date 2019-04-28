@@ -58,6 +58,9 @@
     '';
     zeroconf.discovery.enable = true;
 
+    # Enable extra bluetooth modules, like APT-X codec.
+    extraModules = [ pkgs.pulseaudio-modules-bt ];
+
     # Enable bluetooth (among others) in Pulseaudio
     package = pkgs.pulseaudioFull;
   };
