@@ -73,7 +73,11 @@
 
     firewall = {
       enable = true;
-      allowedTCPPorts = [ 8080 ];
+      allowedTCPPorts = [
+        3000 # Development
+        8010 # VLC Chromecast streaming
+        8080 # Development
+      ];
       allowPing = true;
     };
 
