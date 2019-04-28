@@ -122,10 +122,7 @@
   services.acpid.enable = true;
   security.polkit.enable = true;
 
-  # Currently nixpkgs doesn't support suspend-then-hibernate yet on stable, but it
-  # is in unstable. Enable this when in stable.
-  # services.logind.lidSwitch = "suspend-then-hibernate";
-  services.logind.lidSwitch = "suspend";
+  services.logind.lidSwitch = "suspend-then-hibernate";
 
   services.udev.extraRules = ''
     SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="0925", ATTR{idProduct}=="3881", MODE="0666"
