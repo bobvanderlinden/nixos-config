@@ -2,8 +2,8 @@
 { config, pkgs, ... }:
 {
   fonts = {
-    fonts = [
-      pkgs.emojione
+    fonts = with pkgs; [
+      noto-fonts noto-fonts-cjk noto-fonts-emoji
     ];
 
     # Source: https://github.com/wireapp/wire-desktop/wiki/Colorful-emojis-on-Linux
@@ -15,21 +15,21 @@
         <!-- Add emoji generic family -->
         <alias binding="strong">
           <family>emoji</family>
-          <default><family>Emoji One</family></default>
+          <default><family>Noto Color Emoji</family></default>
         </alias>
 
         <!-- Aliases for the other emoji fonts -->
         <alias binding="strong">
           <family>Apple Color Emoji</family>
-          <prefer><family>Emoji One</family></prefer>
+          <prefer><family>Noto Color Emoji</family></prefer>
         </alias>
         <alias binding="strong">
           <family>Segoe UI Emoji</family>
-          <prefer><family>Emoji One</family></prefer>
+          <prefer><family>Noto Color Emoji</family></prefer>
         </alias>
         <alias binding="strong">
-          <family>Noto Color Emoji</family>
-          <prefer><family>Emoji One</family></prefer>
+          <family>Emoji One</family>
+          <prefer><family>Noto Color Emoji</family></prefer>
         </alias>
 
         <!-- Do not allow any app to use Symbola, ever -->

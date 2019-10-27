@@ -4,7 +4,7 @@
     [
       ./hardware-configuration.nix
       ./modules/towindows.nix
-      ./modules/emojione.nix
+      ./modules/emoji.nix
       # ./modules/synaptics.nix
       ./modules/steam.nix
     ];
@@ -43,7 +43,7 @@
 
   # systemd.services.systemd-udev-settle.enable = false;
 
-  hardware.enableAllFirmware = true;
+  # hardware.enableAllFirmware = true;
   hardware.bluetooth.enable = true;
   hardware.opengl.driSupport32Bit = true;
   hardware.pulseaudio = {
@@ -89,7 +89,21 @@
     networkmanager.enable = true;
   };
 
-  fonts.fontconfig.ultimate.enable = true;
+  fonts = {
+    enableFontDir = true;
+    fontconfig.enable = true;
+    fonts = with pkgs; [
+      corefonts # Microsoft free fonts
+      iosevka
+      meslo-lg
+      # nerdfonts
+      source-code-pro
+      noto-fonts noto-fonts-cjk noto-fonts-emoji
+      google-fonts
+
+      emacs-all-the-icons-fonts
+    ];
+  };
 
   environment.systemPackages = with pkgs; [
     bash
@@ -122,7 +136,7 @@
   services.acpid.enable = true;
   security.polkit.enable = true;
 
-  services.logind.lidSwitch = "suspend-then-hibernate";
+  services.logind.lidSwitch = "suspend";
 
   services.udev.extraRules = ''
     SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="0925", ATTR{idProduct}=="3881", MODE="0666"
@@ -144,9 +158,9 @@
 
   services.gnome3 = {
     gnome-keyring.enable = true;
-    seahorse.enable = true;
-    gvfs.enable = false;
   };
+  services.gvfs.enable = true;
+  programs.seahorse.enable = true;
 
   services.printing = {
     enable = true;
@@ -172,8 +186,8 @@
 
   services.redshift = {
     enable = true;
-    provider = "geoclue2";
   };
+  location.provider = "geoclue2";
 
   # Enable the X11 windowing system.
   services.xserver = {
@@ -186,7 +200,7 @@
     desktopManager.default = "none";
     desktopManager.xterm.enable = false;
 
-    autoRepeatDelay = 145;
+    autoRepeatDelay = 300;
     autoRepeatInterval = 60;
 
     synaptics.enable = false;
@@ -195,6 +209,15 @@
     libinput.disableWhileTyping = true;
   };
 
+  i18n.inputMethod = {
+    enabled = "ibus";
+    ibus.engines = with pkgs.ibus-engines; [
+      uniemoji
+    ];
+  };
+
+  # users.extraUsers.bob.extraGroups = [ "sway" ];
+  # programs.sway.enable = true;
 
   programs.zsh.enable = true;
   programs.bash.enableCompletion = true;
