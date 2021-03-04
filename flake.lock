@@ -1,0 +1,59 @@
+{
+  "nodes": {
+    "home-manager": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1614810486,
+        "narHash": "sha256-gD4BdLEO1pTuLJ5wXnGbtJrpkW5BzQoNOuopqZXROcY=",
+        "owner": "nix-community",
+        "repo": "home-manager",
+        "rev": "69e2693342f78be18126665c2c3adc28f8d66a4b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "home-manager",
+        "type": "github"
+      }
+    },
+    "nixos-hardware": {
+      "locked": {
+        "lastModified": 1614792912,
+        "narHash": "sha256-SNteffh445fpxvZRlXQ0ZWWTIlceXB/D39o6IaLEN1s=",
+        "owner": "NixOS",
+        "repo": "nixos-hardware",
+        "rev": "3caaa0588e90e8f368fa1c5a002f24f2d4af4224",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixos-hardware",
+        "type": "github"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "narHash": "sha256-zwBoVxwy/tm9RN2kaggdVaNs0ejCosGfmahf2JnUQGQ=",
+        "path": "/home/bob.vanderlinden/projects/nixpkgs",
+        "type": "path"
+      },
+      "original": {
+        "path": "/home/bob.vanderlinden/projects/nixpkgs",
+        "type": "path"
+      }
+    },
+    "root": {
+      "inputs": {
+        "home-manager": "home-manager",
+        "nixos-hardware": "nixos-hardware",
+        "nixpkgs": "nixpkgs"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}

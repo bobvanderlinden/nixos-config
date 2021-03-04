@@ -1,4 +1,0 @@
-{ callPackage, ... }:
-{
-  towindows = callPackage ./towindows { };
-}

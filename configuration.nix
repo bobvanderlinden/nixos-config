@@ -1,53 +1,50 @@
 { config, pkgs, ... }:
+
 {
-  imports =
-    [
-      ./hardware-configuration.nix
-      ./modules/towindows.nix
-      ./modules/emoji.nix
-      # ./modules/synaptics.nix
-      ./modules/steam.nix
-    ];
-  nixpkgs.overlays = [
-    (import ./pkgs/overlay.nix)
+  imports = [ # Include the results of the hardware scan.
+    ./hardware-configuration.nix
   ];
+
+  systemd.additionalUpstreamSystemUnits = [ "debug-shell.service" ];
 
   time.timeZone = "Europe/Amsterdam";
 
-  boot = {
-    # Use the gummiboot efi boot loader.
-    loader = {
-      systemd-boot.enable = true;
-      timeout = -1;
-      efi.canTouchEfiVariables = true;
-    };
-
-    kernel.sysctl = {
-      "fs.inotify.max_user_watches" = 100000;
-    };
-    extraModprobeConfig = ''
-      options iwlwifi fw_monifor=1
-    '';
-    
-    kernelModules = [ "fuse" "kvm-intel" "tun" "virtio" "coretemp" ];
-    
-    cleanTmpDir = true;
+  users.users."bob.vanderlinden" = {
+    uid = 1000;
+    isNormalUser = true;
+    extraGroups = [
+      "wheel"
+      "network"
+      "uucp"
+      "dialout"
+      "vboxusers"
+      "networkmanager"
+      "docker"
+      "audio"
+      "video"
+      "input"
+      "sudo"
+    ];
+    useDefaultShell = true;
   };
 
-  swapDevices = [{
-    device = "/swap";
-    size = 10 * 1024; # 10GB
-  }];
-
-  powerManagement.enable = true;
-
-  # systemd.services.systemd-udev-settle.enable = false;
-
-  # hardware.enableAllFirmware = true;
-  hardware.bluetooth.enable = true;
-  hardware.opengl.driSupport32Bit = true;
-  hardware.pulseaudio = {
+  # Some programs need SUID wrappers, can be configured further or are
+  # started in user sessions.
+  programs.mtr.enable = true;
+  programs.gnupg.agent = {
     enable = true;
+    enableSSHSupport = true;
+  };
+
+  security.sudo.enable = true;
+
+  hardware.bluetooth.enable = true;
+  hardware.bluetooth.hsphfpd.enable = true;
+  services.blueman.enable = true;
+  hardware.opengl.driSupport32Bit = true;
+  hardware.video.hidpi.enable = true;
+  hardware.pulseaudio = {
+    enable = false;
     support32Bit = true;
     extraConfig = ''
       # Automatically switch to newly connected devices.
@@ -61,36 +58,58 @@
     # Enable extra bluetooth modules, like APT-X codec.
     extraModules = [ pkgs.pulseaudio-modules-bt ];
 
-    # Enable bluetooth (among others) in Pulseaudio
-    package = pkgs.pulseaudioFull;
+    # Allow bluetooth with hsphdpd support
+    # package = pkgs.pulseaudio-hsphfpd.overrideAttrs (attrs: {
+    #   patches = [
+    #     (pkgs.fetchurl {
+    #       url =
+    #         "https://gitlab.freedesktop.org/pulseaudio/pulseaudio/-/merge_requests/254.diff";
+    #       hash = "sha256-LTSBrA17UrbnWn4mBCnSrtK+KleGepJgOjSoLovIaTM=";
+    #     })
+    #   ];
+    # });
+    package = pkgs.pulseaudio-hsphfpd;
   };
+
   # Make sure pulseaudio is being used as sound system
   # for the different applications as well.
   nixpkgs.config.pulseaudio = true;
-  
+  services.pipewire = {
+    enable = true;
+    pulse.enable = true;
+    alsa.enable = true;
+    alsa.support32Bit = true;
+
+    media-session.config.bluez-monitor.properties = {
+      # MSBC is not expected to work on all headset + adapter combinations.
+      "bluez5.msbc-support" = true;
+      "bluez5.sbc-xq-support" = true;
+    };
+  };
+
+  services.ssmtp = {
+    # directDelivery = true;
+    hostName = "in1-smtp.messagingengine.com";
+  };
+
   networking = {
-    hostName = "bob-laptop";
+    hostName = "NVC3919";
 
     firewall = {
       enable = true;
       allowedTCPPorts = [
         3000 # Development
-        8010 # VLC Chromecast streaming
         8080 # Development
       ];
       allowPing = true;
     };
 
-    defaultMailServer = {
-      directDelivery = true;
-      hostName = "in1-smtp.messagingengine.com";
-    };
-
     networkmanager.enable = true;
+    networkmanager.packages = [ pkgs.networkmanager_openvpn ];
   };
 
   fonts = {
-    enableFontDir = true;
+    fontDir.enable = true;
     fontconfig.enable = true;
     fonts = with pkgs; [
       corefonts # Microsoft free fonts
@@ -98,7 +117,9 @@
       meslo-lg
       # nerdfonts
       source-code-pro
-      noto-fonts noto-fonts-cjk noto-fonts-emoji
+      noto-fonts
+      noto-fonts-cjk
+      noto-fonts-emoji
       google-fonts
 
       emacs-all-the-icons-fonts
@@ -106,37 +127,35 @@
   };
 
   environment.systemPackages = with pkgs; [
+    # nixFlakes # experimental version of nix
+
     bash
-    binutils
-    findutils
+    findutils # find locate
+    moreutils # sponge...
     unzip
     vim
     wget
     htop
-    hicolor_icon_theme
-    inetutils
     efibootmgr
-    openvpn
-    ntfs3g
-    bridge-utils
-    iw
-    wirelesstools
-    iptables
-    tunctl
 
-    gtk_engines
+    # Networking tools
+    inetutils # hostname ping ifconfig...
+    dnsutils # dig nslookup...
+    bridge-utils # brctl
+    iw
+    wirelesstools # iwconfig
 
     docker
-    
-    networkmanager_openvpn
-    usbutils
-    avahi
+
+    usbutils # lsusb
   ];
 
   services.acpid.enable = true;
   security.polkit.enable = true;
+  services.upower.enable = true;
 
-  services.logind.lidSwitch = "suspend";
+  # This should already be handled by upower
+  # services.logind.lidSwitch = "suspend";
 
   services.udev.extraRules = ''
     SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="0925", ATTR{idProduct}=="3881", MODE="0666"
@@ -151,14 +170,8 @@
   services.locate.enable = true;
   services.openssh.enable = false;
   services.postgresql.enable = true;
-  # services.neo4j.enable = true;
-  # services.kubernetes.roles = ["master" "node"];
-  # services.kubernetes.kubelet.extraOpts = "--fail-swap-on=false";
-  # services.kubernetes.kubelet.nodeIp = "192.168.1.88";
 
-  services.gnome3 = {
-    gnome-keyring.enable = true;
-  };
+  services.gnome3.gnome-keyring.enable = true;
   services.gvfs.enable = true;
   programs.seahorse.enable = true;
 
@@ -171,7 +184,7 @@
     enable = true;
     host = "0.0.0.0";
     allowAnonymous = true;
-    users = {};
+    users = { };
   };
 
   services.avahi = {
@@ -184,65 +197,121 @@
     publish.enable = false;
   };
 
-  services.redshift = {
-    enable = true;
-  };
+  services.redshift.enable = true;
   location.provider = "geoclue2";
 
   # Enable the X11 windowing system.
   services.xserver = {
     enable = true;
-    displayManager.slim = {
-      enable = true;
-      autoLogin = true;
-      defaultUser = "bob";
-    };
-    desktopManager.default = "none";
+    displayManager.defaultSession = "none+i3";
+    displayManager.lightdm.enable = true;
+    displayManager.autoLogin.enable = true;
+    displayManager.autoLogin.user = "bob.vanderlinden";
     desktopManager.xterm.enable = false;
+    videoDrivers = [ "nvidia" ];
+    xrandrHeads = [
+      {
+        output = "DP-0";
+        primary = true;
+      }
+      "HDMI-0"
+    ];
 
     autoRepeatDelay = 300;
     autoRepeatInterval = 60;
 
     synaptics.enable = false;
-    libinput.enable = true;
-    libinput.clickMethod = "clickfinger";
-    libinput.disableWhileTyping = true;
+    libinput = {
+      enable = true;
+      touchpad = {
+        clickMethod = "clickfinger";
+        disableWhileTyping = true;
+        accelProfile = "adaptive";
+        accelSpeed = "0, 5";
+      };
+    };
+
+    windowManager.i3 = {
+      enable = true;
+      extraPackages = with pkgs; [ dmenu i3status i3lock ];
+    };
   };
 
   i18n.inputMethod = {
     enabled = "ibus";
-    ibus.engines = with pkgs.ibus-engines; [
-      uniemoji
-    ];
+    ibus.engines = with pkgs.ibus-engines; [ uniemoji ];
   };
 
+  services.actkbd = {
+    enable = true;
+    bindings = [
+      # "Mute" media key
+      {
+        keys = [ 121 ];
+        events = [ "key" ];
+        command = "${pkgs.alsaUtils}/bin/amixer -q set Master toggle";
+      }
+
+      # "Mute Microphone" button
+      {
+        keys = [ 190 ];
+        events = [ "key" ];
+        command = "${pkgs.alsaUtils}/bin/amixer -q set Capture toggle";
+      }
+
+      # "Lower Volume" media key
+      {
+        keys = [ 122 ];
+        events = [ "key" "rep" ];
+        command = "${pkgs.alsaUtils}/bin/amixer -q set Master 5%- unmute";
+      }
+
+      # "Raise Volume" media key
+      {
+        keys = [ 123 ];
+        events = [ "key" "rep" ];
+        command = "${pkgs.alsaUtils}/bin/amixer -q set Master 5%+ unmute";
+      }
+
+    ];
+  };
   # users.extraUsers.bob.extraGroups = [ "sway" ];
   # programs.sway.enable = true;
 
   programs.zsh.enable = true;
+  programs.zsh.enableCompletion = true;
   programs.bash.enableCompletion = true;
   programs.tmux.enable = true;
   programs.adb.enable = true;
 
+  services.mysql = {
+    enable = true;
+    package = pkgs.mysql;
+  };
+
   # virtualisation.virtualbox.host.enable = true;
   virtualisation.docker.enable = true;
 
-  users.defaultUserShell = "/var/run/current-system/sw/bin/zsh";
-  users.extraUsers.bob = {
-    uid = 1000;
-    createHome = true;
-    home = "/home/bob";
-    extraGroups = [ "wheel" "network" "uucp" "dialout" "vboxusers" "networkmanager" "docker" "audio" "video" "input" ];
-    useDefaultShell = true;
-  };
+  users.defaultUserShell = pkgs.zsh;
 
   nixpkgs.config.allowUnfree = true;
 
   nix = {
     gc.automatic = true;
     useSandbox = true;
-    package = pkgs.nixUnstable;
+    package = pkgs.nixFlakes;
+    extraOptions = ''
+      experimental-features = nix-command flakes
+    '';
   };
 
-  system.stateVersion = "18.03";
+  # This value determines the NixOS release from which the default
+  # settings for stateful data, like file locations and database versions
+  # on your system were taken. It‘s perfectly fine and recommended to leave
+  # this value at the release version of the first install of this system.
+  # Before changing this value read the documentation for this option
+  # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
+  system.stateVersion = "21.03"; # Did you read the comment?
+
 }
+
