@@ -12,14 +12,14 @@
     overlay = final: prev: { coin = final.callPackage ./packages/coin { }; };
     nixosModules.hp-zbook-studio-g5 = { pkgs, ... }: {
       imports = [
-        nixos-hardware.nixosModules.common-cpu-intel
-        nixos-hardware.nixosModules.common-gpu-nvidia
-        nixos-hardware.nixosModules.common-pc-laptop-ssd
-        nixos-hardware.nixosModules.common-pc-laptop
-        {
-          hardware.nvidia.prime.offload.enable = false;
-          hardware.enableRedistributableFirmware = true;
-        }
+        # nixos-hardware.nixosModules.common-cpu-intel
+        # nixos-hardware.nixosModules.common-gpu-nvidia
+        # nixos-hardware.nixosModules.common-pc-laptop-ssd
+        # nixos-hardware.nixosModules.common-pc-laptop
+        # {
+        #   hardware.nvidia.prime.offload.enable = false;
+        #   hardware.enableRedistributableFirmware = true;
+        # }
       ];
     };
     nixosConfigurations.NVC3919 = nixpkgs.lib.nixosSystem {
