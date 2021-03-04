@@ -72,9 +72,9 @@
   nixpkgs.config.pulseaudio = true;
   services.pipewire = {
     enable = false;
-    pulse.enable = true;
-    alsa.enable = true;
-    alsa.support32Bit = true;
+    pulse.enable = false;
+    alsa.enable = false;
+    alsa.support32Bit = false;
 
     media-session.config.bluez-monitor.properties = {
       # MSBC is not expected to work on all headset + adapter combinations.
