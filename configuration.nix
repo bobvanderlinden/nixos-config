@@ -123,8 +123,6 @@
   };
 
   environment.systemPackages = with pkgs; [
-    # nixFlakes # experimental version of nix
-
     bash
     findutils # find locate
     moreutils # sponge...
