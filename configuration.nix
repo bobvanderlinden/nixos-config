@@ -71,7 +71,7 @@
   # for the different applications as well.
   nixpkgs.config.pulseaudio = true;
   services.pipewire = {
-    enable = true;
+    enable = false;
     pulse.enable = true;
     alsa.enable = true;
     alsa.support32Bit = true;
