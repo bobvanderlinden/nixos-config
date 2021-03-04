@@ -506,7 +506,7 @@ in {
           "!git push --set-upstream origin $(git rev-parse --abbrev-ref HEAD)";
         recent-branches = "branch --sort=-committerdate";
       };
-      ignores = [ "shell.nix" ];
+      ignores = [ ".direnv" "flake.nix" ".envrc" ];
       extraConfig = {
         core.editor = "${vscode}/bin/code --wait";
         merge.conflictstyle = "diff3";
