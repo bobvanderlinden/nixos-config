@@ -1,10 +1,6 @@
 { config, pkgs, ... }:
 
 {
-  imports = [ # Include the results of the hardware scan.
-    ./hardware-configuration.nix
-  ];
-
   systemd.additionalUpstreamSystemUnits = [ "debug-shell.service" ];
 
   time.timeZone = "Europe/Amsterdam";

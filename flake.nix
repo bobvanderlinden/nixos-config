@@ -16,7 +16,10 @@
         nixos-hardware.nixosModules.common-gpu-nvidia
         nixos-hardware.nixosModules.common-pc-laptop-ssd
         nixos-hardware.nixosModules.common-pc-laptop
-        { hardware.nvidia.prime.offload.enable = false; }
+        {
+          hardware.nvidia.prime.offload.enable = false;
+          hardware.enableRedistributableFirmware = true;
+        }
       ];
     };
     nixosConfigurations.NVC3919 = nixpkgs.lib.nixosSystem {
@@ -24,6 +27,7 @@
       modules = [
         { nixpkgs.overlays = [ self.overlay ]; }
         self.nixosModules.hp-zbook-studio-g5
+        ./hardware-configuration.nix
         ./configuration.nix
         home-manager.nixosModules.home-manager
         {

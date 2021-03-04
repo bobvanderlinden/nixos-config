@@ -4,11 +4,8 @@
 { config, lib, pkgs, modulesPath, ... }:
 
 {
-  imports =
-    [ (modulesPath + "/installer/scan/not-detected.nix")
-    ];
-
-  boot.initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "rtsx_pci_sdmmc" ];
+  boot.initrd.availableKernelModules =
+    [ "xhci_pci" "ahci" "nvme" "rtsx_pci_sdmmc" ];
   boot.initrd.kernelModules = [ "dm-snapshot" ];
   boot.kernelModules = [ "kvm-intel" ];
   boot.extraModulePackages = [ ];
@@ -17,15 +14,6 @@
     efiSupport = true;
     device = "nodev";
     gfxmodeEfi = "1280x1024x32,auto";
-    extraEntries = ''
-
-menuentry "Debian sh" --unrestricted {
-search --set=drive1 --fs-uuid bd487b7d-a609-4548-a6bc-ec1c3fd5490a
-  linux ($drive1)//vmlinuz-5.8.0-0.bpo.2-amd64 root=/dev/mapper/NVC3919--vg-root init=/bin/sh systemd.debug-shell
-  initrd ($drive1)//initrd.img-5.8.0-0.bpo.2-amd64
-}
-
-'';
   };
   boot.loader.efi.canTouchEfiVariables = false;
   boot.loader.efi.efiSysMountPoint = "/boot/efi";
@@ -36,24 +24,23 @@ search --set=drive1 --fs-uuid bd487b7d-a609-4548-a6bc-ec1c3fd5490a
     fallbackToPassword = true;
   };
 
-  fileSystems."/" =
-    { device = "/dev/disk/by-uuid/d8273e31-010b-4746-9f3f-74af3895ad7e";
-      fsType = "ext4";
-    };
+  fileSystems."/" = {
+    device = "/dev/disk/by-uuid/d8273e31-010b-4746-9f3f-74af3895ad7e";
+    fsType = "ext4";
+  };
 
-  fileSystems."/boot" =
-    { device = "/dev/disk/by-uuid/bd487b7d-a609-4548-a6bc-ec1c3fd5490a";
-      fsType = "ext2";
-    };
+  fileSystems."/boot" = {
+    device = "/dev/disk/by-uuid/bd487b7d-a609-4548-a6bc-ec1c3fd5490a";
+    fsType = "ext2";
+  };
 
-  fileSystems."/boot/efi" =
-    { device = "/dev/disk/by-uuid/F3A7-9DE7";
-      fsType = "vfat";
-    };
+  fileSystems."/boot/efi" = {
+    device = "/dev/disk/by-uuid/F3A7-9DE7";
+    fsType = "vfat";
+  };
 
   swapDevices =
-    [ { device = "/dev/disk/by-uuid/e6abca0d-aa89-423f-a2c1-add077c0d83f"; }
-    ];
+    [{ device = "/dev/disk/by-uuid/e6abca0d-aa89-423f-a2c1-add077c0d83f"; }];
 
   powerManagement.cpuFreqGovernor = lib.mkDefault "powersave";
 }
