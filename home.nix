@@ -320,7 +320,7 @@ in {
       enable = true;
       latitude = "51.985104";
       longitude = "5.898730";
-      temperature.day = 25000;
+      temperature.day = 5500;
       temperature.night = 3700;
       tray = true;
     };
