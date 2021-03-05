@@ -74,7 +74,6 @@ in {
       dejavu_fonts
       mypaint
       tiled
-      rbenv
       maven
       terminator
     ];
