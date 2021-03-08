@@ -512,6 +512,7 @@ in {
         push.default = "current";
         pull.rebase = false;
         init.defaultBranch = "master";
+        core.excludesfile = "~/.config/git/ignore";
       };
     };
     home.sessionVariables = { BROWSER = "${pkgs.chromium}/bin/chromium"; };
