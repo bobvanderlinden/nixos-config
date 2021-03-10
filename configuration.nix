@@ -38,8 +38,6 @@
   hardware.bluetooth.hsphfpd.enable = true;
   services.blueman.enable = true;
   hardware.opengl.driSupport32Bit = true;
-  hardware.opengl.extraPackages = [ pkgs.libvdpau-va-gl ];
-  hardware.opengl.extraPackages32 = [ pkgs.pkgsi686Linux.libvdpau-va-gl ];
   hardware.video.hidpi.enable = true;
   hardware.pulseaudio = {
     enable = false;

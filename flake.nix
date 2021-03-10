@@ -16,11 +16,12 @@
         nixos-hardware.nixosModules.common-gpu-nvidia
         nixos-hardware.nixosModules.common-pc-laptop-ssd
         nixos-hardware.nixosModules.common-pc-laptop
-        {
-          hardware.nvidia.prime.offload.enable = false;
-          hardware.enableRedistributableFirmware = true;
-        }
       ];
+
+      hardware.nvidia.prime.offload.enable = false;
+      hardware.enableRedistributableFirmware = true;
+      hardware.opengl.extraPackages = [ pkgs.libvdpau-va-gl ];
+      hardware.opengl.extraPackages32 = [ pkgs.pkgsi686Linux.libvdpau-va-gl ];
     };
     nixosConfigurations.NVC3919 = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
