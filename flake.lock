@@ -37,7 +37,7 @@
     },
     "nixpkgs": {
       "locked": {
-        "narHash": "sha256-zwBoVxwy/tm9RN2kaggdVaNs0ejCosGfmahf2JnUQGQ=",
+        "narHash": "sha256-5XT0rLmiD2fh/ULWxmsVYHx9n3ZCH0qKMfeE1m+3Z/g=",
         "path": "/home/bob.vanderlinden/projects/nixpkgs",
         "type": "path"
       },
