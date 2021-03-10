@@ -267,6 +267,21 @@
         command = "${pkgs.alsaUtils}/bin/amixer -q set Master 5%+ unmute";
       }
 
+      # "Phone connect"
+      {
+        keys = [ 56 125 218 ];
+        events = [ "key" ];
+        command =
+          "${pkgs.pulseaudio}/bin/pactl set-card-profile bluez_card.2C:41:A1:C8:E5:04 headset-head-unit";
+      }
+
+      # "Phone disconnect"
+      {
+        keys = [ 29 56 223 ];
+        events = [ "key" ];
+        command =
+          "${pkgs.pulseaudio}/bin/pactl set-card-profile bluez_card.2C:41:A1:C8:E5:04 a2dp-sink-aac";
+      }
     ];
   };
   # users.extraUsers.bob.extraGroups = [ "sway" ];
