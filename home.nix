@@ -2,6 +2,7 @@
 let
   vscode = pkgs.vscode;
   pulseaudio = pkgs.pulseaudioFull;
+  chromium = pkgs.chromium.override { enableVaapi = true; };
 in {
   config = {
     home.packages = with pkgs; [
@@ -522,7 +523,7 @@ in {
         core.excludesfile = "~/.config/git/ignore";
       };
     };
-    home.sessionVariables = { BROWSER = "${pkgs.chromium}/bin/chromium"; };
+    home.sessionVariables = { BROWSER = "${chromium}/bin/chromium"; };
     programs.autorandr.enable = true;
     programs.direnv.enable = true;
     programs.direnv.enableNixDirenvIntegration = true;
