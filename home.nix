@@ -44,7 +44,6 @@ in {
       lxappearance
       gitAndTools.hub
       gitAndTools.gh
-      travis
       git-cola
       gnome3.file-roller
       clang
@@ -339,16 +338,16 @@ in {
       };
     };
 
-    systemd.user.services.volumeicon = {
+    systemd.user.services.pasystray = {
       Unit = {
-        Description = "Volume Icon";
+        Description = "pasystray";
         After = [ "graphical-session-pre.target" ];
         PartOf = [ "graphical-session.target" ];
       };
 
       Install = { WantedBy = [ "graphical-session.target" ]; };
 
-      Service = { ExecStart = "${pkgs.volumeicon}/bin/volumeicon"; };
+      Service = { ExecStart = "${pkgs.pasystray}/bin/pasystray"; };
     };
 
     systemd.user.services.bitwarden = {

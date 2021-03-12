@@ -7,9 +7,12 @@
     url = "github:nix-community/home-manager";
     inputs.nixpkgs.follows = "nixpkgs";
   };
-  inputs.nixpkgs.url = "/home/bob.vanderlinden/projects/nixpkgs";
+  inputs.nixpkgs.url = "github:nixos/nixpkgs";
+  # inputs.nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+  # inputs.nixpkgs.url = "github:nixos/nixpkgs-channels/nixos-unstable";
   outputs = { self, nixpkgs, home-manager, nixos-hardware }: rec {
     overlay = final: prev: { coin = final.callPackage ./packages/coin { }; };
+
     nixosModules.hp-zbook-studio-g5 = { pkgs, ... }: {
       imports = [
         nixos-hardware.nixosModules.common-cpu-intel
@@ -23,6 +26,13 @@
       hardware.opengl.extraPackages = [ pkgs.libvdpau-va-gl ];
       hardware.opengl.extraPackages32 = [ pkgs.pkgsi686Linux.libvdpau-va-gl ];
     };
+
+    nixosModules.home-manager = { pkgs, ... }: {
+      home-manager.verbose = true;
+      home-manager.useGlobalPkgs = true;
+      home-manager.useUserPackages = true;
+      home-manager.users."bob.vanderlinden".imports = [ ./home.nix ];
+    };
     nixosConfigurations.NVC3919 = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
       modules = [
@@ -31,12 +41,7 @@
         ./hardware-configuration.nix
         ./configuration.nix
         home-manager.nixosModules.home-manager
-        {
-          home-manager.verbose = true;
-          home-manager.useGlobalPkgs = true;
-          home-manager.useUserPackages = true;
-          home-manager.users."bob.vanderlinden".imports = [ ./home.nix ];
-        }
+        self.nixosModules.home-manager
       ];
     };
   };

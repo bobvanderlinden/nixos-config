@@ -37,13 +37,17 @@
     },
     "nixpkgs": {
       "locked": {
-        "narHash": "sha256-5XT0rLmiD2fh/ULWxmsVYHx9n3ZCH0qKMfeE1m+3Z/g=",
-        "path": "/home/bob.vanderlinden/projects/nixpkgs",
-        "type": "path"
+        "lastModified": 1615542018,
+        "narHash": "sha256-8tVWnt1Qese7ZAkqhcZm5rcpZFVMcYSZVrH6sD6wXKc=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "163ffe2fe41b9b0c757733388761c713e9457f39",
+        "type": "github"
       },
       "original": {
-        "path": "/home/bob.vanderlinden/projects/nixpkgs",
-        "type": "path"
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "type": "github"
       }
     },
     "root": {
