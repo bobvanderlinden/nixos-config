@@ -312,6 +312,7 @@
     extraOptions = ''
       experimental-features = nix-command flakes
       netrc-file = /etc/nix/netrc
+      extra-sandbox-paths = /etc/nix/netrc
     '';
   };
 
