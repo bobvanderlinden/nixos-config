@@ -76,6 +76,7 @@ in {
       tiled
       maven
       terminator
+      clean
     ];
 
     dconf = {
