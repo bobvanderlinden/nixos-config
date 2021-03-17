@@ -309,10 +309,10 @@
     gc.automatic = true;
     useSandbox = true;
     package = pkgs.nixFlakes;
+    sandboxPaths = [ "/etc/nix/netrc" ];
     extraOptions = ''
       experimental-features = nix-command flakes
       netrc-file = /etc/nix/netrc
-      extra-sandbox-paths = /etc/nix/netrc
     '';
   };
 
