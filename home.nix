@@ -77,6 +77,7 @@ in {
       maven
       terminator
       yq-go
+      ripgrep
     ];
 
     dconf = {
