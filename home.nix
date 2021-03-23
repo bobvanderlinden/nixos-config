@@ -405,6 +405,10 @@ in {
             "${mod}+Shift+Down" = "move down";
             "${mod}+Shift+Up" = "move up";
             "${mod}+Shift+Right" = "move right";
+            "${mod}+Ctrl+Left" = "resize grow left";
+            "${mod}+Ctrl+Down" = "resize grow down";
+            "${mod}+Ctrl+Up" = "resize grow up";
+            "${mod}+Ctrl+Right" = "resize grow right";
             "${mod}+h" = "split h";
             "${mod}+v" = "split v";
             "${mod}+f" = "fullscreen";

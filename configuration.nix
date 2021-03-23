@@ -40,7 +40,7 @@
   hardware.opengl.driSupport32Bit = true;
   hardware.video.hidpi.enable = true;
   hardware.pulseaudio = {
-    enable = false;
+    enable = true;
     support32Bit = true;
     extraConfig = ''
       # Automatically switch to newly connected devices.
@@ -70,18 +70,6 @@
   # Make sure pulseaudio is being used as sound system
   # for the different applications as well.
   nixpkgs.config.pulseaudio = true;
-  services.pipewire = {
-    enable = true;
-    pulse.enable = true;
-    alsa.enable = true;
-    alsa.support32Bit = true;
-
-    media-session.config.bluez-monitor.properties = {
-      # MSBC is not expected to work on all headset + adapter combinations.
-      "bluez5.msbc-support" = true;
-      "bluez5.sbc-xq-support" = true;
-    };
-  };
 
   services.ssmtp = {
     # directDelivery = true;
@@ -304,6 +292,24 @@
   users.defaultUserShell = pkgs.zsh;
 
   nixpkgs.config.allowUnfree = true;
+
+  specialisation = {
+    pipewire.configuration = {
+      hardware.pulseaudio.enable = pkgs.lib.mkForce false;
+      services.pipewire = {
+        enable = true;
+        pulse.enable = true;
+        alsa.enable = true;
+        alsa.support32Bit = true;
+
+        media-session.config.bluez-monitor.properties = {
+          # MSBC is not expected to work on all headset + adapter combinations.
+          "bluez5.msbc-support" = true;
+          "bluez5.sbc-xq-support" = true;
+        };
+      };
+    };
+  };
 
   nix = {
     gc.automatic = true;
