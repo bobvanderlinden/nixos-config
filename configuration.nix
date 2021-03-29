@@ -276,6 +276,7 @@
     enable = true;
     package = pkgs.mysql;
   };
+  services.redis.enable = true;
 
   # virtualisation.virtualbox.host.enable = true;
   virtualisation.docker.enable = true;
