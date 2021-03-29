@@ -54,17 +54,8 @@
     # Enable extra bluetooth modules, like APT-X codec.
     extraModules = [ pkgs.pulseaudio-modules-bt ];
 
-    # Allow bluetooth with hsphdpd support
-    # package = pkgs.pulseaudio-hsphfpd.overrideAttrs (attrs: {
-    #   patches = [
-    #     (pkgs.fetchurl {
-    #       url =
-    #         "https://gitlab.freedesktop.org/pulseaudio/pulseaudio/-/merge_requests/254.diff";
-    #       hash = "sha256-LTSBrA17UrbnWn4mBCnSrtK+KleGepJgOjSoLovIaTM=";
-    #     })
-    #   ];
-    # });
-    package = pkgs.pulseaudio-hsphfpd;
+    # package = pkgs.pulseaudio-hsphfpd;
+    package = pkgs.pulseaudioFull;
   };
 
   # Make sure pulseaudio is being used as sound system
