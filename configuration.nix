@@ -37,7 +37,11 @@
   hardware.bluetooth.enable = true;
   hardware.bluetooth.hsphfpd.enable = true;
   services.blueman.enable = true;
-  hardware.opengl.driSupport32Bit = true;
+  hardware.opengl = {
+    enable = true;
+    driSupport32Bit = true;
+  };
+  
   hardware.video.hidpi.enable = true;
   hardware.pulseaudio = {
     enable = true;
@@ -208,6 +212,10 @@
       enable = true;
       extraPackages = with pkgs; [ dmenu i3status i3lock ];
     };
+  };
+  services.picom = {
+    enable = true;
+    vSync = true;
   };
 
   i18n.inputMethod = {
