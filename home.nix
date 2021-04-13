@@ -78,6 +78,7 @@ in {
       terminator
       yq-go
       ripgrep
+      gnome3.pomodoro
     ];
 
     dconf = {
@@ -475,6 +476,7 @@ in {
           for_window [class="scratchpad"] move scratchpad
           for_window [class="keepassxc"] move scratchpad
           for_window [class="Bitwarden"] move scratchpad
+          for_window [class="gnome-pomodoro"] move scratchpad
           for_window [title="notes - Zim"] move scratchpad
           for_window [class="floating"] floating enable
         '';
