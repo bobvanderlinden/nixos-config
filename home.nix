@@ -2,7 +2,6 @@
 let
   vscode = pkgs.vscode;
   pulseaudio = pkgs.pulseaudioFull;
-  chromium = pkgs.chromium.override { enableVaapi = true; };
 in {
   config = {
     home.packages = with pkgs; [
@@ -309,7 +308,7 @@ in {
     };
     qt = {
       enable = true;
-      platformTheme = "gnome";
+      platformTheme = "gtk";
     };
 
     services.gnome-keyring.enable = true;
@@ -528,9 +527,10 @@ in {
         pull.rebase = false;
         init.defaultBranch = "master";
         core.excludesfile = "~/.config/git/ignore";
+        url."git@github.com:".insteadOf = "https://github.com/";
       };
     };
-    home.sessionVariables = { BROWSER = "${chromium}/bin/chromium"; };
+    home.sessionVariables = { BROWSER = "${pkgs.chromium}/bin/chromium"; };
     programs.autorandr.enable = true;
     programs.direnv.enable = true;
     programs.direnv.enableNixDirenvIntegration = true;
