@@ -218,6 +218,11 @@
     vSync = true;
   };
 
+  # Fingerprint reader
+  services.fprintd.enable = true;
+  security.pam.services.login.fprintAuth = true;
+  security.pam.services.xscreensaver.fprintAuth = true;
+
   i18n.inputMethod = {
     enabled = "ibus";
     ibus.engines = with pkgs.ibus-engines; [ uniemoji ];
