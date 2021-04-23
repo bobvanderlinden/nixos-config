@@ -14,6 +14,7 @@
     efiSupport = true;
     device = "nodev";
     gfxmodeEfi = "1280x1024x32,auto";
+    configurationLimit = 5;
   };
   boot.loader.efi.canTouchEfiVariables = false;
   boot.loader.efi.efiSysMountPoint = "/boot/efi";
