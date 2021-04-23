@@ -249,10 +249,10 @@ in {
           extraOptions."VerifyHostKeyDNS" = "no";
         };
 
-        # "github.com" = {
-        #   user = "git";
-        #   identityFile = "~/.ssh/github_ed25519";
-        # };
+        "github.com" = {
+          user = "git";
+          identityFile = "~/.ssh/github_ed25519";
+        };
       };
 
       forwardAgent = false;
