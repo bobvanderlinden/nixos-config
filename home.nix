@@ -78,6 +78,7 @@ in {
       yq-go
       ripgrep
       gnome3.pomodoro
+      audacity
     ];
 
     dconf = {
