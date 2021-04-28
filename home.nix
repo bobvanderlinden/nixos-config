@@ -79,6 +79,7 @@ in {
       ripgrep
       gnome3.pomodoro
       audacity
+      ffmpeg-full
     ];
 
     dconf = {
