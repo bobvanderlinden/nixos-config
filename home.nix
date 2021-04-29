@@ -30,6 +30,9 @@ in {
       nmap
       graphviz
       xfce.thunar
+      xfce.xfconf
+      xfce.tumbler
+      xfce.exo
       volumeicon
       keepassxc
       jdk
