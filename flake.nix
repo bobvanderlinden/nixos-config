@@ -23,8 +23,14 @@
 
       hardware.nvidia.prime.offload.enable = false;
       hardware.enableRedistributableFirmware = true;
-      hardware.opengl.extraPackages = [ pkgs.libvdpau-va-gl ];
-      hardware.opengl.extraPackages32 = [ pkgs.pkgsi686Linux.libvdpau-va-gl ];
+      hardware.opengl.extraPackages = with pkgs; [
+        vaapiVdpau
+        libvdpau-va-gl
+      ];
+      hardware.opengl.extraPackages32 = with pkgs.pkgsi686Linux;[
+        vaapiVdpau
+        libvdpau-va-gl
+      ];
     };
 
     nixosModules.home-manager = { pkgs, ... }: {
