@@ -7,9 +7,8 @@
     url = "github:nix-community/home-manager";
     inputs.nixpkgs.follows = "nixpkgs";
   };
-  inputs.nixpkgs.url = "github:nixos/nixpkgs";
-  # inputs.nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-  # inputs.nixpkgs.url = "github:nixos/nixpkgs-channels/nixos-unstable";
+  # inputs.nixpkgs.url = "github:nixos/nixpkgs";
+  inputs.nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
   outputs = { self, nixpkgs, home-manager, nixos-hardware }: rec {
     overlay = final: prev: { coin = final.callPackage ./packages/coin { }; };
 
