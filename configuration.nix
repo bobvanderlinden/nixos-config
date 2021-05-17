@@ -206,6 +206,9 @@
         accelProfile = "adaptive";
         accelSpeed = "0, 5";
       };
+      mouse = {
+        accelSpeed = "1";
+      };
     };
 
     windowManager.i3 = {
