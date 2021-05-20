@@ -321,6 +321,7 @@ in {
     services.keybase.enable = true;
     services.network-manager-applet.enable = true;
     services.blueman-applet.enable = true;
+    services.mpris-proxy.enable = true;
     services.flameshot.enable = true;
     services.redshift = {
       enable = true;
