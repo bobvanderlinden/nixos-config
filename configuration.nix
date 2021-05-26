@@ -324,7 +324,7 @@
     useSandbox = true;
     package = pkgs.nixFlakes;
     sandboxPaths = [ "/etc/nix/netrc" ];
-    trustedUsers = [ "bob.vanderlinden" ];
+    trustedUsers = [ "root" "bob.vanderlinden" ];
     extraOptions = ''
       experimental-features = nix-command flakes
       netrc-file = /etc/nix/netrc
