@@ -148,7 +148,7 @@
   services.openssh.enable = false;
   services.postgresql.enable = true;
 
-  services.gnome3.gnome-keyring.enable = true;
+  services.gnome.gnome-keyring.enable = true;
   services.gvfs.enable = true;
   programs.seahorse.enable = true;
 
@@ -329,6 +329,13 @@
       experimental-features = nix-command flakes
       netrc-file = /etc/nix/netrc
     '';
+  };
+
+  system.autoUpgrade = {
+    enable = true;
+    flake = "/home/bob.vanderlinden/projects/bobvanderlinden/nixos-config";
+    flags = [ "--update-input" "nixpkgs" "--commit-lock-file" ];
+    dates = "17:30";
   };
 
   # This value determines the NixOS release from which the default
