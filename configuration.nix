@@ -326,7 +326,7 @@
     sandboxPaths = [ "/etc/nix/netrc" ];
     trustedUsers = [ "root" "bob.vanderlinden" ];
     extraOptions = ''
-      experimental-features = nix-command flakes
+      experimental-features = nix-command flakes ca-references
       netrc-file = /etc/nix/netrc
     '';
   };
