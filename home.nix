@@ -83,6 +83,13 @@ in {
       gnome3.pomodoro
       audacity
       ffmpeg-full
+      zoxide
+      bat
+      fd
+      procs
+      sd
+      dust
+      bottom
     ];
 
     dconf = {
@@ -310,6 +317,10 @@ in {
         bindkey '^F' history-incremental-pattern-search-forward
         eval "$(rbenv init -)"
       '';
+    };
+    programs.starship = {
+      enable = true;
+      enableZshIntegration = true;
     };
     qt = {
       enable = true;
