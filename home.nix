@@ -297,7 +297,6 @@ in {
       oh-my-zsh = {
         enable = true;
         plugins = [
-          "archlinux"
           "git-extras"
           "git"
           "gitfast"
