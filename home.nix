@@ -305,8 +305,6 @@ in {
           "ssh-agent"
           "gpg-agent"
         ];
-        #theme = "frozencow";
-        theme = "agnoster";
       };
       loginExtra = ''
         setopt extendedglob
