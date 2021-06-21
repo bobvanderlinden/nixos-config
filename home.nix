@@ -90,6 +90,7 @@ in {
       sd
       dust
       bottom
+      neo4j-desktop
     ];
 
     dconf = {
@@ -546,8 +547,10 @@ in {
     };
     home.sessionVariables = { BROWSER = "${pkgs.chromium}/bin/chromium"; };
     programs.autorandr.enable = true;
-    programs.direnv.enable = true;
-    programs.direnv.enableNixDirenvIntegration = true;
+    programs.direnv = {
+      enable = true;
+      nix-direnv.enable = true;
+    };
     programs.htop.enable = true;
     programs.home-manager.enable = true;
   };

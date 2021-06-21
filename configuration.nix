@@ -101,7 +101,7 @@
       noto-fonts-emoji
       google-fonts
 
-      emacs-all-the-icons-fonts
+      # emacs-all-the-icons-fonts
     ];
   };
 
@@ -325,6 +325,7 @@
     package = pkgs.nixFlakes;
     sandboxPaths = [ "/etc/nix/netrc" ];
     trustedUsers = [ "root" "bob.vanderlinden" ];
+    binaryCaches = [ "https://cachix.cachix.org" ];
     extraOptions = ''
       experimental-features = nix-command flakes ca-references
       netrc-file = /etc/nix/netrc
