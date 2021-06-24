@@ -91,6 +91,7 @@ in {
       dust
       bottom
       neo4j-desktop
+      watchexec
     ];
 
     dconf = {
