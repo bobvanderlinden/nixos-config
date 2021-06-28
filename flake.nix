@@ -13,7 +13,19 @@
       system = "x86_64-linux";
       username = "bob.vanderlinden";
     in rec {
-      overlay = final: prev: { coin = final.callPackage ./packages/coin { }; };
+      overlay = final: prev: {
+        coin = final.callPackage ./packages/coin { };
+        nix-direnv = prev.nix-direnv.overrideAttrs (prev: rec {
+            version = "1.4.0";
+
+            src = final.fetchFromGitHub {
+              owner = "nix-community";
+              repo = "nix-direnv";
+              rev = version;
+              sha256 = "sha256-BKiuYvxgY2P7GK59jul5l0kHNrJtD2jmsMGmX0+09hY=";
+            };
+        });
+      };
 
       homeManagerConfigurations."${username}" =
         home-manager.lib.homeManagerConfiguration {
