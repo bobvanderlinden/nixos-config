@@ -18,7 +18,7 @@
       homeManagerConfigurations."${username}" =
         home-manager.lib.homeManagerConfiguration {
           inherit system username;
-          configuration = ./home.nix;
+          configuration = ./home/default.nix;
           homeDirectory = "/home/${username}";
         };
 
@@ -46,7 +46,7 @@
         home-manager.verbose = true;
         home-manager.useGlobalPkgs = true;
         home-manager.useUserPackages = true;
-        home-manager.users."${username}".imports = [ ./home.nix ];
+        home-manager.users."${username}".imports = [ ./home/default.nix ];
       };
 
       nixosConfigurations.NVC3919 = nixpkgs.lib.nixosSystem {
