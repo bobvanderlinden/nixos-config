@@ -94,6 +94,7 @@ in {
       watchexec
       bitwarden-cli
       xsv
+      q-text-as-data
     ];
 
     dconf = {
