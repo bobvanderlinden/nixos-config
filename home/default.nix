@@ -93,6 +93,7 @@ in {
       neo4j-desktop
       watchexec
       bitwarden-cli
+      xsv
     ];
 
     dconf = {
