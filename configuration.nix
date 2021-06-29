@@ -182,8 +182,6 @@
     enable = true;
     displayManager.defaultSession = "none+i3";
     displayManager.lightdm.enable = true;
-    displayManager.autoLogin.enable = true;
-    displayManager.autoLogin.user = "bob.vanderlinden";
     desktopManager.xterm.enable = false;
     videoDrivers = [ "nvidia" ];
     xrandrHeads = [
@@ -220,6 +218,7 @@
     enable = true;
     vSync = true;
   };
+  programs.xss-lock.enable = true;
 
   # Fingerprint reader
   services.fprintd.enable = true;
