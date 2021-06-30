@@ -345,6 +345,20 @@ in {
       tray = true;
     };
 
+    systemd.user.services.xssproxy = {
+      Unit = {
+        Description = "forward freedesktop.org Idle Inhibition Service calls to Xss";
+        After = [ "graphical-session-pre.target" ];
+        PartOf = [ "graphical-session.target" ];
+      };
+
+      Install = { WantedBy = [ "graphical-session.target" ]; };
+
+      Service = {
+        ExecStart = "${pkgs.xssproxy}/bin/xssproxy";
+      };
+    };
+
     systemd.user.services.lxqt-policykit-agent = {
       Unit = {
         Description = "LXQT PolicyKit Agent";
