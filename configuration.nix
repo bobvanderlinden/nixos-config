@@ -32,6 +32,9 @@
     enableSSHSupport = true;
   };
 
+  # Smartcard daemon for Yubikey
+  services.pcscd.enable = true;
+
   security.sudo.enable = true;
 
   hardware.bluetooth.enable = true;
