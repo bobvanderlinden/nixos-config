@@ -3,6 +3,10 @@ let
   vscode = pkgs.vscode;
   pulseaudio = pkgs.pulseaudioFull;
 in {
+  imports = [
+    ./modules/lxqt-policykit-agent.nix
+    ./modules/xssproxy.nix
+  ];
   config = {
     home.packages = with pkgs; [
       coin
@@ -84,7 +88,6 @@ in {
       audacity
       ffmpeg-full
       zoxide
-      bat
       fd
       procs
       sd
@@ -95,6 +98,8 @@ in {
       bitwarden-cli
       xsv
       q-text-as-data
+      httpie
+      delta
     ];
 
     dconf = {
@@ -161,35 +166,37 @@ in {
         color21 = #eee8d5
       '';
     };
-    home.file.".i3status.conf".text = ''
-      general {
-              colors = true
-              interval = 5
-      }
+    programs.i3status = {
+      enable = true;
+      general = {
+        colors = true;
+        interval = 5;
+      };
+      modules = {
+        "wireless wlan0" = {
+          position = 1;
+          settings = {
+            format_up = "W: (%quality at %essid) %ip";
+            format_down = "W: down";
+          };
+        };
 
-      #order += "ipv6"
-      order += "disk /"
-      #order += "run_watch DHCP"
-      #order += "run_watch VPN"
-      order += "wireless wlp3s0"
-      order += "ethernet enp0s25"
-      order += "battery 0"
-      #order += "load"
-      order += "tztime local"
+        "battery 0" = {
+          position = 2;
+          settings = {
+            format = "%status %percentage %remaining";
+          };
+        };
 
-      wireless wlan0 {
-              format_up = "W: (%quality at %essid) %ip"
-              format_down = "W: down"
-      }
+        "tztime local" = {
+          position = 3;
+          settings = {
+            format = "%Y-%m-%d %H:%M:%S";
+          };
+        };
+      };
+    };
 
-      battery 0 {
-              format = "%status %percentage %remaining"
-      }
-
-      tztime local {
-              format = "%Y-%m-%d %H:%M:%S"
-      }
-    '';
     programs.kitty = {
       enable = true;
       settings = {
@@ -200,22 +207,27 @@ in {
       };
     };
 
-    home.file.".config/terminator/config".text = ''
-      [global_config]
-        inactive_color_offset = 1.0
-      [keybindings]
-        go_next = ""
-        new_window = <Primary><Shift>n
-      [profiles]
-        [[default]]
-          background_color = "#002b36"
-          cursor_color = "#aaaaaa"
-          font = DejaVu Sans Mono for Powerline 11
-          foreground_color = "#839496"
-          show_titlebar = False
-          scrollback_lines = 5000
-          palette = "#073642:#dc322f:#859900:#b58900:#268bd2:#d33682:#2aa198:#eee8d5:#002b36:#cb4b16:#586e75:#657b83:#839496:#6c71c4:#93a1a1:#fdf6e3"
-    '';
+    programs.terminator = {
+      enable = true;
+      config = {
+        global_config = {
+          inactive_color_offset = "1.0";
+        };
+        keybindings = {
+          go_next = "";
+          new_window = "<Primary><Shift>n";
+        };
+        profiles.default = {
+          background_color = "#002b36";
+          cursor_color = "#aaaaaa";
+          font = "DejaVu Sans Mono for Powerline 11";
+          foreground_color = "#839496";
+          show_titlebar = false;
+          scrollback_lines = 5000;
+          palette = "#073642:#dc322f:#859900:#b58900:#268bd2:#d33682:#2aa198:#eee8d5:#002b36:#cb4b16:#586e75:#657b83:#839496:#6c71c4:#93a1a1:#fdf6e3";
+        };
+      };
+    };
 
     xresources.properties = { "Xft.dpi" = 192; };
     fonts.fontconfig.enable = true;
@@ -274,27 +286,9 @@ in {
 
       forwardAgent = false;
       serverAliveInterval = 180;
-
-      # extraConfig = ''
-      #   SendEnv LANG LC_*
-      #   IdentitiesOnly yes
-      #   Port 22
-      #   Protocol 2
-      #   UseRoaming no
-      #   PubkeyAuthentication yes
-      #   PasswordAuthentication no
-      #   ChallengeResponseAuthentication no
-      #   ForwardX11 no
-      #   ForwardX11Trusted no
-      #   HostKeyAlgorithms ssh-ed25519-cert-v01@openssh.com,ssh-rsa-cert-v01@openssh.com,ssh-ed25519,ssh-rsa
-      #   Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr
-      #   MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@openssh.com,hmac-sha2-512,hmac-sha2-256,umac-128@openssh.com
-      #   KexAlgorithms curve25519-sha256@libssh.org,diffie-hellman-group-exchange-sha256
-      #   VerifyHostKeyDNS yes
-      # '';
     };
     programs.fzf.enable = true;
-    programs.vim.enable = true;
+    programs.bat.enable = true;
     programs.zsh = {
       enable = true;
       enableAutosuggestions = true;
@@ -345,45 +339,10 @@ in {
       tray = true;
     };
 
-    systemd.user.services.xssproxy = {
-      Unit = {
-        Description = "forward freedesktop.org Idle Inhibition Service calls to Xss";
-        After = [ "graphical-session-pre.target" ];
-        PartOf = [ "graphical-session.target" ];
-      };
+    services.xssproxy.enable = true;
+    services.lxqt-policykit-agent.enable = true;
 
-      Install = { WantedBy = [ "graphical-session.target" ]; };
-
-      Service = {
-        ExecStart = "${pkgs.xssproxy}/bin/xssproxy";
-      };
-    };
-
-    systemd.user.services.lxqt-policykit-agent = {
-      Unit = {
-        Description = "LXQT PolicyKit Agent";
-        After = [ "graphical-session-pre.target" ];
-        PartOf = [ "graphical-session.target" ];
-      };
-
-      Install = { WantedBy = [ "graphical-session.target" ]; };
-
-      Service = {
-        ExecStart = "${pkgs.lxqt.lxqt-policykit}/bin/lxqt-policykit-agent";
-      };
-    };
-
-    systemd.user.services.pasystray = {
-      Unit = {
-        Description = "pasystray";
-        After = [ "graphical-session-pre.target" ];
-        PartOf = [ "graphical-session.target" ];
-      };
-
-      Install = { WantedBy = [ "graphical-session.target" ]; };
-
-      Service = { ExecStart = "${pkgs.pasystray}/bin/pasystray"; };
-    };
+    services.pasystray.enable = true;
 
     systemd.user.services.bitwarden = {
       Unit = {
@@ -410,7 +369,7 @@ in {
         enable = true;
         config = {
           modifier = "Mod4";
-          bars = [{ statusCommand = "${pkgs.i3status}/bin/i3status"; }];
+          # bars = [{ statusCommand = "${pkgs.i3status}/bin/i3status"; }];
           keybindings = let mod = config.modifier;
           in {
             "${mod}+t" = "exec terminator";
@@ -521,6 +480,7 @@ in {
       userEmail = "bobvanderlinden@gmail.com";
       signing.signByDefault = true;
       signing.key = "EEBE8E3EC4A31364";
+      delta.enable = true;
       aliases = {
         unstage = "reset HEAD --";
         pr = "pull --rebase";
@@ -563,6 +523,11 @@ in {
         url."git@github.com:".insteadOf = "https://github.com/";
       };
     };
+    programs.gh.enable = true;
+    programs.jq.enable = true;
+    programs.mcfly.enable = true;
+    programs.mcfly.enableFuzzySearch = true;
+    programs.neovim.enable = true;
     home.sessionVariables = { BROWSER = "${pkgs.chromium}/bin/chromium"; };
     programs.autorandr.enable = true;
     programs.direnv = {
