@@ -335,7 +335,7 @@
   };
 
   system.autoUpgrade = {
-    enable = true;
+    enable = false;
     flake = "/home/bob.vanderlinden/projects/bobvanderlinden/nixos-config";
     flags = [ "--update-input" "nixpkgs" "--commit-lock-file" ];
     dates = "17:30";
