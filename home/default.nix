@@ -100,6 +100,7 @@ in {
       q-text-as-data
       httpie
       delta
+      luakit
     ];
 
     dconf = {
