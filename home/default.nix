@@ -464,13 +464,23 @@ in {
           assign [class="Pidgin"] "10"
           assign [class="Spotify"] = "10"
 
-          for_window [window_role="scratchpad"] move scratchpad
-          for_window [class="scratchpad"] move scratchpad
-          for_window [class="keepassxc"] move scratchpad
           for_window [class="Bitwarden"] move scratchpad
+          for_window [class="Bitwarden"] sticky enable
           for_window [class="gnome-pomodoro"] move scratchpad
-          for_window [title="notes - Zim"] move scratchpad
+          for_window [class="gnome-pomodoro"] sticky enable
           for_window [class="floating"] floating enable
+          for_window [class="zoom"] floating enable
+          for_window [class="zoom"] sticky enable
+
+          for_window [window_type="dialog"] floating enable
+          for_window [window_type="utility"] floating enable
+          for_window [window_type="toolbar"] floating enable
+          for_window [window_type="splash"] floating enable
+          for_window [window_type="menu"] floating enable
+          for_window [window_type="dropdown_menu"] floating enable
+          for_window [window_type="popup_menu"] floating enable
+          for_window [window_type="tooltip"] floating enable
+          for_window [window_type="notification"] floating enable
         '';
       };
     };
