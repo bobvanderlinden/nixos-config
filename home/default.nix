@@ -407,6 +407,7 @@ in {
             "${mod}+f" = "fullscreen";
             "${mod}+Shift+s" = "layout stacking";
             "${mod}+Shift+t" = "layout tabbed";
+            "${mod}+Shift+g" = "sticky toggle";
             "${mod}+Shift+f" = "floating toggle";
             "${mod}+space" = "focus mode_toggle";
             "${mod}+1" = "workspace 1";
