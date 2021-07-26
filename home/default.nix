@@ -169,6 +169,7 @@ in {
     };
     programs.i3status = {
       enable = true;
+      enableDefault = false;
       general = {
         colors = true;
         interval = 5;
