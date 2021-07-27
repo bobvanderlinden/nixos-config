@@ -199,6 +199,9 @@ in {
       };
     };
 
+    # Desktop notifications
+    services.dunst.enable = true;
+
     programs.kitty = {
       enable = true;
       settings = {
@@ -454,6 +457,7 @@ in {
           };
 
           startup = [{
+            # Auto-start all *.desktop files in auto-start directories.
             command = "${pkgs.dex}/bin/dex -a";
             notification = false;
           }];
