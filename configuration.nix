@@ -149,7 +149,6 @@
 
   services.locate.enable = true;
   services.openssh.enable = false;
-  services.postgresql.enable = true;
 
   services.gnome.gnome-keyring.enable = true;
   services.gvfs.enable = true;
@@ -158,13 +157,6 @@
   services.printing = {
     enable = true;
     drivers = [ pkgs.gutenprint pkgs.splix pkgs.cupsBjnp ];
-  };
-
-  services.mosquitto = {
-    enable = true;
-    host = "0.0.0.0";
-    allowAnonymous = true;
-    users = { };
   };
 
   services.avahi = {
