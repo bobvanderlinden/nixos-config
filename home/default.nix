@@ -102,6 +102,7 @@ in {
       delta
       luakit
       nodePackages.zx
+      deno
     ];
 
     dconf = {
