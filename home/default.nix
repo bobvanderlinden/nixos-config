@@ -101,6 +101,7 @@ in {
       httpie
       delta
       luakit
+      nodePackages.zx
     ];
 
     dconf = {
