@@ -177,7 +177,7 @@ in {
         interval = 5;
       };
       modules = {
-        "wireless wlan0" = {
+        "wireless wlp0s20f3" = {
           position = 1;
           settings = {
             format_up = "W: (%quality at %essid) %ip";
