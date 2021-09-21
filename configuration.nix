@@ -52,9 +52,6 @@
     extraConfig = ''
       # Automatically switch to newly connected devices.
       # load-module module-switch-on-connect
-
-      # Discover Apple iTunes devices on network.
-      load-module module-raop-discover
     '';
 
     # Enable extra bluetooth modules, like APT-X codec.
