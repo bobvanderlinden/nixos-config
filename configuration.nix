@@ -56,7 +56,6 @@
       # Discover Apple iTunes devices on network.
       load-module module-raop-discover
     '';
-    zeroconf.discovery.enable = true;
 
     # Enable extra bluetooth modules, like APT-X codec.
     extraModules = [ pkgs.pulseaudio-modules-bt ];
