@@ -134,6 +134,8 @@
   # services.logind.lidSwitch = "suspend";
 
   services.udev.extraRules = ''
+    # Always authorize thunderbolt connections when they are plugged in.
+    # This is to make sure the USB hub of Thunderbolt is wsorking.ss
     ACTION=="add", SUBSYSTEM=="thunderbolt", ATTR{authorized}=="0", ATTR{authorized}="1"
 
     SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="0925", ATTR{idProduct}=="3881", MODE="0666"
