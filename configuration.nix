@@ -1,6 +1,9 @@
 { config, pkgs, ... }:
 
 {
+  imports = [
+    ./modules/v4l2loopback.nix
+  ];
   systemd.additionalUpstreamSystemUnits = [ "debug-shell.service" ];
 
   time.timeZone = "Europe/Amsterdam";
@@ -44,6 +47,8 @@
     enable = true;
     driSupport32Bit = true;
   };
+
+  hardware.v4l2loopback.enable = true;
   
   hardware.video.hidpi.enable = true;
   hardware.pulseaudio = {
@@ -134,12 +139,16 @@
   # services.logind.lidSwitch = "suspend";
 
   services.udev.extraRules = ''
+    # Thunderbolt
     # Always authorize thunderbolt connections when they are plugged in.
-    # This is to make sure the USB hub of Thunderbolt is wsorking.ss
+    # This is to make sure the USB hub of Thunderbolt is working.
     ACTION=="add", SUBSYSTEM=="thunderbolt", ATTR{authorized}=="0", ATTR{authorized}="1"
 
+    # Saleae Logic Analyzer
     SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="0925", ATTR{idProduct}=="3881", MODE="0666"
     SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="21a9", ATTR{idProduct}=="1001", MODE="0666"
+
+    # Arduino
     SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="2341", ATTR{idProduct}=="0043", MODE="0666", SYMLINK+="arduino"
     SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", MODE="0664", GROUP="uucp"
     SUBSYSTEM=="tty", ATTRS{idVendor}=="2341", ATTRS{idProduct}=="0043", MODE="0660", SYMLINK+="ttyArduinoUno"
