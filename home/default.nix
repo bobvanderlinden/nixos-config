@@ -362,6 +362,7 @@ in {
             "${mod}+w" = "exec chromium --disable-gpu-driver-bug-workarounds --ignore-gpu-blocklist --enable-gpu-rasterization --enable-zero-copy --enable-features=VaapiVideoDecoder";
             "${mod}+e" = "exec thunar";
             "${mod}+q" = "exec dmenu_run";
+            "${mod}+Delete" = "exec i3lock";
             "${mod}+Print" = "exec flameshot gui";
             "${mod}+c" = "kill";
 
