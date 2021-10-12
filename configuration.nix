@@ -3,6 +3,7 @@
 {
   imports = [
     ./modules/v4l2loopback.nix
+    ./modules/docker-config.nix
   ];
   systemd.additionalUpstreamSystemUnits = [ "debug-shell.service" ];
 
