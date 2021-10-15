@@ -7,11 +7,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1633733120,
-        "narHash": "sha256-IdUgCn7eud2he4LWZpzFPf1D2u+mjZC09mvo3oSNoss=",
+        "lastModified": 1634139232,
+        "narHash": "sha256-nLOFGxwpRXouriPBJ8Hf7X60kdMBRNBodFHG9AM6H4o=",
         "owner": "nix-community",
         "repo": "home-manager",
-        "rev": "32285d8fe64138a41f1caed23d94f28529ea4eb4",
+        "rev": "b88c863b4068faf43aa4d1bb5c4397a67b64c59c",
         "type": "github"
       },
       "original": {
@@ -37,12 +37,13 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1633791597,
-        "narHash": "sha256-HzpxqTEnqsjkKWfW87kSI3WVizYjUMQeUjSIm3b5I0Y=",
-        "owner": "nixos",
-        "repo": "nixpkgs",
-        "rev": "9bf75dd50b7b6d3ce6aaf6563db95f41438b9bdb",
-        "type": "github"
+        "lastModified": 1634159890,
+        "narHash": "sha256-sBkE2vm2lLOmeaLUGkAV5Ta4qMtjllTqUe66FwUKkmk=",
+        "ref": "docker-daemon-config",
+        "rev": "da96a90a5cec44a817b87b124193cab5e9ebc500",
+        "revCount": 323019,
+        "type": "git",
+        "url": "file:///home/bob.vanderlinden/projects/nixpkgs"
       },
       "original": {
         "owner": "nixos",

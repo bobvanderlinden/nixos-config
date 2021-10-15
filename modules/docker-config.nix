@@ -1,13 +1,14 @@
 { lib, config, pkgs, ... }:
 with lib;
 let
-  daemonJsonContent = builtins.toJSON config.virtualisation.docker.config;
-  daemonJson = pkgs.writeText "daemon.json" daemonJsonContent;
+  cfg = config.virtualisation.docker;
+  daemonConfigJson = builtins.toJSON cfg.daemonConfig;
+  daemonConfigFile = pkgs.writeText "daemon.json" daemonConfigJson;
 in
 {
   options.virtualisation.docker = {
-    config = mkOption {
-      type = types.attrs;
+    daemonConfig = mkOption {
+      type = types.anything;
       default = { };
       example = {
         ipv6 = true;
@@ -18,10 +19,18 @@ in
         Note that /etc/docker/daemon.conf will not be available anymore.
       '';
     };
+    ipv6 = mkOption {
+      type = types.bool;
+      default = config.networking.enableIPv6;
+      defaultText = "config.networking.enableIPv6";
+      description = "Whether to use IPv6.";
+    };
   };
   config = {
-    virtualisation.docker.config.ipv6 = true;
-    virtualisation.docker.config."fixed-cidr-v6" = "fd00::/80";
-    virtualisation.docker.extraOptions = "--config-file=${daemonJson}";
+    virtualisation.docker.daemonConfig = mkIf cfg.ipv6 {
+      ipv6 = true;
+      "fixed-cidr-v6" = "fd00::/80";
+    };
+    virtualisation.docker.extraOptions = "--config-file=${daemonConfigFile}";
   };
 }

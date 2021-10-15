@@ -51,6 +51,7 @@ in {
       gitAndTools.hub
       gitAndTools.gh
       git-cola
+      git-branchless
       gnome3.file-roller
       clang
       slack
@@ -325,7 +326,7 @@ in {
       tray = true;
     };
 
-    services.xssproxy.enable = true;
+    services.xssproxy.enable = false;
     services.lxqt-policykit-agent.enable = true;
 
     services.pasystray.enable = true;
@@ -524,8 +525,6 @@ in {
     };
     programs.gh.enable = true;
     programs.jq.enable = true;
-    programs.mcfly.enable = true;
-    programs.mcfly.enableFuzzySearch = true;
     programs.neovim.enable = true;
     home.sessionVariables = { BROWSER = "${pkgs.chromium}/bin/chromium"; };
     programs.autorandr.enable = true;

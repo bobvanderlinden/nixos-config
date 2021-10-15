@@ -3,7 +3,6 @@
 {
   imports = [
     ./modules/v4l2loopback.nix
-    ./modules/docker-config.nix
   ];
   systemd.additionalUpstreamSystemUnits = [ "debug-shell.service" ];
 
@@ -135,9 +134,6 @@
   services.acpid.enable = true;
   security.polkit.enable = true;
   services.upower.enable = true;
-
-  # This should already be handled by upower
-  # services.logind.lidSwitch = "suspend";
 
   services.udev.extraRules = ''
     # Thunderbolt
@@ -299,7 +295,13 @@
   services.redis.enable = true;
 
   # virtualisation.virtualbox.host.enable = true;
-  virtualisation.docker.enable = true;
+  virtualisation.docker = {
+    enable = true;
+    daemon.settings = {
+      ipv6 = true;
+      "fixed-cidr-v6" = "fd00::/80";
+    };
+  };
 
   users.defaultUserShell = pkgs.zsh;
 
