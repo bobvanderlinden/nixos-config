@@ -301,10 +301,10 @@
   # virtualisation.virtualbox.host.enable = true;
   virtualisation.docker = {
     enable = true;
-    daemon.settings = {
-      ipv6 = true;
-      "fixed-cidr-v6" = "fd00::/80";
-    };
+    # daemon.settings = {
+    #   ipv6 = true;
+    #   "fixed-cidr-v6" = "fd00::/80";
+    # };
   };
 
   users.defaultUserShell = pkgs.zsh;

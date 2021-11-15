@@ -530,10 +530,7 @@ in {
     programs.autorandr.enable = true;
     programs.direnv = {
       enable = true;
-      nix-direnv = {
-        enable = true;
-        enableFlakes = true;
-      };
+      nix-direnv.enable = true;
 
       # Store .envrc files outside of project directories.
       # Source: https://github.com/nix-community/nix-direnv#storing-direnv-outside-the-project-directory
