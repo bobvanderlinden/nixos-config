@@ -107,7 +107,6 @@
       noto-fonts
       noto-fonts-cjk
       noto-fonts-emoji
-      google-fonts
 
       # emacs-all-the-icons-fonts
     ];
@@ -115,7 +114,6 @@
 
   environment.systemPackages = with pkgs; [
     bash
-    findutils # find locate
     moreutils # sponge...
     unzip
     vim
@@ -157,7 +155,10 @@
     SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", MODE="0660", SYMLINK+="ttyArduinoNano"
   '';
 
-  services.locate.enable = true;
+  services.locate = {
+    enable = true;
+    pruneNames = [];
+  };
   services.openssh.enable = false;
 
   services.gnome.gnome-keyring.enable = true;
@@ -201,6 +202,7 @@
     autoRepeatInterval = 60;
 
     synaptics.enable = false;
+    # wacom.enable = true;
     libinput = {
       enable = true;
       touchpad = {
@@ -296,7 +298,7 @@
     enable = true;
     package = pkgs.mysql;
   };
-  services.redis.enable = true;
+  services.redis.servers."".enable = true;
 
   # virtualisation.virtualbox.host.enable = true;
   virtualisation.docker = {
@@ -330,7 +332,11 @@
   };
 
   nix = {
-    gc.automatic = true;
+    gc = {
+      dates = "weekly";
+      automatic = true;
+      options = "--delete-older-than 60d";
+    };
     useSandbox = true;
     package = pkgs.nixFlakes;
     sandboxPaths = [ "/etc/nix/netrc" ];
