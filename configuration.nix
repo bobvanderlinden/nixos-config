@@ -55,24 +55,19 @@
   hardware.v4l2loopback.enable = true;
   
   hardware.video.hidpi.enable = true;
-  hardware.pulseaudio = {
+
+  services.pipewire = {
     enable = true;
-    support32Bit = true;
-    extraConfig = ''
-      # Automatically switch to newly connected devices.
-      # load-module module-switch-on-connect
-    '';
+    pulse.enable = true;
+    alsa.enable = true;
+    alsa.support32Bit = true;
 
-    # Enable extra bluetooth modules, like APT-X codec.
-    extraModules = [ pkgs.pulseaudio-modules-bt ];
-
-    # package = pkgs.pulseaudio-hsphfpd;
-    package = pkgs.pulseaudioFull;
+    media-session.config.bluez-monitor.properties = {
+      # MSBC is not expected to work on all headset + adapter combinations.
+      "bluez5.msbc-support" = true;
+      "bluez5.sbc-xq-support" = true;
+    };
   };
-
-  # Make sure pulseaudio is being used as sound system
-  # for the different applications as well.
-  nixpkgs.config.pulseaudio = true;
 
   services.ssmtp = {
     # directDelivery = true;
@@ -313,23 +308,6 @@
 
   nixpkgs.config.allowUnfree = true;
 
-  specialisation = {
-    pipewire.configuration = {
-      hardware.pulseaudio.enable = pkgs.lib.mkForce false;
-      services.pipewire = {
-        enable = true;
-        pulse.enable = true;
-        alsa.enable = true;
-        alsa.support32Bit = true;
-
-        media-session.config.bluez-monitor.properties = {
-          # MSBC is not expected to work on all headset + adapter combinations.
-          "bluez5.msbc-support" = true;
-          "bluez5.sbc-xq-support" = true;
-        };
-      };
-    };
-  };
 
   nix = {
     gc = {
