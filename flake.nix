@@ -33,6 +33,7 @@
         ];
 
         hardware.nvidia.prime.offload.enable = false;
+        hardware.nvidia.powerManagement.enable = true;
         hardware.enableRedistributableFirmware = true;
         hardware.opengl.extraPackages = with pkgs; [
           vaapiVdpau
