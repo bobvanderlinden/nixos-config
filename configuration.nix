@@ -308,6 +308,28 @@
 
   nixpkgs.config.allowUnfree = true;
 
+  specialisation = {
+    wayland.configuration = {
+      services.xserver.enable = pkgs.lib.mkForce false;
+      services.xserver.displayManager.lightdm.enable = pkgs.lib.mkForce false;
+      services.xserver.displayManager.gdm.enable = true;
+      services.xserver.displayManager.gdm.wayland = true;
+      services.xserver.displayManager.defaultSession = "sway";
+      services.xserver.videoDrivers = pkgs.lib.mkForce [ ];
+      programs.sway.enable = true;
+      xdg.portal = {
+        enable = true;
+        wlr.enable = true;
+        gtkUsePortal = true;
+        extraPortals = [ pkgs.xdg-desktop-portal-gtk pkgs.xdg-desktop-portal-kde ];
+      };
+      
+      home-manager.users."bob.vanderlinden" = {
+        programs.mako.enable = true;
+        services.dunst.enable = pkgs.lib.mkForce false;
+      };
+    };
+  };
 
   nix = {
     gc = {
