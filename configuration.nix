@@ -337,15 +337,15 @@
       automatic = true;
       options = "--delete-older-than 60d";
     };
-    useSandbox = true;
+    settings = {
+      sandbox = true;
+      extra-sandbox-paths = [ "/etc/nix/netrc" ];
+      trusted-users = [ "root" "bob.vanderlinden" ];
+      substituters = [ "https://cachix.cachix.org" ];
+      experimental-features = [ "nix-command" "flakes" ];
+      netrc-file = "/etc/nix/netrc";
+    };
     package = pkgs.nixFlakes;
-    sandboxPaths = [ "/etc/nix/netrc" ];
-    trustedUsers = [ "root" "bob.vanderlinden" ];
-    binaryCaches = [ "https://cachix.cachix.org" ];
-    extraOptions = ''
-      experimental-features = nix-command flakes ca-references
-      netrc-file = /etc/nix/netrc
-    '';
   };
 
   system.autoUpgrade = {

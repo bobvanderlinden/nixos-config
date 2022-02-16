@@ -44,7 +44,6 @@ in {
       speedcrunch
       ffmpegthumbnailer
       networkmanagerapplet
-      gksu
       rxvt_unicode-with-plugins
       xsel
       lxappearance
