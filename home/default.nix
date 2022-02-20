@@ -55,9 +55,7 @@ in {
       slack
       zoom-us
       watchman
-      dmenu
       i3status
-      chromium
       mono
       inconsolata
       liberation_ttf
@@ -80,7 +78,6 @@ in {
       mypaint
       tiled
       maven
-      terminator
       yq-go
       ripgrep
       gnome3.pomodoro
@@ -112,6 +109,19 @@ in {
           input-feedback-sounds = false;
         };
       };
+    };
+
+    programs.chromium = {
+      enable = true;
+      commandLineArgs = [
+        "--enable-features=WebUIDarkMode,CSSColorSchemeUARendering"
+        "--force-dark-mode"
+        "--disable-gpu-driver-bug-workarounds"
+        "--ignore-gpu-blocklist"
+        "--enable-gpu-rasterization"
+        "--enable-zero-copy"
+        "--enable-features=VaapiVideoDecoder"
+      ];
     };
 
     programs.i3status = {
@@ -508,7 +518,9 @@ in {
     programs.gh.enable = true;
     programs.jq.enable = true;
     programs.neovim.enable = true;
-    home.sessionVariables = {BROWSER = "${pkgs.chromium}/bin/chromium";};
+    home.sessionVariables = {
+      BROWSER = "chromium";
+    };
     programs.autorandr.enable = true;
     programs.direnv = {
       enable = true;
