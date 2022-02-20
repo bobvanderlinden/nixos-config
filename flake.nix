@@ -1,6 +1,8 @@
 {
   nixConfig = {
     substituters = [
+      "https://cache.nixos.org"
+      "https://cachix.cachix.org"
       "https://alejandra.cachix.org"
     ];
   };
@@ -16,41 +18,37 @@
   inputs.alejandra.url = "github:kamadorueda/alejandra";
   inputs.nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
-  outputs = {
-    self,
-    nixpkgs,
-    home-manager,
-    nixos-hardware,
-    alejandra,
-  }: let
+  outputs = inputs: let
     system = "x86_64-linux";
     username = "bob.vanderlinden";
 
     overlay = final: prev: {
       coin = final.callPackage ./packages/coin {};
-      alejandra = alejandra.defaultPackage."${system}";
+      alejandra = inputs.alejandra.defaultPackage."${system}";
     };
 
-    pkgs = import nixpkgs {
+    pkgs = import inputs.nixpkgs {
       inherit system;
-      overlays = [overlay];
+      overlays = [
+        overlay
+      ];
     };
   in rec {
     inherit overlay;
 
     homeManagerConfigurations."${username}" =
-      home-manager.lib.homeManagerConfiguration {
+      inputs.home-manager.lib.homeManagerConfiguration {
         inherit system username;
         configuration = ./home/default.nix;
         homeDirectory = "/home/${username}";
       };
 
     nixosModules.hp-zbook-studio-g5 = {pkgs, ...}: {
-      imports = [
-        nixos-hardware.nixosModules.common-cpu-intel
-        nixos-hardware.nixosModules.common-gpu-nvidia
-        nixos-hardware.nixosModules.common-pc-laptop-ssd
-        nixos-hardware.nixosModules.common-pc-laptop
+      imports = with inputs.nixos-hardware.nixosModules; [
+        common-cpu-intel
+        common-gpu-nvidia
+        common-pc-laptop-ssd
+        common-pc-laptop
       ];
 
       hardware.nvidia.prime.offload.enable = false;
@@ -65,6 +63,9 @@
         libvdpau-va-gl
       ];
     };
+    nixosModules.overlays = {nixpkgs.overlays = [inputs.self.overlay];};
+    nixosModules.hardware-configuration = ./hardware-configuration.nix;
+    nixosModules.system-configuration = ./configuration.nix;
 
     nixosModules.home-manager = {pkgs, ...}: {
       home-manager.verbose = true;
@@ -73,15 +74,15 @@
       home-manager.users."${username}".imports = [./home/default.nix];
     };
 
-    nixosConfigurations.NVC3919 = nixpkgs.lib.nixosSystem {
+    nixosConfigurations.NVC3919 = inputs.nixpkgs.lib.nixosSystem {
       inherit system;
-      modules = [
-        {nixpkgs.overlays = [self.overlay];}
-        self.nixosModules.hp-zbook-studio-g5
-        ./hardware-configuration.nix
-        ./configuration.nix
-        home-manager.nixosModules.home-manager
-        self.nixosModules.home-manager
+      modules = with inputs.self.nixosModules; [
+        inputs.home-manager.nixosModules.home-manager
+        hp-zbook-studio-g5
+        overlays
+        hardware-configuration
+        system-configuration
+        home-manager
       ];
     };
 
