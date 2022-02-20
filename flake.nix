@@ -28,6 +28,7 @@
 
     overlay = final: prev: {
       coin = final.callPackage ./packages/coin {};
+      alejandra = alejandra.defaultPackage."${system}";
     };
 
     pkgs = import nixpkgs {
@@ -85,8 +86,8 @@
     };
 
     devShell."${system}" = pkgs.mkShell {
-      nativeBuildInputs = [
-        alejandra.defaultPackage."${system}"
+      nativeBuildInputs = with pkgs; [
+        alejandra
       ];
     };
   };
