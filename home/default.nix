@@ -1,5 +1,4 @@
-{ pkgs, ... }:
-let
+{pkgs, ...}: let
   vscode = pkgs.vscode;
   pulseaudio = pkgs.pulseaudioFull;
 in {
@@ -205,7 +204,7 @@ in {
       };
     };
 
-    xresources.properties = { "Xft.dpi" = 192; };
+    xresources.properties = {"Xft.dpi" = 192;};
     fonts.fontconfig.enable = true;
     gtk = {
       enable = true;
@@ -225,27 +224,25 @@ in {
         gtk-error-bell = 0
       '';
 
-      gtk3.extraConfig = { gtk-error-bell = 0; };
+      gtk3.extraConfig = {gtk-error-bell = 0;};
     };
     programs.ssh = {
       enable = true;
 
       matchBlocks = {
-        "beheer1.ioservice.net beheer1.stpst.nl beheer2.ioservice.net beheer2.stpst.nl" =
-          {
-            user = "bob.vanderlinden";
-            forwardAgent = false;
-            identityFile = "~/.ssh/nedap_rsa";
-          };
+        "beheer1.ioservice.net beheer1.stpst.nl beheer2.ioservice.net beheer2.stpst.nl" = {
+          user = "bob.vanderlinden";
+          forwardAgent = false;
+          identityFile = "~/.ssh/nedap_rsa";
+        };
 
-        "nl12* nl14* nl22* nl24* vm* nvs* nas* *.healthcare.nedap.local *.consul" =
-          {
-            user = "bob.vanderlinden";
-            forwardAgent = false;
-            identityFile = "~/.ssh/nedap_rsa";
-            extraOptions."VerifyHostKeyDNS" = "no";
-            extraOptions."ProxyJump" = "beheer1.ioservice.net";
-          };
+        "nl12* nl14* nl22* nl24* vm* nvs* nas* *.healthcare.nedap.local *.consul" = {
+          user = "bob.vanderlinden";
+          forwardAgent = false;
+          identityFile = "~/.ssh/nedap_rsa";
+          extraOptions."VerifyHostKeyDNS" = "no";
+          extraOptions."ProxyJump" = "beheer1.ioservice.net";
+        };
 
         "127.0.0.1" = {
           user = "bob.vanderlinden";
@@ -323,13 +320,13 @@ in {
     systemd.user.services.bitwarden = {
       Unit = {
         Description = "Bitwarden";
-        After = [ "graphical-session-pre.target" ];
-        PartOf = [ "graphical-session.target" ];
+        After = ["graphical-session-pre.target"];
+        PartOf = ["graphical-session.target"];
       };
 
-      Install = { WantedBy = [ "graphical-session.target" ]; };
+      Install = {WantedBy = ["graphical-session.target"];};
 
-      Service = { ExecStart = "${pkgs.bitwarden}/bin/bitwarden"; };
+      Service = {ExecStart = "${pkgs.bitwarden}/bin/bitwarden";};
     };
 
     xdg.enable = true;
@@ -346,7 +343,8 @@ in {
         config = {
           modifier = "Mod4";
           # bars = [{ statusCommand = "${pkgs.i3status}/bin/i3status"; }];
-          keybindings = let mod = config.modifier;
+          keybindings = let
+            mod = config.modifier;
           in {
             "${mod}+t" = "exec terminator";
             "${mod}+w" = "exec chromium --disable-gpu-driver-bug-workarounds --ignore-gpu-blocklist --enable-gpu-rasterization --enable-zero-copy --enable-features=VaapiVideoDecoder";
@@ -410,17 +408,12 @@ in {
             "${mod}+Shift+e" = ''
               exec "i3-nagbar -t warning -m 'You pressed the exit shortcut. Do you really want to exit i3? This will end your X session.' -b 'Yes, exit i3' 'i3-msg exit'"'';
 
-            "XF86AudioRaiseVolume" =
-              "exec ${pulseaudio}/bin/pactl set-sink-volume 0 +5%";
-            "XF86AudioLowerVolume" =
-              "exec ${pulseaudio}/bin/pactl set-sink-volume 0 -5%";
-            "XF86AudioMute" =
-              "exec ${pulseaudio}/bin/pactl set-sink-mute 0 toggle";
+            "XF86AudioRaiseVolume" = "exec ${pulseaudio}/bin/pactl set-sink-volume 0 +5%";
+            "XF86AudioLowerVolume" = "exec ${pulseaudio}/bin/pactl set-sink-volume 0 -5%";
+            "XF86AudioMute" = "exec ${pulseaudio}/bin/pactl set-sink-mute 0 toggle";
 
-            "XF86MonBrightnessUp" =
-              "exec ${pkgs.xorg.xbacklight}/bin/xbacklight -inc 5";
-            "XF86MonBrightnessDown" =
-              "exec ${pkgs.xorg.xbacklight}/bin/xbacklight -dec 5";
+            "XF86MonBrightnessUp" = "exec ${pkgs.xorg.xbacklight}/bin/xbacklight -inc 5";
+            "XF86MonBrightnessDown" = "exec ${pkgs.xorg.xbacklight}/bin/xbacklight -dec 5";
 
             "XF86AudioPlay" = "exec ${pkgs.playerctl}/bin/playerctl play";
             "XF86AudioPause" = "exec ${pkgs.playerctl}/bin/playerctl pause";
@@ -428,11 +421,13 @@ in {
             "XF86AudioPrev" = "exec ${pkgs.playerctl}/bin/playerctl previous";
           };
 
-          startup = [{
-            # Auto-start all *.desktop files in auto-start directories.
-            command = "${pkgs.dex}/bin/dex -a";
-            notification = false;
-          }];
+          startup = [
+            {
+              # Auto-start all *.desktop files in auto-start directories.
+              command = "${pkgs.dex}/bin/dex -a";
+              notification = false;
+            }
+          ];
         };
         extraConfig = ''
           default_orientation horizontal
@@ -488,10 +483,8 @@ in {
         pa = "add --patch";
         pc = "commit --patch";
         rf = "reflog";
-        l =
-          "log --graph --pretty='%Cred%h%Creset - %C(bold blue)<%an>%Creset %s%C(yellow)%d%Creset %Cgreen(%cr)' --abbrev-commit --date=relative";
-        pp =
-          "!git push --set-upstream origin $(git rev-parse --abbrev-ref HEAD)";
+        l = "log --graph --pretty='%Cred%h%Creset - %C(bold blue)<%an>%Creset %s%C(yellow)%d%Creset %Cgreen(%cr)' --abbrev-commit --date=relative";
+        pp = "!git push --set-upstream origin $(git rev-parse --abbrev-ref HEAD)";
         recent-branches = "branch --sort=-committerdate";
       };
       ignores = [
@@ -515,7 +508,7 @@ in {
     programs.gh.enable = true;
     programs.jq.enable = true;
     programs.neovim.enable = true;
-    home.sessionVariables = { BROWSER = "${pkgs.chromium}/bin/chromium"; };
+    home.sessionVariables = {BROWSER = "${pkgs.chromium}/bin/chromium";};
     programs.autorandr.enable = true;
     programs.direnv = {
       enable = true;

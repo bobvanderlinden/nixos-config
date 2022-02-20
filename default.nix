@@ -2,21 +2,18 @@ rec {
   nixpkgs = import <nixpkgs>;
   nixos = import <nixpkgs/nixos>;
   test = import <nixpkgs/nixos/tests/make-test.nix> (
-    { pkgs, ...}:
-    rec {
+    {pkgs, ...}: rec {
       name = "desktop";
       meta = {
         maintainers = [];
       };
       nodes = {
-        machine =
-          { pkgs, ... }:
-
-          { imports = [ ./configuration.nix ];
-            networking.hostName = pkgs.lib.mkForce "machine";
-            swapDevices = pkgs.lib.mkForce [];
-            boot = pkgs.lib.mkForce {};
-          };
+        machine = {pkgs, ...}: {
+          imports = [./configuration.nix];
+          networking.hostName = pkgs.lib.mkForce "machine";
+          swapDevices = pkgs.lib.mkForce [];
+          boot = pkgs.lib.mkForce {};
+        };
       };
       testScript = ''
         startAll;

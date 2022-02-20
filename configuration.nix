@@ -1,10 +1,12 @@
-{ config, pkgs, ... }:
-
 {
+  config,
+  pkgs,
+  ...
+}: {
   imports = [
     ./modules/v4l2loopback.nix
   ];
-  systemd.additionalUpstreamSystemUnits = [ "debug-shell.service" ];
+  systemd.additionalUpstreamSystemUnits = ["debug-shell.service"];
 
   time.timeZone = "Europe/Amsterdam";
 
@@ -53,7 +55,7 @@
   };
 
   hardware.v4l2loopback.enable = true;
-  
+
   hardware.video.hidpi.enable = true;
 
   services.pipewire = {
@@ -87,7 +89,7 @@
     };
 
     networkmanager.enable = true;
-    networkmanager.packages = [ pkgs.networkmanager_openvpn ];
+    networkmanager.packages = [pkgs.networkmanager_openvpn];
   };
 
   fonts = {
@@ -169,12 +171,12 @@
 
   services.printing = {
     enable = true;
-    drivers = [ pkgs.gutenprint pkgs.splix pkgs.cupsBjnp ];
+    drivers = [pkgs.gutenprint pkgs.splix pkgs.cupsBjnp];
   };
 
   services.avahi = {
     enable = true;
-    browseDomains = [ ];
+    browseDomains = [];
 
     # Seems to be causing trouble/slowness when resolving hosts
     #nssmdns = true;
@@ -191,7 +193,7 @@
     displayManager.defaultSession = "none+i3";
     displayManager.lightdm.enable = true;
     desktopManager.xterm.enable = false;
-    videoDrivers = [ "nvidia" ];
+    videoDrivers = ["nvidia"];
     xrandrHeads = [
       {
         output = "DP-0";
@@ -220,7 +222,7 @@
 
     windowManager.i3 = {
       enable = true;
-      extraPackages = with pkgs; [ dmenu i3status i3lock ];
+      extraPackages = with pkgs; [dmenu i3status i3lock];
     };
   };
   services.picom = {
@@ -236,7 +238,7 @@
 
   i18n.inputMethod = {
     enabled = "ibus";
-    ibus.engines = with pkgs.ibus-engines; [ uniemoji ];
+    ibus.engines = with pkgs.ibus-engines; [uniemoji];
   };
 
   services.actkbd = {
@@ -244,46 +246,44 @@
     bindings = [
       # "Mute" media key
       {
-        keys = [ 121 ];
-        events = [ "key" ];
+        keys = [121];
+        events = ["key"];
         command = "${pkgs.alsaUtils}/bin/amixer -q set Master toggle";
       }
 
       # "Mute Microphone" button
       {
-        keys = [ 190 ];
-        events = [ "key" ];
+        keys = [190];
+        events = ["key"];
         command = "${pkgs.alsaUtils}/bin/amixer -q set Capture toggle";
       }
 
       # "Lower Volume" media key
       {
-        keys = [ 122 ];
-        events = [ "key" "rep" ];
+        keys = [122];
+        events = ["key" "rep"];
         command = "${pkgs.alsaUtils}/bin/amixer -q set Master 5%- unmute";
       }
 
       # "Raise Volume" media key
       {
-        keys = [ 123 ];
-        events = [ "key" "rep" ];
+        keys = [123];
+        events = ["key" "rep"];
         command = "${pkgs.alsaUtils}/bin/amixer -q set Master 5%+ unmute";
       }
 
       # "Phone connect"
       {
-        keys = [ 56 125 218 ];
-        events = [ "key" ];
-        command =
-          "${pkgs.pulseaudio}/bin/pactl set-card-profile bluez_card.2C:41:A1:C8:E5:04 headset-head-unit";
+        keys = [56 125 218];
+        events = ["key"];
+        command = "${pkgs.pulseaudio}/bin/pactl set-card-profile bluez_card.2C:41:A1:C8:E5:04 headset-head-unit";
       }
 
       # "Phone disconnect"
       {
-        keys = [ 29 56 223 ];
-        events = [ "key" ];
-        command =
-          "${pkgs.pulseaudio}/bin/pactl set-card-profile bluez_card.2C:41:A1:C8:E5:04 a2dp-sink-aac";
+        keys = [29 56 223];
+        events = ["key"];
+        command = "${pkgs.pulseaudio}/bin/pactl set-card-profile bluez_card.2C:41:A1:C8:E5:04 a2dp-sink-aac";
       }
     ];
   };
@@ -322,15 +322,15 @@
       services.xserver.displayManager.gdm.enable = true;
       services.xserver.displayManager.gdm.wayland = true;
       services.xserver.displayManager.defaultSession = "sway";
-      services.xserver.videoDrivers = pkgs.lib.mkForce [ ];
+      services.xserver.videoDrivers = pkgs.lib.mkForce [];
       programs.sway.enable = true;
       xdg.portal = {
         enable = true;
         wlr.enable = true;
         gtkUsePortal = true;
-        extraPortals = [ pkgs.xdg-desktop-portal-gtk pkgs.xdg-desktop-portal-kde ];
+        extraPortals = [pkgs.xdg-desktop-portal-gtk pkgs.xdg-desktop-portal-kde];
       };
-      
+
       home-manager.users."bob.vanderlinden" = {
         programs.mako.enable = true;
         services.dunst.enable = pkgs.lib.mkForce false;
@@ -346,10 +346,10 @@
     };
     settings = {
       sandbox = true;
-      extra-sandbox-paths = [ "/etc/nix/netrc" ];
-      trusted-users = [ "root" "bob.vanderlinden" ];
-      substituters = [ "https://cachix.cachix.org" ];
-      experimental-features = [ "nix-command" "flakes" ];
+      extra-sandbox-paths = ["/etc/nix/netrc"];
+      trusted-users = ["root" "bob.vanderlinden"];
+      substituters = ["https://cachix.cachix.org"];
+      experimental-features = ["nix-command" "flakes"];
       netrc-file = "/etc/nix/netrc";
     };
     package = pkgs.nixFlakes;
@@ -358,7 +358,7 @@
   system.autoUpgrade = {
     enable = false;
     flake = "/home/bob.vanderlinden/projects/bobvanderlinden/nixos-config";
-    flags = [ "--update-input" "nixpkgs" "--commit-lock-file" ];
+    flags = ["--update-input" "nixpkgs" "--commit-lock-file"];
     dates = "17:30";
   };
 
@@ -369,6 +369,4 @@
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "21.03"; # Did you read the comment?
-
 }
-
