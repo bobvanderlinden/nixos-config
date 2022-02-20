@@ -1,4 +1,10 @@
 {
+  nixConfig = {
+    substituters = [
+      "https://alejandra.cachix.org"
+    ];
+  };
+
   inputs.nixos-hardware = {
     url = "github:NixOS/nixos-hardware";
     inputs.nixpkgs.follows = "nixpkgs";
@@ -7,15 +13,24 @@
     url = "github:nix-community/home-manager";
     inputs.nixpkgs.follows = "nixpkgs";
   };
+  inputs.alejandra.url = "github:kamadorueda/alejandra";
   inputs.nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-  outputs = { self, nixpkgs, home-manager, nixos-hardware }:
+
+  outputs = { self, nixpkgs, home-manager, nixos-hardware, alejandra }:
     let
       system = "x86_64-linux";
       username = "bob.vanderlinden";
-    in rec {
+
       overlay = final: prev: {
         coin = final.callPackage ./packages/coin { };
       };
+
+      pkgs = import nixpkgs {
+        inherit system;
+        overlays = [ overlay ];
+      };
+    in rec {
+      inherit overlay;
 
       homeManagerConfigurations."${username}" =
         home-manager.lib.homeManagerConfiguration {
@@ -61,6 +76,12 @@
           ./configuration.nix
           home-manager.nixosModules.home-manager
           self.nixosModules.home-manager
+        ];
+      };
+
+      devShell."${system}" = pkgs.mkShell {
+        nativeBuildInputs = [
+          alejandra.defaultPackage."${system}"
         ];
       };
     };
