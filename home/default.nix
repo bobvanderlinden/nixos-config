@@ -183,16 +183,6 @@ in {
       };
     };
 
-    programs.kitty = {
-      enable = true;
-      settings = {
-        background = "#002B36";
-        font_size = "11.0";
-        input_delay = "0";
-        enable_audio_bell = "no";
-      };
-    };
-
     programs.terminator = {
       enable = true;
       config = {
