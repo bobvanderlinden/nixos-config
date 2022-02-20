@@ -92,7 +92,14 @@
 
   fonts = {
     fontDir.enable = true;
-    fontconfig.enable = true;
+    fontconfig = {
+      enable = true;
+      defaultFonts = {
+        monospace = [
+          "DejaVu Sans Mono for Powerline Book"
+        ];
+      };
+    };
     fonts = with pkgs; [
       corefonts # Microsoft free fonts
       iosevka
