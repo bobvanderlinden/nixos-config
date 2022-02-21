@@ -499,25 +499,25 @@
           '';
         };
 
-        # services.swayidle = {
-        #   enable = true;
-        #   timeouts = [
-        #     {
-        #       timeout = 5 * 60;
-        #       command = "swaylock -f";
-        #     }
-        #   ];
-        #   events = [
-        #     {
-        #       event = "before-sleep";
-        #       command = "swaylock -f";
-        #     }
-        #     {
-        #       event = "lock";
-        #       command = "swaylock -f";
-        #     }
-        #   ];
-        # };
+        services.swayidle = {
+          enable = true;
+          timeouts = [
+            {
+              timeout = 5 * 60;
+              command = "swaylock -f";
+            }
+          ];
+          events = [
+            {
+              event = "before-sleep";
+              command = "swaylock -f";
+            }
+            {
+              event = "lock";
+              command = "swaylock -f";
+            }
+          ];
+        };
 
         programs.waybar = {
           enable = true;
