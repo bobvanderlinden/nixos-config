@@ -99,6 +99,7 @@ in {
       luakit
       nodePackages.zx
       deno
+      jujutsu
     ];
 
     dconf = {

@@ -18,6 +18,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     alejandra.url = "github:kamadorueda/alejandra";
+    jujutsu.url = "github:martinvonz/jj";
   };
 
   outputs = inputs: let
@@ -26,7 +27,8 @@
 
     overlay = final: prev: {
       coin = final.callPackage ./packages/coin {};
-      alejandra = inputs.alejandra.defaultPackage."${system}";
+      jujutsu = inputs.jujutsu.defaultPackage.${system};
+      alejandra = inputs.alejandra.defaultPackage.${system};
     };
 
     pkgs = import inputs.nixpkgs {
@@ -39,9 +41,13 @@
   in rec {
     inherit overlay;
 
-    homeManagerConfigurations."${username}" =
+    packages.${system} = {
+      inherit (pkgs) coin jujutsu;
+    };
+
+    homeManagerConfigurations.${username} =
       inputs.home-manager.lib.homeManagerConfiguration {
-        inherit system username;
+        inherit system username pkgs;
         configuration = ./home/default.nix;
         homeDirectory = "/home/${username}";
       };
@@ -89,7 +95,7 @@
       ];
     };
 
-    devShell."${system}" = pkgs.mkShell {
+    devShell.${system} = pkgs.mkShell {
       nativeBuildInputs = with pkgs; [
         alejandra
       ];
