@@ -365,6 +365,7 @@
 
       home-manager.users."bob.vanderlinden" = {
         services.dunst.enable = pkgs.lib.mkForce false;
+        services.network-manager-applet.enable = pkgs.lib.mkForce false;
         xsession.enable = pkgs.lib.mkForce false;
         xsession.windowManager.i3.enable = pkgs.lib.mkForce false;
 
@@ -469,6 +470,7 @@
                 command = "${pkgs.dex}/bin/dex -a";
               }
               {command = "mako";}
+              {command = "nm-applet --indicator";}
             ];
           };
           extraConfig = ''
