@@ -116,11 +116,11 @@ in {
       commandLineArgs = [
         "--enable-features=WebUIDarkMode,CSSColorSchemeUARendering"
         "--force-dark-mode"
-        "--disable-gpu-driver-bug-workarounds"
-        "--ignore-gpu-blocklist"
-        "--enable-gpu-rasterization"
-        "--enable-zero-copy"
-        "--enable-features=VaapiVideoDecoder"
+        # "--disable-gpu-driver-bug-workarounds"
+        # "--ignore-gpu-blocklist"
+        # "--enable-gpu-rasterization"
+        # "--enable-zero-copy"
+        # "--enable-features=VaapiVideoDecoder"
       ];
     };
 
