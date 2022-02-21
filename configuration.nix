@@ -523,12 +523,18 @@
 
         programs.waybar = {
           enable = true;
-          style = builtins.readFile (
-            pkgs.fetchurl {
-              url = "https://raw.githubusercontent.com/mnussbaum/base16-waybar/d2f943b1abb9c9f295e4c6760b7bdfc2125171d2/colors/base16-default-dark.css";
-              hash = "sha256:1dncxqgf7zsk39bbvrlnh89lsgr2fnvq5l50xvmpnibk764bz0jb";
-            }
-          );
+          style = let
+            # base16-default-dark-css = pkgs.fetchurl {
+            #   url = "https://raw.githubusercontent.com/mnussbaum/base16-waybar/d2f943b1abb9c9f295e4c6760b7bdfc2125171d2/colors/base16-default-dark.css";
+            #   hash = "sha256:1dncxqgf7zsk39bbvrlnh89lsgr2fnvq5l50xvmpnibk764bz0jb";
+            # };
+            style = pkgs.fetchurl {
+              url = "https://raw.githubusercontent.com/robertjk/dotfiles/253b86442dae4d07d872e8b963fa33b5f8819594/.config/waybar/style.css";
+              hash = "sha256-7bEOPMslgpXsKOa2aMqVoV5z1OSSRqXs2UGDgWwejx4=";
+            };
+          in ''
+            @import "${style}";
+          '';
           settings = {
             mainBar = {
               position = "bottom";
@@ -537,6 +543,14 @@
               modules-right = ["network" "battery" "clock" "tray"];
               "sway/window" = {
                 max-length = 50;
+              };
+              network = {
+                format = "";
+                format-wired = "";
+                format-linked = "";
+                format-wifi = "{essid} {icon}";
+                format-disconnected = "";
+                tooltip-format = "{ifname}\n{ipaddr}\n{essid} ({signalStrength}%)";
               };
               battery = {
                 format = "{capacity}% {icon}";
