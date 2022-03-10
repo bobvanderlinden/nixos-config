@@ -328,6 +328,9 @@
       services.xserver.displayManager.defaultSession = pkgs.lib.mkForce "sway";
       services.xserver.videoDrivers = pkgs.lib.mkForce [];
 
+      # Prevent restarting sway when using nixos-rebuild switch
+      systemd.services.sway.restartIfChanged = false;
+
       programs.sway = {
         enable = true;
         extraPackages = with pkgs; [
