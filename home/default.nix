@@ -100,6 +100,7 @@ in {
       nodePackages.zx
       deno
       jujutsu
+      procs
     ];
 
     dconf = {
