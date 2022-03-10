@@ -60,6 +60,11 @@
         common-pc-laptop
       ];
 
+      # nixos-hardware defaults to va_gl for intel chipsets.
+      # This breaks on systems with nvidia.
+      # See https://github.com/NixOS/nixos-hardware/issues/388
+      environment.variables.VDPAU_DRIVER = "nvidia";
+
       hardware.nvidia.prime.offload.enable = false;
       hardware.nvidia.powerManagement.enable = true;
       hardware.enableRedistributableFirmware = true;
