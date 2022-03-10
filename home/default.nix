@@ -66,7 +66,7 @@ in {
       vlc
       webtorrent_desktop
       patchelf
-      docker_compose
+      docker-compose
       httpie
       gimp
       feh

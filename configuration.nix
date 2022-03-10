@@ -89,7 +89,7 @@
     };
 
     networkmanager.enable = true;
-    networkmanager.packages = [pkgs.networkmanager_openvpn];
+    networkmanager.packages = with pkgs; [networkmanager-openvpn];
   };
 
   fonts = {
@@ -172,7 +172,7 @@
 
   services.printing = {
     enable = true;
-    drivers = [pkgs.gutenprint pkgs.splix pkgs.cupsBjnp];
+    drivers = with pkgs; [gutenprint splix cups-bjnp];
   };
 
   services.avahi = {
