@@ -45,12 +45,11 @@
       inherit (pkgs) coin jujutsu;
     };
 
-    homeManagerConfigurations.${username} =
-      inputs.home-manager.lib.homeManagerConfiguration {
-        inherit system username pkgs;
-        configuration = ./home/default.nix;
-        homeDirectory = "/home/${username}";
-      };
+    homeManagerConfigurations.${username} = inputs.home-manager.lib.homeManagerConfiguration {
+      inherit system username pkgs;
+      configuration = ./home/default.nix;
+      homeDirectory = "/home/${username}";
+    };
 
     nixosModules.hp-zbook-studio-g5 = {pkgs, ...}: {
       imports = with inputs.nixos-hardware.nixosModules; [
