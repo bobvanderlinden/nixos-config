@@ -2,7 +2,7 @@
   nixConfig = {
     substituters = [
       "https://cache.nixos.org"
-      "https://cachix.cachix.org"
+      # "https://cachix.cachix.org"
       "https://alejandra.cachix.org"
     ];
   };
