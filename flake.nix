@@ -112,7 +112,7 @@
 
     devShell.${system} = pkgs.mkShell {
       nativeBuildInputs = with pkgs; [
-        alejandra
+        nixpkgs-fmt
       ];
     };
   };
