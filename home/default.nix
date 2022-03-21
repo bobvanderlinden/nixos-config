@@ -101,6 +101,8 @@ in {
       deno
       jujutsu
       procs
+      element-desktop
+      thunderbird
     ];
 
     dconf = {
