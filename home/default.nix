@@ -87,7 +87,6 @@ in {
       fd
       procs
       sd
-      dust
       bottom
       neo4j-desktop
       watchexec
@@ -345,13 +344,16 @@ in {
 
     xdg.enable = true;
     # news.display = "silent";
+
+    home.pointerCursor = {
+      x11.enable = true;
+      name = "Vanilla-DMZ";
+      package = pkgs.vanilla-dmz;
+      size = 128;
+    };
+
     xsession = {
       enable = true;
-      pointerCursor = {
-        name = "Vanilla-DMZ";
-        package = pkgs.vanilla-dmz;
-        size = 128;
-      };
       windowManager.i3 = rec {
         enable = true;
         config = {
