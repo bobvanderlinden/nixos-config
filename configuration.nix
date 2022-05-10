@@ -71,11 +71,6 @@
     };
   };
 
-  services.ssmtp = {
-    # directDelivery = true;
-    hostName = "in1-smtp.messagingengine.com";
-  };
-
   networking = {
     hostName = "NVC3919";
 
@@ -88,8 +83,10 @@
       allowPing = true;
     };
 
-    networkmanager.enable = true;
-    networkmanager.packages = with pkgs; [networkmanager-openvpn];
+    networkmanager = {
+      enable = true;
+      plugins = with pkgs; [networkmanager-openvpn];
+    };
   };
 
   fonts = {
