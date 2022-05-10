@@ -98,7 +98,7 @@ in {
       luakit
       nodePackages.zx
       deno
-      jujutsu
+      # jujutsu
       procs
       element-desktop
       thunderbird
