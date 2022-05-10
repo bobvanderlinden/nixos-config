@@ -27,6 +27,7 @@
 
     overlay = final: prev: {
       coin = final.callPackage ./packages/coin {};
+      gnome-dbus-emulation-wlr = final.callPackage ./packages/gnome-dbus-emulation-wlr {};
       jujutsu = inputs.jujutsu.defaultPackage.${system};
       alejandra = inputs.alejandra.defaultPackage.${system};
     };
@@ -42,7 +43,7 @@
     inherit overlay;
 
     packages.${system} = {
-      inherit (pkgs) coin jujutsu;
+      inherit (pkgs) coin jujutsu gnome-dbus-emulation-wlr;
     };
 
     homeManagerConfigurations.${username} = inputs.home-manager.lib.homeManagerConfiguration {
@@ -78,14 +79,14 @@
       hardware.nvidia.powerManagement.enable = true;
       hardware.enableRedistributableFirmware = true;
 
-      hardware.opengl.extraPackages = with pkgs; [
-        vaapiVdpau
-        libvdpau-va-gl
-      ];
-      hardware.opengl.extraPackages32 = with pkgs.pkgsi686Linux; [
-        vaapiVdpau
-        libvdpau-va-gl
-      ];
+      # hardware.opengl.extraPackages = with pkgs; [
+      #   vaapiVdpau
+      #   libvdpau-va-gl
+      # ];
+      # hardware.opengl.extraPackages32 = with pkgs.pkgsi686Linux; [
+      #   vaapiVdpau
+      #   libvdpau-va-gl
+      # ];
     };
     nixosModules.overlays = {nixpkgs.overlays = [inputs.self.overlay];};
     nixosModules.hardware-configuration = ./hardware-configuration.nix;

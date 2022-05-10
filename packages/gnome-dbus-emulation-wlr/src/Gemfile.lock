@@ -1,0 +1,15 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    byebug (11.0.1)
+    ruby-dbus (0.16.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  byebug
+  ruby-dbus
+
+BUNDLED WITH
+   2.1.0.pre.2

@@ -1,6 +1,7 @@
 {
   config,
   pkgs,
+  lib,
   ...
 }: {
   imports = [
@@ -286,7 +287,7 @@
     ];
   };
   # users.extraUsers.bob.extraGroups = [ "sway" ];
-  programs.sway.enable = true;
+  # programs.sway.enable = true;
 
   programs.zsh.enable = true;
   programs.zsh.enableCompletion = true;
