@@ -88,7 +88,7 @@ in {
       procs
       sd
       bottom
-      neo4j-desktop
+      # neo4j-desktop
       watchexec
       bitwarden-cli
       xsv
