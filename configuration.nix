@@ -57,7 +57,6 @@
   # Workaround: https://github.com/NixOS/nixpkgs/issues/114222
   systemd.user.services.telephony_client.enable = false;
 
-  services.blueman.enable = true;
   hardware.opengl = {
     enable = true;
     driSupport32Bit = true;
