@@ -25,7 +25,7 @@
   boot.initrd.luks.devices.luksroot = {
     device = "/dev/disk/by-uuid/cd9a4de0-421a-4dfa-b029-ec5d167bee8b";
     allowDiscards = true;
-    fallbackToPassword = true;
+    # fallbackToPassword = true;
   };
 
   fileSystems."/" = {
