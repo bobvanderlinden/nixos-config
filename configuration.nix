@@ -43,8 +43,16 @@
 
   security.sudo.enable = true;
 
-  hardware.bluetooth.enable = true;
-  hardware.bluetooth.hsphfpd.enable = true;
+  hardware.bluetooth = {
+    enable = true;
+    # hsphfpd.enable = true;
+    settings = {
+      General = {
+        # To enable BlueZ Battery Provider
+        Experimental = true;
+      };
+    };
+  };
 
   # Workaround: https://github.com/NixOS/nixpkgs/issues/114222
   systemd.user.services.telephony_client.enable = false;

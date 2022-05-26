@@ -95,7 +95,7 @@ in {
       q-text-as-data
       httpie
       delta
-      luakit
+      # luakit
       nodePackages.zx
       deno
       # jujutsu
