@@ -40,6 +40,7 @@
       homeDirectory = "/home/${username}";
     };
 
+    nixosModules.suite-single-user = ./modules/suites/single-user.nix;
     nixosModules.hp-zbook-studio-g5 = {
       pkgs,
       config,
@@ -82,11 +83,13 @@
       inherit system;
       modules = with inputs.self.nixosModules; [
         inputs.home-manager.nixosModules.home-manager
+        suite-single-user
         hp-zbook-studio-g5
         overlays
         hardware-configuration
         system-configuration
         home-manager
+        {suites.single-user.user = username;}
       ];
     };
 

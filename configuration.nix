@@ -11,24 +11,7 @@
 
   time.timeZone = "Europe/Amsterdam";
 
-  users.users."bob.vanderlinden" = {
-    uid = 1000;
-    isNormalUser = true;
-    extraGroups = [
-      "wheel"
-      "network"
-      "uucp"
-      "dialout"
-      "vboxusers"
-      "networkmanager"
-      "docker"
-      "audio"
-      "video"
-      "input"
-      "sudo"
-    ];
-    useDefaultShell = true;
-  };
+  suites.single-user.enable = true;
 
   boot.initrd.systemd.enable = true;
 
@@ -204,10 +187,7 @@
   services.xserver = {
     enable = true;
     displayManager.gdm.enable = true;
-    displayManager.autoLogin = {
-      enable = true;
-      user = "bob.vanderlinden";
-    };
+    displayManager.autoLogin.enable = true;
     displayManager.defaultSession = "none+i3";
     desktopManager.xterm.enable = false;
     videoDrivers = ["nvidia"];
@@ -382,7 +362,7 @@
         # ];
       };
 
-      home-manager.users."bob.vanderlinden" = {
+      home-manager.users."${config.suites.single-user.user}" = {
         services.dunst.enable = pkgs.lib.mkForce false;
         services.network-manager-applet.enable = pkgs.lib.mkForce false;
         xsession.enable = pkgs.lib.mkForce false;
@@ -611,7 +591,7 @@
     settings = {
       sandbox = true;
       extra-sandbox-paths = ["/etc/nix/netrc"];
-      trusted-users = ["root" "bob.vanderlinden"];
+      trusted-users = ["root" "${config.suites.single-user.user}"];
       substituters = ["https://cachix.cachix.org"];
       experimental-features = ["nix-command" "flakes"];
       netrc-file = "/etc/nix/netrc";
