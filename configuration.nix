@@ -203,8 +203,12 @@
   # Enable the X11 windowing system.
   services.xserver = {
     enable = true;
+    displayManager.gdm.enable = true;
+    displayManager.autoLogin = {
+      enable = true;
+      user = "bob.vanderlinden";
+    };
     displayManager.defaultSession = "none+i3";
-    displayManager.lightdm.enable = true;
     desktopManager.xterm.enable = false;
     videoDrivers = ["nvidia"];
     xrandrHeads = [
@@ -335,9 +339,7 @@
 
       services.picom.enable = pkgs.lib.mkForce false;
 
-      services.xserver.displayManager.lightdm.enable = pkgs.lib.mkForce false;
       systemd.services.display-manager.enable = true;
-      services.xserver.displayManager.gdm.enable = true;
       services.xserver.displayManager.gdm.wayland = true;
       services.xserver.displayManager.defaultSession = pkgs.lib.mkForce "sway";
       services.xserver.videoDrivers = pkgs.lib.mkForce [];
