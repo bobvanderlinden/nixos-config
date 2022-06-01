@@ -333,6 +333,8 @@
       # Unfortunately this must be true for GDM to work properly.
       services.xserver.enable = true;
 
+      services.picom.enable = pkgs.lib.mkForce false;
+
       services.xserver.displayManager.lightdm.enable = pkgs.lib.mkForce false;
       systemd.services.display-manager.enable = true;
       services.xserver.displayManager.gdm.enable = true;
@@ -372,10 +374,10 @@
         enable = true;
         wlr.enable = true;
         gtkUsePortal = true;
-        extraPortals = with pkgs; [
-          xdg-desktop-portal-gtk
-          xdg-desktop-portal-kde
-        ];
+        # extraPortals = with pkgs; [
+        #   xdg-desktop-portal-gtk
+        #   # xdg-desktop-portal-kde
+        # ];
       };
 
       home-manager.users."bob.vanderlinden" = {
