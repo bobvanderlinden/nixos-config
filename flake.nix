@@ -1,12 +1,4 @@
 {
-  nixConfig = {
-    substituters = [
-      "https://cache.nixos.org"
-      # "https://cachix.cachix.org"
-      "https://alejandra.cachix.org"
-    ];
-  };
-
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     home-manager = {
@@ -17,8 +9,6 @@
       url = "github:NixOS/nixos-hardware";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    alejandra.url = "github:kamadorueda/alejandra";
-    jujutsu.url = "github:martinvonz/jj";
   };
 
   outputs = inputs: let
@@ -28,8 +18,6 @@
     overlay = final: prev: {
       coin = final.callPackage ./packages/coin {};
       gnome-dbus-emulation-wlr = final.callPackage ./packages/gnome-dbus-emulation-wlr {};
-      jujutsu = inputs.jujutsu.defaultPackage.${system};
-      alejandra = inputs.alejandra.defaultPackage.${system};
     };
 
     pkgs = import inputs.nixpkgs {
@@ -43,7 +31,7 @@
     inherit overlay;
 
     packages.${system} = {
-      inherit (pkgs) coin jujutsu gnome-dbus-emulation-wlr;
+      inherit (pkgs) coin gnome-dbus-emulation-wlr;
     };
 
     homeManagerConfigurations.${username} = inputs.home-manager.lib.homeManagerConfiguration {
