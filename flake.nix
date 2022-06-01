@@ -66,15 +66,6 @@
 
       hardware.nvidia.powerManagement.enable = true;
       hardware.enableRedistributableFirmware = true;
-
-      # hardware.opengl.extraPackages = with pkgs; [
-      #   vaapiVdpau
-      #   libvdpau-va-gl
-      # ];
-      # hardware.opengl.extraPackages32 = with pkgs.pkgsi686Linux; [
-      #   vaapiVdpau
-      #   libvdpau-va-gl
-      # ];
     };
     nixosModules.overlays = {nixpkgs.overlays = [inputs.self.overlay];};
     nixosModules.hardware-configuration = ./hardware-configuration.nix;
