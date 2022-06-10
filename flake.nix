@@ -41,6 +41,8 @@
     };
 
     nixosModules.suite-single-user = ./modules/suites/single-user.nix;
+    nixosModules.suite-i3 = ./modules/suites/i3.nix;
+    nixosModules.suite-sway = ./modules/suites/sway.nix;
     nixosModules.hp-zbook-studio-g5 = {
       pkgs,
       config,
@@ -84,6 +86,8 @@
       modules = with inputs.self.nixosModules; [
         inputs.home-manager.nixosModules.home-manager
         suite-single-user
+        suite-i3
+        suite-sway
         hp-zbook-studio-g5
         overlays
         hardware-configuration
