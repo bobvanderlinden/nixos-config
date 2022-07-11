@@ -255,8 +255,8 @@ with lib; {
                 for_window [class="gnome-pomodoro"] move scratchpad
                 for_window [class="gnome-pomodoro"] sticky enable
                 for_window [class="floating"] floating enable
-                for_window [class="zoom"] floating enable
-                for_window [class="zoom"] sticky enable
+                for_window [title="Zoom Meeting"] floating enable
+                for_window [title="Zoom Meeting"] sticky enable
 
                 for_window [window_type="dialog"] floating enable
                 for_window [window_type="utility"] floating enable
