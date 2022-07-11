@@ -348,5 +348,7 @@ in {
     };
     programs.htop.enable = true;
     programs.home-manager.enable = true;
+
+    home.stateVersion = "21.03";
   };
 }
