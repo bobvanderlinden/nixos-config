@@ -175,9 +175,9 @@
   location.provider = "geoclue2";
 
   # Enable the X11 windowing system.
+  services.greetd.enable = true;
   services.xserver = {
     enable = true;
-    displayManager.gdm.enable = true;
     displayManager.autoLogin.enable = true;
     desktopManager.xterm.enable = false;
     videoDrivers = ["nvidia"];
