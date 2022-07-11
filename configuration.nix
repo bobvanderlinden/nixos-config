@@ -62,12 +62,6 @@
     pulse.enable = true;
     alsa.enable = true;
     alsa.support32Bit = true;
-
-    media-session.config.bluez-monitor.properties = {
-      # MSBC is not expected to work on all headset + adapter combinations.
-      "bluez5.msbc-support" = true;
-      "bluez5.sbc-xq-support" = true;
-    };
   };
 
   networking = {
