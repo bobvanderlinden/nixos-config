@@ -103,6 +103,7 @@ in {
       procs
       element-desktop
       thunderbird
+      inkscape
     ];
 
     dconf = {
