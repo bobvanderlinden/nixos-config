@@ -34,10 +34,15 @@
       inherit (pkgs) coin gnome-dbus-emulation-wlr;
     };
 
-    homeManagerConfigurations.${username} = inputs.home-manager.lib.homeManagerConfiguration {
-      inherit system username pkgs;
-      configuration = ./home/default.nix;
-      homeDirectory = "/home/${username}";
+    homeConfigurations.${username} = inputs.home-manager.lib.homeManagerConfiguration {
+      inherit pkgs;
+      modules = [
+        ./home
+        {
+          home.username = username;
+          home.homeDirectory = "/home/${username}";
+        }
+      ];
     };
 
     nixosModules.suite-single-user = ./modules/suites/single-user.nix;
