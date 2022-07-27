@@ -50,7 +50,6 @@ in {
       gitAndTools.hub
       gitAndTools.gh
       git-cola
-      git-branchless
       gnome3.file-roller
       clang
       slack
