@@ -241,6 +241,7 @@
     #   "fixed-cidr-v6" = "fd00::/80";
     # };
   };
+  networking.firewall.trustedInterfaces = ["docker0"];
 
   users.defaultUserShell = pkgs.zsh;
 
