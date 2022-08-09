@@ -25,6 +25,13 @@ with lib; {
         enable = true;
         vSync = true;
       };
+      xdg.portal = {
+        enable = true;
+        extraPortals = with pkgs; [
+          xdg-desktop-portal-gtk
+        ];
+      };
+
       programs.xss-lock.enable = true;
       services.gnome.gnome-keyring.enable = true;
       services.gvfs.enable = true;
