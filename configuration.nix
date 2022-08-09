@@ -133,6 +133,7 @@
   services.acpid.enable = true;
   security.polkit.enable = true;
   services.upower.enable = true;
+  services.tlp.enable = true;
 
   services.udev.extraRules = ''
     # Thunderbolt
