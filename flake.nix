@@ -17,6 +17,7 @@
 
     overlay = final: prev: {
       coin = final.callPackage ./packages/coin {};
+      git-worktree-shell = final.callPackage ./packages/git-worktree-shell {};
       gnome-dbus-emulation-wlr = final.callPackage ./packages/gnome-dbus-emulation-wlr {};
     };
 
