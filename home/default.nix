@@ -103,6 +103,7 @@ in {
       element-desktop
       thunderbird
       inkscape
+      git-worktree-shell
     ];
 
     dconf = {
@@ -309,9 +310,15 @@ in {
         pa = "add --patch";
         pc = "commit --patch";
         rf = "reflog";
+        t = "tag";
         l = "log --graph --pretty='%Cred%h%Creset - %C(bold blue)<%an>%Creset %s%C(yellow)%d%Creset %Cgreen(%cr)' --abbrev-commit --date=relative";
         pp = "!git push --set-upstream origin $(git rev-parse --abbrev-ref HEAD)";
         recent-branches = "branch --sort=-committerdate";
+        fixup = "commit --fixup";
+        pr-log = "l origin/HEAD..";
+        pr-edit = "rebase --interactive --autosquash --rerere-autoupdate --rebase-merges --fork-point origin/HEAD";
+        pr-clean = "rebase --autosquash --rerere-autoupdate --empty drop --no-keep-empty --fork-point origin/HEAD";
+        pr-update = "pull --rebase=merges origin/HEAD";
       };
       ignores = [
         ".direnv"
@@ -329,6 +336,8 @@ in {
         init.defaultBranch = "master";
         core.excludesfile = "~/.config/git/ignore";
         url."git@github.com:".insteadOf = "https://github.com/";
+        branch.sort = "-committerdate";
+        tag.sort = "-v:refname";
       };
     };
     programs.gh.enable = true;
