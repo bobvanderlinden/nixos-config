@@ -97,7 +97,7 @@
     fonts = with pkgs; [
       font-awesome
       corefonts # Microsoft free fonts
-      iosevka
+      # iosevka # Font unable to build
       meslo-lg
       # nerdfonts
       source-code-pro
