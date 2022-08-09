@@ -7,7 +7,8 @@
   imports = [
     ./modules/v4l2loopback.nix
   ];
-  systemd.additionalUpstreamSystemUnits = ["debug-shell.service"];
+  # Allow opening a shell during boot.
+  # systemd.additionalUpstreamSystemUnits = ["debug-shell.service"];
 
   time.timeZone = "Europe/Amsterdam";
 
