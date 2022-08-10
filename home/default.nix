@@ -294,7 +294,6 @@ in {
       delta.enable = true;
       aliases = {
         unstage = "reset HEAD --";
-        pr = "pull --rebase";
         addp = "add --patch";
         comp = "commit --patch";
         co = "checkout";
@@ -317,7 +316,7 @@ in {
         fixup = "commit --fixup";
         pr-log = "l origin/HEAD..";
         pr-edit = "rebase --interactive --autosquash --rerere-autoupdate --rebase-merges --fork-point origin/HEAD";
-        pr-clean = "rebase -c sequence.editor=true rebase --interactive --autosquash --rerere-autoupdate --empty drop --no-keep-empty --fork-point origin/HEAD";
+        pr-clean = "-c sequence.editor=true rebase --interactive --autosquash --rerere-autoupdate --empty drop --no-keep-empty --fork-point origin/HEAD";
         pr-update = "pull --rebase=merges origin/HEAD";
       };
       ignores = [
