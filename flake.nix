@@ -46,51 +46,23 @@
       ];
     };
 
-    nixosModules.suite-single-user = ./system/modules/suites/single-user.nix;
-    nixosModules.suite-i3 = ./system/modules/suites/i3.nix;
-    nixosModules.suite-sway = ./system/modules/suites/sway.nix;
-    nixosModules.hp-zbook-studio-g5 = {
-      pkgs,
-      config,
-      ...
-    }: {
-      imports = with inputs.nixos-hardware.nixosModules; [
-        # common-cpu-intel
-        # common-gpu-nvidia
-        common-pc-laptop-ssd
-        common-pc-laptop
-      ];
-
-      # Replacement for common-cpu-intel
-      boot.initrd.kernelModules = ["i915"];
-      hardware.cpu.intel.updateMicrocode = config.hardware.enableRedistributableFirmware;
-
-      # Replacement for common-gpu-nvidia
-      services.xserver.videoDrivers = ["nvidia"];
-
-      # nixos-hardware defaults to va_gl for intel chipsets.
-      # This breaks on systems with nvidia.
-      # See https://github.com/NixOS/nixos-hardware/issues/388
-      environment.variables.VDPAU_DRIVER = "nvidia";
-
-      hardware.nvidia.powerManagement.enable = true;
-      hardware.enableRedistributableFirmware = true;
-    };
-    nixosModules.overlays = {nixpkgs.overlays = [inputs.self.overlay];};
-    nixosModules.hardware-configuration = ./system/hardware-configuration.nix;
-    nixosModules.system-configuration = ./system/configuration.nix;
-
-    nixosModules.home-manager = {pkgs, ...}: {
-      home-manager.verbose = true;
-      home-manager.useGlobalPkgs = true;
-      home-manager.useUserPackages = true;
-      home-manager.users."${username}".imports = [./home/default.nix];
+    nixosModules = {
+      overlays = {nixpkgs.overlays = [inputs.self.overlay];};
+      suite-single-user = ./system/modules/suites/single-user.nix;
+      suite-i3 = ./system/modules/suites/i3.nix;
+      suite-sway = ./system/modules/suites/sway.nix;
+      home-manager = ./system/modules/home-manager.nix;
+      hp-zbook-studio-g5 = ./system/modules/hp-zbook-studio-g5.nix;
+      hardware-configuration = ./system/hardware-configuration.nix;
+      system-configuration = ./system/configuration.nix;
     };
 
     nixosConfigurations.NVC3919 = inputs.nixpkgs.lib.nixosSystem {
       inherit system;
+      specialArgs = {
+        inherit inputs;
+      };
       modules = with inputs.self.nixosModules; [
-        inputs.home-manager.nixosModules.home-manager
         suite-single-user
         suite-i3
         suite-sway
