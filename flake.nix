@@ -29,7 +29,7 @@
       ];
     };
   in rec {
-    inherit overlay;
+    overlays.default = overlay;
 
     packages.${system} = {
       inherit (pkgs) coin gnome-dbus-emulation-wlr;
@@ -47,14 +47,14 @@
     };
 
     nixosModules = {
-      overlays = {nixpkgs.overlays = [inputs.self.overlay];};
-      suite-single-user = ./system/modules/suites/single-user.nix;
-      suite-i3 = ./system/modules/suites/i3.nix;
-      suite-sway = ./system/modules/suites/sway.nix;
-      home-manager = ./system/modules/home-manager.nix;
-      hp-zbook-studio-g5 = ./system/modules/hp-zbook-studio-g5.nix;
-      hardware-configuration = ./system/hardware-configuration.nix;
-      system-configuration = ./system/configuration.nix;
+      overlays = {nixpkgs.overlays = [inputs.self.overlays.default];};
+      suite-single-user = import ./system/modules/suites/single-user.nix;
+      suite-i3 = import ./system/modules/suites/i3.nix;
+      suite-sway = import ./system/modules/suites/sway.nix;
+      home-manager = import ./system/modules/home-manager.nix;
+      hp-zbook-studio-g5 = import ./system/modules/hp-zbook-studio-g5.nix;
+      hardware-configuration = import ./system/hardware-configuration.nix;
+      system-configuration = import ./system/configuration.nix;
       single-user = {suites.single-user.user = username;};
     };
 
@@ -66,7 +66,7 @@
       modules = builtins.attrValues inputs.self.nixosModules;
     };
 
-    devShell.${system} = pkgs.mkShell {
+    devShells.${system}.default = pkgs.mkShell {
       nativeBuildInputs = with pkgs; [
         nixpkgs-fmt
       ];
