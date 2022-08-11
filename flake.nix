@@ -46,9 +46,9 @@
       ];
     };
 
-    nixosModules.suite-single-user = ./modules/suites/single-user.nix;
-    nixosModules.suite-i3 = ./modules/suites/i3.nix;
-    nixosModules.suite-sway = ./modules/suites/sway.nix;
+    nixosModules.suite-single-user = ./system/modules/suites/single-user.nix;
+    nixosModules.suite-i3 = ./system/modules/suites/i3.nix;
+    nixosModules.suite-sway = ./system/modules/suites/sway.nix;
     nixosModules.hp-zbook-studio-g5 = {
       pkgs,
       config,
@@ -77,8 +77,8 @@
       hardware.enableRedistributableFirmware = true;
     };
     nixosModules.overlays = {nixpkgs.overlays = [inputs.self.overlay];};
-    nixosModules.hardware-configuration = ./hardware-configuration.nix;
-    nixosModules.system-configuration = ./configuration.nix;
+    nixosModules.hardware-configuration = ./system/hardware-configuration.nix;
+    nixosModules.system-configuration = ./system/configuration.nix;
 
     nixosModules.home-manager = {pkgs, ...}: {
       home-manager.verbose = true;

@@ -10,13 +10,13 @@ stdenv.mkDerivation rec {
   pname = "gnome-dbus-emulation-wlr";
   version = "unstable-2022-02-21";
 
-  # src = fetchFromGitLab {
-  #   owner = "jamedjo";
-  #   repo = "gnome-dbus-emulation-wlr";
-  #   rev = "c1314b12de214505af4b1b6007686ccc91692892";
-  #   hash = "sha256-ghDI08f/1avP+HUpQAoZjZ9bY0FILXKquRvZfkrgpTU=";
-  # };
-  src = ./src;
+  src = fetchFromGitLab {
+    owner = "jamedjo";
+    repo = "gnome-dbus-emulation-wlr";
+    rev = "c1314b12de214505af4b1b6007686ccc91692892";
+    hash = "sha256-ghDI08f/1avP+HUpQAoZjZ9bY0FILXKquRvZfkrgpTU=";
+  };
+  # src = ./src;
 
   gems = bundlerEnv {
     name = "${pname}-gems-${version}";
