@@ -55,6 +55,7 @@
       hp-zbook-studio-g5 = ./system/modules/hp-zbook-studio-g5.nix;
       hardware-configuration = ./system/hardware-configuration.nix;
       system-configuration = ./system/configuration.nix;
+      single-user = {suites.single-user.user = username;};
     };
 
     nixosConfigurations.NVC3919 = inputs.nixpkgs.lib.nixosSystem {
@@ -62,17 +63,7 @@
       specialArgs = {
         inherit inputs;
       };
-      modules = with inputs.self.nixosModules; [
-        suite-single-user
-        suite-i3
-        suite-sway
-        hp-zbook-studio-g5
-        overlays
-        hardware-configuration
-        system-configuration
-        home-manager
-        {suites.single-user.user = username;}
-      ];
+      modules = builtins.attrValues inputs.self.nixosModules;
     };
 
     devShell.${system} = pkgs.mkShell {
