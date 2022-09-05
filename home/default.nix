@@ -305,6 +305,7 @@ in {
         t = "tag";
         l = "log --graph --pretty='%Cred%h%Creset - %C(bold blue)<%an>%Creset %s%C(yellow)%d%Creset %Cgreen(%cr)' --abbrev-commit --date=relative";
         fixup = "commit --fixup";
+        pr-diff = "diff origin/HEAD..";
         pr-log = "l origin/HEAD..";
         pr-edit = "rebase --interactive --autosquash --rerere-autoupdate --rebase-merges --fork-point origin/HEAD";
         pr-clean = "-c sequence.editor=true rebase --interactive --autosquash --rerere-autoupdate --empty drop --no-keep-empty --fork-point origin/HEAD";
