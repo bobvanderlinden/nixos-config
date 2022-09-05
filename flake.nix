@@ -1,5 +1,6 @@
 {
   inputs = {
+    nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-22.05";
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     home-manager = {
       url = "github:nix-community/home-manager";
@@ -27,6 +28,11 @@
       overlays = [
         overlay
       ];
+    };
+
+    pkgs-stable = import inputs.nixpkgs-stable {
+      inherit system;
+      config.allowUnfree = true;
     };
   in rec {
     overlays.default = overlay;
@@ -66,10 +72,16 @@
       modules = builtins.attrValues inputs.self.nixosModules;
     };
 
-    devShells.${system}.default = pkgs.mkShell {
-      nativeBuildInputs = with pkgs; [
-        nixpkgs-fmt
-      ];
-    };
+    devShells.${system} =
+      {
+        default = pkgs.mkShell {
+          nativeBuildInputs = with pkgs; [
+            nixpkgs-fmt
+          ];
+        };
+      }
+      // (
+        import ./shells {pkgs = pkgs-stable;}
+      );
   };
 }
