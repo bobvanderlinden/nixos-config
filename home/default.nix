@@ -324,7 +324,6 @@ in {
         push.default = "current";
         pull.rebase = false;
         init.defaultBranch = "master";
-        core.excludesfile = "~/.config/git/ignore";
         url."git@github.com:".insteadOf = "https://github.com/";
         branch.sort = "-committerdate";
         tag.sort = "-v:refname";
