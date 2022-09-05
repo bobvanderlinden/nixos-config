@@ -7,78 +7,84 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     nixos-hardware.url = "github:NixOS/nixos-hardware";
+    flake-utils.url = "github:numtide/flake-utils";
   };
 
   outputs = inputs: let
-    system = "x86_64-linux";
     username = "bob.vanderlinden";
+  in
+    {
+      overlays.default = final: prev: import ./packages {pkgs = final;};
 
-    overlay = final: prev: {
-      coin = final.callPackage ./packages/coin {};
-      git-worktree-shell = final.callPackage ./packages/git-worktree-shell {};
-      gnome-dbus-emulation-wlr = final.callPackage ./packages/gnome-dbus-emulation-wlr {};
-    };
+      nixosModules =
+        import ./system/modules
+        // {
+          overlays = {nixpkgs.overlays = [inputs.self.overlays.default];};
+          hardware-configuration = import ./system/hardware-configuration.nix;
+          system-configuration = import ./system/configuration.nix;
+          single-user = {suites.single-user.user = username;};
+        };
 
-    pkgs = import inputs.nixpkgs {
-      inherit system;
-      config.allowUnfree = true;
-      overlays = [
-        overlay
-      ];
-    };
-
-    pkgs-stable = import inputs.nixpkgs-stable {
-      inherit system;
-      config.allowUnfree = true;
-    };
-  in rec {
-    overlays.default = overlay;
-
-    packages.${system} = {
-      inherit (pkgs) coin gnome-dbus-emulation-wlr;
-    };
-
-    homeConfigurations.${username} = inputs.home-manager.lib.homeManagerConfiguration {
-      inherit pkgs;
-      modules = [
-        ./home
-        {
-          home.username = username;
-          home.homeDirectory = "/home/${username}";
-        }
-      ];
-    };
-
-    nixosModules = {
-      overlays = {nixpkgs.overlays = [inputs.self.overlays.default];};
-      suite-single-user = import ./system/modules/suites/single-user.nix;
-      suite-i3 = import ./system/modules/suites/i3.nix;
-      suite-sway = import ./system/modules/suites/sway.nix;
-      home-manager = import ./system/modules/home-manager.nix;
-      hp-zbook-studio-g5 = import ./system/modules/hp-zbook-studio-g5.nix;
-      hardware-configuration = import ./system/hardware-configuration.nix;
-      system-configuration = import ./system/configuration.nix;
-      single-user = {suites.single-user.user = username;};
-    };
-
-    nixosConfigurations.NVC3919 = inputs.nixpkgs.lib.nixosSystem {
-      inherit system;
-      specialArgs = {
-        inherit inputs;
+      # System configuration for laptop.
+      nixosConfigurations.NVC3919 = inputs.nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        specialArgs = {
+          inherit inputs;
+        };
+        modules = builtins.attrValues inputs.self.nixosModules;
       };
-      modules = builtins.attrValues inputs.self.nixosModules;
-    };
 
-    devShells.${system} =
-      {
-        default = pkgs.mkShell {
-          nativeBuildInputs = with pkgs; [
-            nixpkgs-fmt
+      homeConfigurations.${username} = inputs.home-manager.lib.homeManagerConfiguration {
+        # A bit strange to specify pkgs with x86_64-linux here.
+        # See https://github.com/nix-community/home-manager/issues/3075
+        pkgs = import inputs.nixpkgs {
+          system = "x86_64-linux";
+          config.allowUnfree = true;
+          overlays = [
+            inputs.self.overlays.default
           ];
         };
-      }
-      // (
-        import ./shells {pkgs = pkgs-stable;}
-      );
-  };
+        modules = [
+          ./home
+          {
+            home.username = username;
+            home.homeDirectory = "/home/${username}";
+          }
+        ];
+      };
+    }
+    # Define outputs that allow multiple systems with for all default systems.
+    # This is to support OSX and RPI.
+    // inputs.flake-utils.lib.eachDefaultSystem (system: let
+      pkgs = import inputs.nixpkgs {
+        inherit system;
+        config.allowUnfree = true;
+        overlays = [
+          inputs.self.overlays.default
+        ];
+      };
+    in {
+      packages = {
+        inherit (pkgs) coin gnome-dbus-emulation-wlr;
+      };
+
+      devShells =
+        (
+          import ./shells {
+            # Use nixpkgs-stable for development shells.
+            pkgs = import inputs.nixpkgs-stable {
+              inherit system;
+              config.allowUnfree = true;
+            };
+          }
+        )
+        // {
+          # The shell for editing this project.
+          default = pkgs.mkShell {
+            nativeBuildInputs = with pkgs; [
+              nixpkgs-fmt
+            ];
+          };
+        };
+    });
 }
