@@ -8,6 +8,10 @@
     };
     nixos-hardware.url = "github:NixOS/nixos-hardware";
     flake-utils.url = "github:numtide/flake-utils";
+    nixpkgs-ruby = {
+      url = "github:bobvanderlinden/nixpkgs-ruby";
+      inputs.nixpkgs.follows = "nixpkgs-stable";
+    };
   };
 
   outputs = inputs: let
@@ -76,6 +80,7 @@
               inherit system;
               config.allowUnfree = true;
             };
+            inherit system inputs;
           }
         )
         // {

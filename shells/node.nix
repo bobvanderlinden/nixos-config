@@ -1,4 +1,4 @@
-{pkgs}:
+{pkgs, ...}:
 with pkgs; {
   node-14 =
     mkShell {

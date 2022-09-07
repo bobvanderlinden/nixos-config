@@ -1,9 +1,9 @@
-{pkgs, ...}: let
-  mkRubyShell = {version}:
+{pkgs, system, inputs}: let
+  mkRubyShell = {ruby}:
     with pkgs;
       mkShell {
         nativeBuildInputs = with pkgs; [
-          pkgs."ruby_${version}"
+          ruby
           mysql.client
           libmysqlclient
           sqlite
@@ -17,7 +17,10 @@
         WD_CHROME_PATH = "${pkgs.chromium}/bin/chromium";
         FREEDESKTOP_MIME_TYPES_PATH = "${pkgs.shared-mime-info}/share/mime/packages/freedesktop.org.xml";
       };
+
+  rubyPackages = inputs.nixpkgs-ruby.packages.${system};
 in {
-  ruby-3_0 = mkRubyShell {version = "3_0";};
-  ruby-3_1 = mkRubyShell {version = "3_1";};
+  ruby-2_7 = mkRubyShell {ruby = rubyPackages.ruby-2_7;};
+  ruby-3_0 = mkRubyShell {ruby = pkgs.ruby-3_0;};
+  ruby-3_1 = mkRubyShell {ruby = pkgs.ruby-3_1;};
 }
