@@ -1,4 +1,4 @@
-{pkgs, system, inputs}: let
+{pkgs, lib, system, inputs}: let
   mkRubyShell = {ruby}:
     with pkgs;
       mkShell {
@@ -12,15 +12,16 @@
           augeas
           libxml2
           github-changelog-generator
+        ] ++ lib.optional pkgs.stdenv.isLinux [
           chromedriver
         ];
-        WD_CHROME_PATH = "${pkgs.chromium}/bin/chromium";
+        WD_CHROME_PATH = lib.optionalString pkgs.stdenv.isLinux "${pkgs.chromium}/bin/chromium";
         FREEDESKTOP_MIME_TYPES_PATH = "${pkgs.shared-mime-info}/share/mime/packages/freedesktop.org.xml";
       };
 
   rubyPackages = inputs.nixpkgs-ruby.packages.${system};
 in {
   ruby-2_7 = mkRubyShell {ruby = rubyPackages.ruby-2_7;};
-  ruby-3_0 = mkRubyShell {ruby = pkgs.ruby-3_0;};
-  ruby-3_1 = mkRubyShell {ruby = pkgs.ruby-3_1;};
+  ruby-3_0 = mkRubyShell {ruby = pkgs.ruby_3_0;};
+  ruby-3_1 = mkRubyShell {ruby = pkgs.ruby_3_1;};
 }

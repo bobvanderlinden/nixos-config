@@ -104,6 +104,7 @@ in {
       thunderbird
       inkscape
       git-worktree-shell
+      immersed
     ];
 
     dconf = {

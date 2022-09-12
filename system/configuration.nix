@@ -267,6 +267,7 @@
       substituters = ["https://cachix.cachix.org"];
       experimental-features = ["nix-command" "flakes"];
       netrc-file = "/etc/nix/netrc";
+      auto-optimise-store = true;
     };
     package = pkgs.nixFlakes;
   };

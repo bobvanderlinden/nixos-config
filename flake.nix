@@ -69,7 +69,7 @@
       };
     in {
       packages = {
-        inherit (pkgs) coin gnome-dbus-emulation-wlr;
+        inherit (pkgs) coin gnome-dbus-emulation-wlr immersed disable-firewall;
       };
 
       devShells =
@@ -81,6 +81,7 @@
               config.allowUnfree = true;
             };
             inherit system inputs;
+            inherit (inputs.nixpkgs) lib;
           }
         )
         // {
