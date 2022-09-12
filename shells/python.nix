@@ -8,12 +8,11 @@ let
         python
         automake
         pkg-config
-
-      ] ++ lib.optional pkgs.stdenv.isLinux [
-        chromedriver
+        virtualenv
       ];
-      WD_CHROME_PATH = lib.optionalString pkgs.stdenv.isLinux "${pkgs.chromium}/bin/chromium";
-      FREEDESKTOP_MIME_TYPES_PATH = "${pkgs.shared-mime-info}/share/mime/packages/freedesktop.org.xml";
+      LD_LIBRARY_PATH = lib.makeLibraryPath [
+        pkgs.stdenv.cc.cc.lib
+      ];
     };
 in
 {
