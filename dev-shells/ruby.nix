@@ -12,10 +12,10 @@
           augeas
           libxml2
           github-changelog-generator
-        ] ++ lib.optional pkgs.stdenv.isLinux [
+        ] ++ lib.optional (system == "x86_64-linux") [
           chromedriver
         ];
-        WD_CHROME_PATH = lib.optionalString pkgs.stdenv.isLinux "${pkgs.chromium}/bin/chromium";
+        WD_CHROME_PATH = lib.optionalString (system == "x86_64-linux") "${pkgs.chromium}/bin/chromium";
         FREEDESKTOP_MIME_TYPES_PATH = "${pkgs.shared-mime-info}/share/mime/packages/freedesktop.org.xml";
       };
 

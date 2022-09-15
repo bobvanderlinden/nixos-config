@@ -17,7 +17,6 @@
   outputs = inputs:
     let
       username = "bob.vanderlinden";
-      supportedSystems = [ "x86_64-linux" "aarch64-darwin" ];
     in
     {
       overlays.default = final: prev: import ./packages { pkgs = final; };
@@ -63,7 +62,7 @@
     }
     # Define outputs that allow multiple systems with for all default systems.
     # This is to support OSX and RPI.
-    // inputs.flake-utils.lib.eachSystem supportedSystems (system:
+    // inputs.flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import inputs.nixpkgs {
           inherit system;
