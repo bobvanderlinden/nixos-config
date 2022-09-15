@@ -14,19 +14,20 @@
     };
   };
 
-  outputs = inputs: let
-    username = "bob.vanderlinden";
-  in
+  outputs = inputs:
+    let
+      username = "bob.vanderlinden";
+    in
     {
-      overlays.default = final: prev: import ./packages {pkgs = final;};
+      overlays.default = final: prev: import ./packages { pkgs = final; };
 
       nixosModules =
         import ./system/modules
         // {
-          overlays = {nixpkgs.overlays = [inputs.self.overlays.default];};
+          overlays = { nixpkgs.overlays = [ inputs.self.overlays.default ]; };
           hardware-configuration = import ./system/hardware-configuration.nix;
           system-configuration = import ./system/configuration.nix;
-          single-user = {suites.single-user.user = username;};
+          single-user = { suites.single-user.user = username; };
         };
 
       # System configuration for laptop.
@@ -56,41 +57,54 @@
           }
         ];
       };
+
+      templates = import ./templates;
     }
     # Define outputs that allow multiple systems with for all default systems.
     # This is to support OSX and RPI.
-    // inputs.flake-utils.lib.eachDefaultSystem (system: let
-      pkgs = import inputs.nixpkgs {
-        inherit system;
-        config.allowUnfree = true;
-        overlays = [
-          inputs.self.overlays.default
-        ];
-      };
-    in {
-      packages = {
-        inherit (pkgs) coin gnome-dbus-emulation-wlr immersed disable-firewall;
-      };
-
-      devShells =
-        (
-          import ./shells {
-            # Use nixpkgs-stable for development shells.
-            pkgs = import inputs.nixpkgs-stable {
-              inherit system;
-              config.allowUnfree = true;
-            };
-            inherit system inputs;
-            inherit (inputs.nixpkgs) lib;
-          }
-        )
-        // {
-          # The shell for editing this project.
-          default = pkgs.mkShell {
-            nativeBuildInputs = with pkgs; [
-              nixpkgs-fmt
-            ];
-          };
+    // inputs.flake-utils.lib.eachDefaultSystem (system:
+      let
+        pkgs = import inputs.nixpkgs {
+          inherit system;
+          config.allowUnfree = true;
+          overlays = [
+            inputs.self.overlays.default
+          ];
         };
-    });
+      in
+      {
+        packages = {
+          inherit (pkgs)
+            coin
+            gnome-dbus-emulation-wlr
+            immersed
+            disable-firewall
+            xrdesktop
+            gxr
+            gulkan
+            wxrc
+            wxrd;
+        };
+
+        devShells =
+          (
+            import ./shells {
+              # Use nixpkgs-stable for development shells.
+              pkgs = import inputs.nixpkgs-stable {
+                inherit system;
+                config.allowUnfree = true;
+              };
+              inherit system inputs;
+              inherit (inputs.nixpkgs) lib;
+            }
+          )
+          // {
+            # The shell for editing this project.
+            default = pkgs.mkShell {
+              nativeBuildInputs = with pkgs; [
+                nixpkgs-fmt
+              ];
+            };
+          };
+      });
 }

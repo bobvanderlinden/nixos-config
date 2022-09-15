@@ -1,5 +1,4 @@
-{ pkgs, ... }:
-{ pkgs, lib, system, inputs }:
+{ pkgs, lib, system, inputs, ... }:
 let
   mkPythonShell = { python }:
     with pkgs;

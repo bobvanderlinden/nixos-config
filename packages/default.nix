@@ -1,7 +1,16 @@
-{pkgs}: {
-  coin = pkgs.callPackage ./coin {};
-  git-worktree-shell = pkgs.callPackage ./git-worktree-shell {};
-  gnome-dbus-emulation-wlr = pkgs.callPackage ./gnome-dbus-emulation-wlr {};
-  immersed = pkgs.callPackage ./immersed {};
-  disable-firewall = pkgs.callPackage ./disable-firewall {};
+{ pkgs }:
+let
+  inherit (pkgs) callPackage;
+in
+{
+  coin = callPackage ./coin { };
+  git-worktree-shell = callPackage ./git-worktree-shell { };
+  gnome-dbus-emulation-wlr = callPackage ./gnome-dbus-emulation-wlr { };
+  immersed = callPackage ./immersed { };
+  disable-firewall = callPackage ./disable-firewall { };
+  xrdesktop = callPackage ./xrdesktop { };
+  gxr = callPackage ./gxr { };
+  gulkan = callPackage ./gulkan { };
+  wxrd = callPackage ./wxrd { };
+  wxrc = callPackage ./wxrc { };
 }
