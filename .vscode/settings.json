@@ -1,6 +1,6 @@
 {
   "[nix]": {
-    "editor.defaultFormatter": "kamadorueda.alejandra",
+    "editor.defaultFormatter": "B4dM4n.nixpkgs-fmt",
     "editor.formatOnSave": true
   },
 }
