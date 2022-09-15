@@ -35,10 +35,6 @@ stdenv.mkDerivation rec {
   ];
 
   buildInputs = [
-    gulkan
-    vulkan-loader
-    graphene
-    udev
   ];
 
   meta = with lib; {
