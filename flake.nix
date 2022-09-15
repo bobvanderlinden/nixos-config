@@ -17,6 +17,7 @@
   outputs = inputs:
     let
       username = "bob.vanderlinden";
+      supportedSystems = [ "x86_64-linux" "aarch64-darwin" ];
     in
     {
       overlays.default = final: prev: import ./packages { pkgs = final; };
@@ -62,7 +63,7 @@
     }
     # Define outputs that allow multiple systems with for all default systems.
     # This is to support OSX and RPI.
-    // inputs.flake-utils.lib.eachDefaultSystem (system:
+    // inputs.flake-utils.lib.eachSystem supportedSystems (system:
       let
         pkgs = import inputs.nixpkgs {
           inherit system;
@@ -73,18 +74,9 @@
         };
       in
       {
-        packages = {
-          inherit (pkgs)
-            coin
-            gnome-dbus-emulation-wlr
-            immersed
-            disable-firewall
-            xrdesktop
-            gxr
-            gulkan
-            wxrc
-            wxrd;
-        };
+        packages = let
+          lib = inputs.nixpkgs.lib;
+        in lib.filterAttrs (name: package: (package ? meta) -> (package.meta ? platforms) -> builtins.elem system package.meta.platforms) (import ./packages { inherit pkgs; });
 
         devShells =
           (
