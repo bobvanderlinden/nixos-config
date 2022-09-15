@@ -88,7 +88,7 @@
 
         devShells =
           (
-            import ./shells {
+            import ./dev-shells {
               # Use nixpkgs-stable for development shells.
               pkgs = import inputs.nixpkgs-stable {
                 inherit system;
