@@ -15,6 +15,16 @@
 , graphene
 , udev
 , openxr-loader
+
+, libinput
+, wrapGAppsHook
+, wayland
+, wayland-protocols
+, libGL
+, libxcb
+, glib
+, cairo
+, gtk3
 }:
 
 stdenv.mkDerivation rec {
@@ -38,6 +48,7 @@ stdenv.mkDerivation rec {
     meson
     ninja
     pkg-config
+    wrapGAppsHook
   ];
 
   buildInputs = [
@@ -51,6 +62,15 @@ stdenv.mkDerivation rec {
     graphene
     udev
     openxr-loader
+    wayland
+    wayland-protocols
+    libGL
+    libxcb
+    glib
+    cairo
+    gtk3
+
+    libinput
   ];
 
   meta = with lib; {

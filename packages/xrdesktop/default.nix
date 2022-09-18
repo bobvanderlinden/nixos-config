@@ -15,6 +15,7 @@
 , python3Packages
 , json-glib
 , openxr-loader
+, wrapGAppsHook
 }:
 
 stdenv.mkDerivation rec {
@@ -25,8 +26,8 @@ stdenv.mkDerivation rec {
     domain = "gitlab.freedesktop.org";
     owner = "xrdesktop";
     repo = pname;
-    rev = "2fd523947e7e0114165e71c1469350b5d04135fd";
-    hash = "sha256-YcJQVoCbtwlWBTihIFJWK5IhY/b++TCOmpNaWUrQBdU=";
+    rev = "77ca14f697b6e92f1708504f52f3eb1f654f9d9a";
+    hash = "sha256-P/AgIVyAvwGMNIZgPl23DHqRFpHgtPVXsZ8epLY4fiw=";
   };
 
   nativeBuildInputs = [
@@ -35,6 +36,8 @@ stdenv.mkDerivation rec {
     cmake
     pkg-config
     shaderc
+    python3Packages.wrapPython
+    wrapGAppsHook
   ];
 
   buildInputs = [
@@ -46,12 +49,17 @@ stdenv.mkDerivation rec {
     python3
     json-glib
     openxr-loader
-  ];
-
-  propagatedBuildInputs = [
     python3Packages.pygobject3
     gtk3
   ];
+
+  pythonPath = [
+    python3Packages.pygobject3
+  ];
+
+  postFixup = ''
+    wrapPythonPrograms
+  '';
 
   meta = with lib; {
     homepage = "https://gitlab.freedesktop.org/xrdesktop/xrdesktop";
