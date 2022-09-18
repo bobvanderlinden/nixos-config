@@ -51,7 +51,6 @@ stdenv.mkDerivation rec {
     graphene
     udev
     openxr-loader
-    libinput
   ];
 
   meta = with lib; {
