@@ -14,6 +14,7 @@
 , vulkan-loader
 , graphene
 , udev
+, openxr-loader
 }:
 
 stdenv.mkDerivation rec {
@@ -29,18 +30,13 @@ stdenv.mkDerivation rec {
   };
 
   patchPhase = ''
-    substituteInPlace meson.build \
-      --replace "xrdesktop_version = ['>=0.16.0']," "xrdesktop_version = ['>=0.15.0']" \
-      --replace "xrdesktop-0.16" "xrdesktop-0.15"
-    substituteInPlace src/view.c \
-      --replace xrd_{shell,client}_add_window \
-      --replace xrd_{shell,client}_remove_window
+    substituteInPlace src/wxrd-renderer.c \
+      --replace "#include <types/wlr_buffer.h>" "#include <wlr/types/wlr_buffer.h>"
   '';
 
   nativeBuildInputs = [
     meson
     ninja
-    cmake
     pkg-config
   ];
 
@@ -54,6 +50,8 @@ stdenv.mkDerivation rec {
     vulkan-loader
     graphene
     udev
+    openxr-loader
+    libinput
   ];
 
   meta = with lib; {

@@ -13,18 +13,20 @@
 , shaderc
 , python3
 , python3Packages
+, json-glib
+, openxr-loader
 }:
 
 stdenv.mkDerivation rec {
   pname = "xrdesktop";
-  version = "0.15.2";
+  version = "0.16.0";
 
   src = fetchFromGitLab {
     domain = "gitlab.freedesktop.org";
     owner = "xrdesktop";
     repo = pname;
-    rev = version;
-    hash = "sha256-3qdJHnjTsa53t0V1cRUeBVb4wONRI4eOvxRJS75jWSg=";
+    rev = "2fd523947e7e0114165e71c1469350b5d04135fd";
+    hash = "sha256-YcJQVoCbtwlWBTihIFJWK5IhY/b++TCOmpNaWUrQBdU=";
   };
 
   nativeBuildInputs = [
@@ -42,6 +44,8 @@ stdenv.mkDerivation rec {
     gxr
     gulkan
     python3
+    json-glib
+    openxr-loader
   ];
 
   propagatedBuildInputs = [

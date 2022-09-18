@@ -14,18 +14,19 @@
 , gtk3
 , json-glib
 , shaderc
+, openxr-loader
+, wlroots
 }:
-
 stdenv.mkDerivation rec {
   pname = "gxr";
-  version = "0.15.2";
+  version = "0.16.0";
 
   src = fetchFromGitLab {
     domain = "gitlab.freedesktop.org";
     owner = "xrdesktop";
     repo = pname;
-    rev = version;
-    hash = "sha256-Fu52sLxIjc07tifBbtYu4LT7c1wZhC4cmEDH1WeyT7o=";
+    rev = "ff20019d60697d396f182c8e0ef1dc189480a8da";
+    hash = "sha256-LiOGlV81C2Yp/U6NfLXiYnjcZbC27Xua7I4SJz4PTtc=";
   };
 
   nativeBuildInputs = [
@@ -45,6 +46,8 @@ stdenv.mkDerivation rec {
     graphene
     json-glib
     shaderc
+    openxr-loader
+    wlroots
   ];
 
   meta = with lib; {

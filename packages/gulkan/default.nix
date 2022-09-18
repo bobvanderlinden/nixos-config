@@ -11,26 +11,20 @@
 , graphene
 , cairo
 , shaderc
+, libdrm
 }:
 
 stdenv.mkDerivation rec {
   pname = "gulkan";
-  version = "0.15.2";
+  version = "0.16.0";
 
   src = fetchFromGitLab {
     domain = "gitlab.freedesktop.org";
     owner = "xrdesktop";
     repo = pname;
-    rev = version;
-    hash = "sha256-Kb0Vt19dhkvT6XlxCKcaEBnZb7/fMmRL55+A2mRdn80=";
+    rev = "f7376559cf9dc92dc83f6e5d2472c71091197a29";
+    hash = "sha256-2VAhPm4K3RNH5l3uV1QQUXauMJxwEbahX5iKUfUR4uE=";
   };
-
-  patches = [
-    (fetchpatch {
-      url = "https://gitlab.freedesktop.org/xrdesktop/gulkan/-/commit/ea94e97a58538090f65fae3b94395e5c08d4b8ee.patch";
-      hash = "sha256-CERzQQx0LhEJgudkafsUXQn7y73/wfwKSJg/Y4ASlH4=";
-    })
-  ];
 
   nativeBuildInputs = [
     meson
@@ -45,6 +39,7 @@ stdenv.mkDerivation rec {
     vulkan-loader
     graphene
     cairo
+    libdrm
   ];
 
   meta = with lib; {
