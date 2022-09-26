@@ -1,8 +1,7 @@
-{
-  config,
-  pkgs,
-  lib,
-  ...
+{ config
+, pkgs
+, lib
+, ...
 }: {
   imports = [
     ./modules/v4l2loopback.nix
@@ -80,7 +79,7 @@
 
     networkmanager = {
       enable = true;
-      plugins = with pkgs; [networkmanager-openvpn];
+      plugins = with pkgs; [ networkmanager-openvpn ];
     };
   };
 
@@ -151,22 +150,28 @@
     SUBSYSTEM=="tty", ATTRS{idVendor}=="2341", ATTRS{idProduct}=="0043", MODE="0660", SYMLINK+="ttyArduinoUno"
     SUBSYSTEM=="tty", ATTRS{idVendor}=="1a86", ATTRS{idProduct}=="7523", MODE="0660", SYMLINK+="ttyArduinoNano2"
     SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", MODE="0660", SYMLINK+="ttyArduinoNano"
+
+    # For OVR
+    KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="2833", TAG+="uaccess"
+
+    # For OpenHMD
+    SUBSYSTEM=="usb", ATTRS{idVendor}=="2833", TAG+="uaccess"
   '';
 
   services.locate = {
     enable = true;
-    pruneNames = [];
+    pruneNames = [ ];
   };
   services.openssh.enable = false;
 
   services.printing = {
     enable = true;
-    drivers = with pkgs; [gutenprint splix cups-bjnp];
+    drivers = with pkgs; [ gutenprint splix cups-bjnp ];
   };
 
   services.avahi = {
     enable = true;
-    browseDomains = [];
+    browseDomains = [ ];
 
     # Seems to be causing trouble/slowness when resolving hosts
     #nssmdns = true;
@@ -183,7 +188,7 @@
     enable = true;
     displayManager.autoLogin.enable = true;
     desktopManager.xterm.enable = false;
-    videoDrivers = ["nvidia"];
+    videoDrivers = [ "nvidia" ];
     xrandrHeads = [
       {
         output = "DP-0";
@@ -215,7 +220,7 @@
 
   i18n.inputMethod = {
     enabled = "ibus";
-    ibus.engines = with pkgs.ibus-engines; [uniemoji];
+    ibus.engines = with pkgs.ibus-engines; [ uniemoji ];
   };
 
   # users.extraUsers.bob.extraGroups = [ "sway" ];
@@ -241,7 +246,7 @@
     #   "fixed-cidr-v6" = "fd00::/80";
     # };
   };
-  networking.firewall.trustedInterfaces = ["docker0"];
+  networking.firewall.trustedInterfaces = [ "docker0" ];
 
   users.defaultUserShell = pkgs.zsh;
 
@@ -262,10 +267,10 @@
     };
     settings = {
       sandbox = true;
-      extra-sandbox-paths = ["/etc/nix/netrc"];
-      trusted-users = ["root" "${config.suites.single-user.user}"];
-      substituters = ["https://cachix.cachix.org"];
-      experimental-features = ["nix-command" "flakes"];
+      extra-sandbox-paths = [ "/etc/nix/netrc" ];
+      trusted-users = [ "root" "${config.suites.single-user.user}" ];
+      substituters = [ "https://cachix.cachix.org" ];
+      experimental-features = [ "nix-command" "flakes" ];
       netrc-file = "/etc/nix/netrc";
       auto-optimise-store = true;
     };
@@ -275,7 +280,7 @@
   system.autoUpgrade = {
     enable = false;
     flake = "/home/bob.vanderlinden/projects/bobvanderlinden/nixos-config";
-    flags = ["--update-input" "nixpkgs" "--commit-lock-file"];
+    flags = [ "--update-input" "nixpkgs" "--commit-lock-file" ];
     dates = "17:30";
   };
 

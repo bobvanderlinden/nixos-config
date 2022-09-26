@@ -13,6 +13,7 @@ rec {
   gulkan = callPackage ./gulkan { };
   wxrd = callPackage ./wxrd { };
   wxrc = callPackage ./wxrc { };
+  alvr = callPackage ./alvr { };
   x3d = callPackage ./x3d { };
   stardust-xr = callPackage ./stardust-xr { };
   libstardustxr = callPackage ./libstardustxr { };

@@ -1,7 +1,9 @@
-{pkgs, ...}: let
+{ pkgs, ... }:
+let
   vscode = pkgs.vscode;
   pulseaudio = pkgs.pulseaudioFull;
-in {
+in
+{
   imports = [
     ./modules/blueberry.nix
     ./modules/lxqt-policykit-agent.nix
@@ -104,7 +106,8 @@ in {
       thunderbird
       inkscape
       git-worktree-shell
-      immersed
+      monado
+      meld
     ];
 
     dconf = {
@@ -171,7 +174,7 @@ in {
         gtk-error-bell = 0
       '';
 
-      gtk3.extraConfig = {gtk-error-bell = 0;};
+      gtk3.extraConfig = { gtk-error-bell = 0; };
     };
     programs.ssh = {
       enable = true;
@@ -267,13 +270,13 @@ in {
     systemd.user.services.bitwarden = {
       Unit = {
         Description = "Bitwarden";
-        After = ["graphical-session-pre.target"];
-        PartOf = ["graphical-session.target"];
+        After = [ "graphical-session-pre.target" ];
+        PartOf = [ "graphical-session.target" ];
       };
 
-      Install = {WantedBy = ["graphical-session.target"];};
+      Install = { WantedBy = [ "graphical-session.target" ]; };
 
-      Service = {ExecStart = "${pkgs.bitwarden}/bin/bitwarden";};
+      Service = { ExecStart = "${pkgs.bitwarden}/bin/bitwarden"; };
     };
 
     xdg.enable = true;
