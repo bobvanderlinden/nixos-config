@@ -12,7 +12,6 @@ in
   config = {
     home.packages = with pkgs; [
       coin
-      hello
       nixfmt
       bitwarden
       insomnia
@@ -46,13 +45,12 @@ in
       speedcrunch
       ffmpegthumbnailer
       networkmanagerapplet
-      rxvt_unicode-with-plugins
       xsel
       lxappearance
       gitAndTools.hub
       gitAndTools.gh
       git-cola
-      gnome3.file-roller
+      gnome.file-roller
       clang
       slack
       zoom-us
@@ -73,7 +71,7 @@ in
       gimp
       feh
       screen
-      nix-review
+      nixpkgs-review
       vscode
       leafpad
       dejavu_fonts
@@ -82,7 +80,7 @@ in
       maven
       yq-go
       ripgrep
-      gnome3.pomodoro
+      gnome.pomodoro
       audacity
       ffmpeg-full
       zoxide
@@ -108,6 +106,8 @@ in
       git-worktree-shell
       monado
       meld
+      lsof
+      home-manager
     ];
 
     dconf = {
@@ -149,7 +149,7 @@ in
           font = "DejaVu Sans Mono for Powerline 11";
           foreground_color = "#839496";
           show_titlebar = false;
-          scrollback_lines = 5000;
+          scrollback_lines = 10000;
           palette = "#073642:#dc322f:#859900:#b58900:#268bd2:#d33682:#2aa198:#eee8d5:#002b36:#cb4b16:#586e75:#657b83:#839496:#6c71c4:#93a1a1:#fdf6e3";
         };
       };
@@ -164,11 +164,11 @@ in
       };
       iconTheme = {
         name = "Adwaita";
-        package = pkgs.gnome3.adwaita-icon-theme;
+        package = pkgs.gnome.adwaita-icon-theme;
       };
       theme = {
         name = "Adwaita-dark";
-        package = pkgs.gnome3.gnome-themes-extra;
+        package = pkgs.gnome.gnome-themes-extra;
       };
       gtk2.extraConfig = ''
         gtk-error-bell = 0
@@ -320,6 +320,7 @@ in
         "flake.nix"
         "flake.lock"
         ".envrc"
+        ".data"
         "vendor"
         "workspace.code-workspace"
       ];
@@ -350,7 +351,6 @@ in
       stdlib = builtins.readFile ./direnvrc;
     };
     programs.htop.enable = true;
-    programs.home-manager.enable = true;
 
     home.stateVersion = "21.03";
   };

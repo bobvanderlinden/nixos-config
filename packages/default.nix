@@ -23,7 +23,7 @@ rec {
   libinputsynth = callPackage ./libinputsynth {
     mutter = pkgs.gnome.mutter338;
   };
-  gnome-shell-xrdesktop = pkgs.gnome3.gnome-shell.overrideAttrs (oldAttrs: {
+  gnome-shell-xrdesktop = pkgs.gnome.gnome-shell.overrideAttrs (oldAttrs: {
     src = pkgs.fetchFromGitLab {
       domain = "gitlab.freedesktop.org";
       owner = "xrdesktop";

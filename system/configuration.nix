@@ -232,10 +232,6 @@
   programs.tmux.enable = true;
   programs.adb.enable = true;
 
-  services.mysql = {
-    enable = true;
-    package = pkgs.mysql;
-  };
   services.redis.servers."".enable = true;
 
   # virtualisation.virtualbox.host.enable = true;
@@ -252,12 +248,13 @@
 
   nixpkgs.config.allowUnfree = true;
 
-  specialisation = {
-    wayland.configuration = {
-      suites.i3.enable = pkgs.lib.mkForce false;
-      suites.sway.enable = true;
-    };
-  };
+  # This adds a lot of build time to the system.
+  # specialisation = {
+  #   wayland.configuration = {
+  #     suites.i3.enable = pkgs.lib.mkForce false;
+  #     suites.sway.enable = true;
+  #   };
+  # };
 
   nix = {
     gc = {
@@ -274,7 +271,7 @@
       netrc-file = "/etc/nix/netrc";
       auto-optimise-store = true;
     };
-    package = pkgs.nixFlakes;
+    package = pkgs.nixVersions.stable;
   };
 
   system.autoUpgrade = {
