@@ -1,7 +1,3 @@
-#!/usr/bin/env bash
-set -o errexit
-set -o pipefail
-
 fail()
 {
   echo "$@" >&2
@@ -37,28 +33,28 @@ done
 
 REVISION="HEAD"
 
-if [ "${ARGS[#]}" -eq 1 ]
+if [ "${#ARGS[@]}" -eq 1 ]
 then
   REVISION="${ARGS[0]}"
-elif [ "${ARGS[#]}" -gt 1 ]
+elif [ "${#ARGS[@]}" -gt 1 ]
 then
   fail "Too many arguments"
 fi
 
 [ -d .git ] || fail "Not a git directory"
 
-REPO_NAME="$(basename $PWD)"
+REPO_NAME="$(basename "$PWD")"
 WORKTREE_DIR="$(mktemp --directory --suffix "$REPO_NAME-worktree")"
 git worktree add "$WORKTREE_DIR" "$REVISION"
 
 if [ "$OPTION_INDEX" = 1 ]
 then
   # Apply the index of the original worktree to the new one.
-  git diff --staged | (cd "$WORKTREE_DIR" && git apply --index)
+  git diff --staged | (cd "$WORKTREE_DIR" && git apply --index --allow-empty)
 fi
 
 (cd "$WORKTREE_DIR"
-  $SHELL
+  $SHELL || true
   git worktree remove --force "$WORKTREE_DIR" || true
   rm -rf "$WORKTREE_DIR" || true
 )

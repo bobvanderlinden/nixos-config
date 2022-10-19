@@ -1,2 +1,8 @@
-{writeShellScriptBin}:
-writeShellScriptBin "git-worktree-shell" (builtins.readFile ./git-worktree-shell.sh)
+{ writeShellApplication
+, git
+}:
+writeShellApplication {
+  name = "git-worktree-shell";
+  text = builtins.readFile ./git-worktree-shell.sh;
+  runtimeInputs = [ git ];
+}
