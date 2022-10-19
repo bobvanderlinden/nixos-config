@@ -108,6 +108,7 @@ in
       meld
       lsof
       home-manager
+      difftastic
     ];
 
     dconf = {
@@ -326,6 +327,7 @@ in
       ];
       extraConfig = {
         core.editor = "${vscode}/bin/code --wait";
+        diff.external = "${pkgs.difftastic}/bin/difft";
         merge.conflictstyle = "diff3";
         push.default = "current";
         pull.rebase = false;
