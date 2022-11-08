@@ -89,22 +89,14 @@
       enable = true;
       defaultFonts = {
         monospace = [
-          "DejaVu Sans Mono for Powerline Book"
+          "SauceCodePro Nerd Font"
         ];
       };
     };
     fonts = with pkgs; [
-      font-awesome
+      (nerdfonts.override { fonts = [ "SourceCodePro" ]; })
       corefonts # Microsoft free fonts
-      # iosevka # Font unable to build
-      meslo-lg
-      # nerdfonts
-      source-code-pro
       noto-fonts
-      noto-fonts-cjk
-      noto-fonts-emoji
-
-      # emacs-all-the-icons-fonts
     ];
   };
 

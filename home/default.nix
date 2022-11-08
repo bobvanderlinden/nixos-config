@@ -59,9 +59,7 @@ in
       mono
       inconsolata
       liberation_ttf
-      terminus_font
       ttf_bitstream_vera
-      powerline-fonts
       gnupg
       vlc
       webtorrent_desktop
@@ -74,7 +72,6 @@ in
       nixpkgs-review
       vscode
       leafpad
-      dejavu_fonts
       mypaint
       tiled
       maven
@@ -147,7 +144,8 @@ in
         profiles.default = {
           background_color = "#002b36";
           cursor_color = "#aaaaaa";
-          font = "DejaVu Sans Mono for Powerline 11";
+          font = "SauceCodePro Nerd Font 11";
+          use_system_font = false;
           foreground_color = "#839496";
           show_titlebar = false;
           scrollback_lines = 10000;
