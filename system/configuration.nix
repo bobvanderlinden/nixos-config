@@ -248,6 +248,9 @@
   #   };
   # };
 
+  documentation.enable = false;
+  documentation.nixos.enable = false;
+
   nix = {
     gc = {
       dates = "weekly";
