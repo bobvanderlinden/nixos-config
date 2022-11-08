@@ -17,6 +17,15 @@
   outputs = { self, nixpkgs, home-manager, flake-utils, nixpkgs-stable, ... } @ inputs:
     let
       username = "bob.vanderlinden";
+      mkPkgs =
+        { system ? "x86_64-linux"
+        , nixpkgs ? inputs.nixpkgs
+        , config ? { allowUnfree = true; }
+        , overlays ? [ self.overlays.default ]
+        , ...
+        } @ options: import nixpkgs (options // {
+          inherit system config overlays;
+        });
     in
     {
       overlays.default = final: prev: import ./packages { pkgs = final; };
@@ -42,13 +51,7 @@
       homeConfigurations.${username} = home-manager.lib.homeManagerConfiguration {
         # A bit strange to specify pkgs with x86_64-linux here.
         # See https://github.com/nix-community/home-manager/issues/3075
-        pkgs = import nixpkgs {
-          system = "x86_64-linux";
-          config.allowUnfree = true;
-          overlays = [
-            self.overlays.default
-          ];
-        };
+        pkgs = mkPkgs { };
         modules = [
           ./home
           {
@@ -64,12 +67,8 @@
     # This is to support OSX and RPI.
     // flake-utils.lib.eachDefaultSystem (system:
       let
-        pkgs = import nixpkgs {
+        pkgs = mkPkgs {
           inherit system;
-          config.allowUnfree = true;
-          overlays = [
-            self.overlays.default
-          ];
         };
       in
       {
@@ -83,9 +82,10 @@
           (
             import ./dev-shells {
               # Use nixpkgs-stable for development shells.
-              pkgs = import nixpkgs-stable {
+              pkgs = mkPkgs {
+                nixpkgs = nixpkgs-stable;
                 inherit system;
-                config.allowUnfree = true;
+                overlays = [ ];
               };
               inherit system inputs;
               inherit (nixpkgs-stable) lib;
