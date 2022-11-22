@@ -362,6 +362,17 @@ in
     };
     programs.htop.enable = true;
 
+    xsession.initExtra =
+      let
+        wallpaper = pkgs.fetchurl {
+          url = "https://raw.githubusercontent.com/NixOS/nixos-artwork/master/logo/nix-snowflake.svg";
+          hash = "sha256-SCuQlSPB14GFTq4XvExJ0QEuK2VIbrd5YYKHLRG/q5I=";
+        };
+      in
+      ''
+        ${pkgs.feh}/bin/feh --bg-center --image-bg '#1a1b26' ${wallpaper}
+      '';
+
     home.stateVersion = "21.03";
   };
 }
