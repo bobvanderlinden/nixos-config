@@ -248,7 +248,11 @@ in
     };
     qt = {
       enable = true;
-      platformTheme = "gtk";
+      platformTheme = "gnome";
+      style = {
+        name = "adwaita-dark";
+        package = pkgs.adwaita-qt;
+      };
     };
 
     services.gnome-keyring.enable = true;
