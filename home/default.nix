@@ -106,6 +106,7 @@ in
       lsof
       home-manager
       difftastic
+      git-absorb
     ];
 
     dconf = {
