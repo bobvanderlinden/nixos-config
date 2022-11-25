@@ -218,8 +218,7 @@
   # users.extraUsers.bob.extraGroups = [ "sway" ];
   # programs.sway.enable = true;
 
-  programs.zsh.enable = true;
-  programs.zsh.enableCompletion = true;
+  programs.fish.enable = true;
   programs.bash.enableCompletion = true;
   programs.tmux.enable = true;
   programs.adb.enable = true;
@@ -236,7 +235,7 @@
   };
   networking.firewall.trustedInterfaces = [ "docker0" ];
 
-  users.defaultUserShell = pkgs.zsh;
+  users.defaultUserShell = pkgs.fish;
 
   nixpkgs.config.allowUnfree = true;
 

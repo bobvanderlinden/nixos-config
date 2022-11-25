@@ -212,34 +212,9 @@ in
     };
     programs.fzf.enable = true;
     programs.bat.enable = true;
-    programs.zsh = {
-      enable = true;
-      enableAutosuggestions = true;
-      history.extended = true;
-      oh-my-zsh = {
-        enable = true;
-        plugins = [
-          "git-extras"
-          "git"
-          "gitfast"
-          "github"
-          "ssh-agent"
-          "gpg-agent"
-        ];
-      };
-      loginExtra = ''
-        setopt extendedglob
-        xset b off
-        xset b 0 0 0
-        source $HOME/.aliases
-        bindkey '^R' history-incremental-pattern-search-backward
-        bindkey '^F' history-incremental-pattern-search-forward
-        eval "$(rbenv init -)"
-      '';
-    };
+    programs.fish.enable = true;
     programs.starship = {
       enable = true;
-      enableZshIntegration = true;
       settings = {
         character = {
           success_symbol = "[\\$](bold blue)";
