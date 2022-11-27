@@ -17,13 +17,19 @@ with lib; {
     mkIf cfg.enable {
       suites.wayland.enable = mkDefault true;
 
-      services.xserver.displayManager.defaultSession = mkForce "sway";
+      services.xserver.displayManager.defaultSession = mkDefault "sway";
 
       # Prevent restarting sway when using nixos-rebuild switch
       systemd.services.sway.restartIfChanged = false;
 
+      services.greetd.enable = mkForce false;
+      services.xserver.displayManager.gdm.enable = mkForce true;
+
+
       programs.sway = {
         enable = true;
+        wrapperFeatures.gtk = true;
+        extraOptions = [ "--unsupported-gpu" "--debug" ];
         extraPackages = with pkgs; [
           wl-clipboard
           mako
@@ -56,15 +62,12 @@ with lib; {
             wlr-randr
           ];
 
-          services.dunst.enable = pkgs.lib.mkForce false;
-          services.network-manager-applet.enable = pkgs.lib.mkForce false;
-          xsession.enable = pkgs.lib.mkForce false;
-          xsession.windowManager.i3.enable = pkgs.lib.mkForce false;
-
           wayland.windowManager.sway = rec {
             enable = true;
+            wrapperFeatures.gtk = true;
             systemdIntegration = true;
             xwayland = true;
+            extraOptions = [ "--unsupported-gpu" ];
             config = {
               modifier = "Mod4";
               input = {
@@ -193,6 +196,11 @@ with lib; {
               # From https://www.reddit.com/r/swaywm/comments/l9asbc/comment/h4pwfb4/
               for_window [app_id="zoom"] floating enable, sticky enable
               for_window [app_id="zoom" title="Zoom Meeting"] inhibit_idle open
+
+              for_window [app_id="zoom" title="^(Zoom|About)$"] border pixel, floating enable
+              for_window [app_id="zoom" title="Settings"] floating enable, floating_minimum_size 960 x 700
+              # Open Zoom Meeting windows on a new workspace (a bit hacky)
+              for_window [app_id="zoom" title="Zoom Meeting(.*)?"] floating disable, inhibit_idle open
             '';
           };
 
@@ -264,6 +272,9 @@ with lib; {
             enable = true;
             server.enable = true;
             settings = {
+              main = {
+                font = "monospace:size=12";
+              };
               key-bindings = {
                 search-start = "Control+Shift+f";
               };

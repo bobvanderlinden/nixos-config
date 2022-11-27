@@ -37,6 +37,7 @@ in
     hardware.opengl =
       {
         enable = true;
+        driSupport = true;
         driSupport32Bit = true;
         package = openglVulkanDrivers pkgs.mesa;
         package32 = openglVulkanDrivers pkgs.pkgsi686Linux.mesa;

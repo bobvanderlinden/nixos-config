@@ -13,6 +13,7 @@
 
   suites.single-user.enable = true;
   suites.i3.enable = true;
+  suites.sway.enable = false;
 
   boot.initrd.systemd.enable = true;
 
@@ -50,6 +51,7 @@
 
   hardware.opengl = {
     enable = true;
+    driSupport = true;
     driSupport32Bit = true;
   };
 
@@ -180,7 +182,12 @@
     enable = true;
     displayManager.autoLogin.enable = true;
     desktopManager.xterm.enable = false;
-    videoDrivers = [ "nvidia" ];
+    videoDrivers = [
+      "nouveau"
+      # "nvidia"
+      "modesetting"
+      "fbdev"
+    ];
     xrandrHeads = [
       {
         output = "DP-0";
@@ -215,9 +222,6 @@
     ibus.engines = with pkgs.ibus-engines; [ uniemoji ];
   };
 
-  # users.extraUsers.bob.extraGroups = [ "sway" ];
-  # programs.sway.enable = true;
-
   programs.fish.enable = true;
   programs.bash.enableCompletion = true;
   programs.tmux.enable = true;
@@ -240,12 +244,16 @@
   nixpkgs.config.allowUnfree = true;
 
   # This adds a lot of build time to the system.
-  # specialisation = {
-  #   wayland.configuration = {
-  #     suites.i3.enable = pkgs.lib.mkForce false;
-  #     suites.sway.enable = true;
-  #   };
-  # };
+  specialisation = {
+    wayland.configuration = {
+      suites.i3.enable = pkgs.lib.mkForce false;
+      suites.sway.enable = pkgs.lib.mkForce true;
+    };
+    i3.configuration = {
+      suites.i3.enable = pkgs.lib.mkForce true;
+      suites.sway.enable = pkgs.lib.mkForce false;
+    };
+  };
 
   documentation.enable = false;
   documentation.nixos.enable = false;

@@ -1,8 +1,7 @@
-{
-  pkgs,
-  config,
-  inputs,
-  ...
+{ pkgs
+, config
+, inputs
+, ...
 }: {
   imports = with inputs.nixos-hardware.nixosModules; [
     # common-cpu-intel
@@ -12,11 +11,11 @@
   ];
 
   # Replacement for common-cpu-intel
-  boot.initrd.kernelModules = ["i915"];
-  hardware.cpu.intel.updateMicrocode = config.hardware.enableRedistributableFirmware;
+  # boot.initrd.kernelModules = [ "i915" ];
+  # hardware.cpu.intel.updateMicrocode = config.hardware.enableRedistributableFirmware;
 
   # Replacement for common-gpu-nvidia
-  services.xserver.videoDrivers = ["nvidia"];
+  services.xserver.videoDrivers = [ "nvidia" ];
 
   # nixos-hardware defaults to va_gl for intel chipsets.
   # This breaks on systems with nvidia.
