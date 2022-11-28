@@ -274,6 +274,10 @@ in
       size = 128;
     };
 
+    home.shellAliases = {
+      g = "git";
+    };
+
     programs.git = {
       enable = true;
       userName = "Bob van der Linden";
