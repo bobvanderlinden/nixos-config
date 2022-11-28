@@ -183,10 +183,10 @@
     displayManager.autoLogin.enable = true;
     desktopManager.xterm.enable = false;
     videoDrivers = [
-      "nouveau"
-      # "nvidia"
-      "modesetting"
-      "fbdev"
+      # "nouveau"
+      "nvidia"
+      # "modesetting"
+      # "fbdev"
     ];
     xrandrHeads = [
       {
