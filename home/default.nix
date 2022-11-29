@@ -213,6 +213,9 @@ in
     programs.fzf.enable = true;
     programs.bat.enable = true;
     programs.fish.enable = true;
+    programs.fish.interactiveShellInit = ''
+      set fish_greeting
+    '';
     programs.starship = {
       enable = true;
       settings = {
