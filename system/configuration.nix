@@ -207,7 +207,7 @@
         clickMethod = "clickfinger";
         disableWhileTyping = true;
         accelProfile = "adaptive";
-        accelSpeed = "0, 5";
+        accelSpeed = "2, 5";
       };
       mouse = {
         accelSpeed = "1";
