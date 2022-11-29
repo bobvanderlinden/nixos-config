@@ -239,6 +239,7 @@
     #   ipv6 = true;
     #   "fixed-cidr-v6" = "fd00::/80";
     # };
+    autoPrune.enable = true;
   };
   networking.firewall.trustedInterfaces = [ "docker0" ];
 
