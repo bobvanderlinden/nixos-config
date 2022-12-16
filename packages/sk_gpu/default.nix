@@ -9,7 +9,6 @@
 , spirv-cross
 , spirv-headers
 , glslang
-, cpm
 , libX11
 , glew
 }:
