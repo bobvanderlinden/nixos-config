@@ -123,7 +123,7 @@
     usbutils # lsusb
   ];
 
-  # Use experimental nsncd
+  # Use experimental nsncd. See https://flokli.de/posts/2022-11-18-nsncd/
   services.nscd.enableNsncd = true;
 
   services.acpid.enable = true;
