@@ -22,7 +22,10 @@
 
   # The latest nvidia versions result in 2 different backlight services.
   # This interferes with brightnessctl, that increases/decreases brightness too much.
-  systemd.services."systemd-backlight@backlight:acpi_video0.service".enable = false;
+  boot.kernelParams = [
+    "acpi_backlight=vendor"
+    "video.use_native_backlight=1"
+  ];
 
   # nixos-hardware defaults to va_gl for intel chipsets.
   # This breaks on systems with nvidia.
