@@ -276,6 +276,7 @@
       experimental-features = [ "nix-command" "flakes" ];
       netrc-file = "/etc/nix/netrc";
       auto-optimise-store = true;
+      log-lines = 100;
     };
     package = pkgs.nixVersions.stable;
   };
