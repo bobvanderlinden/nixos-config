@@ -50,7 +50,7 @@ git worktree add "$WORKTREE_DIR" "$REVISION"
 if [ "$OPTION_INDEX" = 1 ]
 then
   # Apply the index of the original worktree to the new one.
-  git diff --staged | (cd "$WORKTREE_DIR" && git apply --index --allow-empty)
+  git diff-index -p --cached HEAD | (cd "$WORKTREE_DIR" && git apply --index --allow-empty)
 fi
 
 (cd "$WORKTREE_DIR"
