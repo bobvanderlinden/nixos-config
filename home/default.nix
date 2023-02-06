@@ -331,6 +331,7 @@ in
     programs.gh.enable = true;
     programs.jq.enable = true;
     programs.neovim.enable = true;
+    programs.nix-index.enable = true;
     home.sessionVariables = {
       BROWSER = "chromium";
     };
