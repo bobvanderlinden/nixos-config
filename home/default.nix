@@ -8,6 +8,7 @@ in
     ./modules/blueberry.nix
     ./modules/lxqt-policykit-agent.nix
     ./modules/xssproxy.nix
+    ./modules/carapace.nix
   ];
   config = {
     home.packages = with pkgs; [
@@ -225,6 +226,7 @@ in
         };
       };
     };
+    programs.carapace.enable = true;
     qt = {
       enable = true;
       platformTheme = "gnome";
