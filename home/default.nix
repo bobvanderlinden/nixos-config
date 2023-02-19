@@ -102,7 +102,7 @@ in
       thunderbird
       inkscape
       git-worktree-shell
-      monado
+      # monado
       meld
       lsof
       home-manager
