@@ -328,6 +328,14 @@ in
         url."git@github.com:".insteadOf = "https://github.com/";
         branch.sort = "-committerdate";
         tag.sort = "-v:refname";
+
+        # avoid issues where the cargo-edit tool tries to clone from a repo you do not have WRITE access to.
+        # we already use SSH for every github repo, and so this puts the clone back to using HTTPS.
+        url."https://github.com/rust-lang/crates.io-index".insteadOf = "https://github.com/rust-lang/crates.io-index";
+
+        # avoid issues where the `cargo audit` command tries to clone from a repo you do not have WRITE access to.
+        # we already use SSH for every github repo, and so this puts the clone back to using HTTPS.
+        url."https://github.com/RustSec/advisory-db".insteadOf = "https://github.com/RustSec/advisory-db";
       };
     };
     programs.gh.enable = true;
