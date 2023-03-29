@@ -244,6 +244,8 @@ with lib; {
                       "${mod}+Shift+8" = "move container to workspace 8";
                       "${mod}+Shift+9" = "move container to workspace 9";
                       "${mod}+Shift+0" = "move container to workspace 10";
+                      "${mod}+Ctrl+greater" = "move workspace to output right";
+                      "${mod}+Ctrl+less" = "move workspace to output left";
                       "${mod}+Shift+r" = "restart";
                       "${mod}+Shift+e" = ''
                         exec "i3-nagbar -t warning -m 'You pressed the exit shortcut. Do you really want to exit i3? This will end your X session.' -b 'Yes, exit i3' 'i3-msg exit'"'';
