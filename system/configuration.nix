@@ -277,6 +277,7 @@
       netrc-file = "/etc/nix/netrc";
       auto-optimise-store = true;
       log-lines = 100;
+      warn-dirty = false;
     };
     package = pkgs.nixVersions.stable;
   };
