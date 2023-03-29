@@ -338,7 +338,12 @@ in
         url."https://github.com/RustSec/advisory-db".insteadOf = "https://github.com/RustSec/advisory-db";
       };
     };
-    programs.gh.enable = true;
+    programs.gh = {
+      enable = true;
+      settings = {
+        editor = "${vscode}/bin/code --wait";
+      };
+    };
     programs.jq.enable = true;
     programs.neovim.enable = true;
     programs.nix-index.enable = true;
