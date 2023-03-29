@@ -286,7 +286,7 @@ with lib; {
             };
           };
 
-          programs.mako.enable = true;
+          services.mako.enable = true;
         }
       ];
     };

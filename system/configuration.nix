@@ -59,8 +59,6 @@
 
   hardware.v4l2loopback.enable = true;
 
-  hardware.video.hidpi.enable = true;
-
   security.rtkit.enable = true;
   services.pipewire = {
     enable = true;
