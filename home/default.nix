@@ -49,9 +49,13 @@ in
       networkmanagerapplet
       xsel
       lxappearance
+
       gitAndTools.hub
       gitAndTools.gh
       git-cola
+      git-branchless
+      git-absorb
+
       gnome.file-roller
       clang
       slack
@@ -108,7 +112,9 @@ in
       lsof
       home-manager
       difftastic
-      git-absorb
+      du-dust
+      fx
+      peek
     ];
 
     dconf = {
@@ -263,6 +269,7 @@ in
     services.blueberry.enable = true;
     services.mpris-proxy.enable = true;
     services.flameshot.enable = true;
+    services.espanso.enable = true;
     services.redshift = {
       enable = true;
       latitude = "51.985104";
@@ -330,11 +337,6 @@ in
         pr-update = "pull --rebase=merges upstream HEAD";
       };
       ignores = [
-        ".direnv"
-        "flake.nix"
-        "flake.lock"
-        ".envrc"
-        ".data"
         "vendor"
         "workspace.code-workspace"
       ];
@@ -349,6 +351,7 @@ in
         branch.sort = "-committerdate";
         tag.sort = "-v:refname";
 
+        # Source: https://github.com/rust-lang/cargo/issues/3381#issuecomment-1193730972
         # avoid issues where the cargo-edit tool tries to clone from a repo you do not have WRITE access to.
         # we already use SSH for every github repo, and so this puts the clone back to using HTTPS.
         url."https://github.com/rust-lang/crates.io-index".insteadOf = "https://github.com/rust-lang/crates.io-index";

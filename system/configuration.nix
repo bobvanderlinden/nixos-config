@@ -131,6 +131,9 @@
   services.upower.enable = true;
   services.tlp.enable = true;
 
+  # Set permissions for RTL2832 USB dongle to use with urh.
+  hardware.rtl-sdr.enable = true;
+
   services.udev.extraRules = ''
     # Thunderbolt
     # Always authorize thunderbolt connections when they are plugged in.

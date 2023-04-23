@@ -1,7 +1,6 @@
-{
-  config,
-  lib,
-  ...
+{ config
+, lib
+, ...
 }:
 with lib; {
   options = {
@@ -16,9 +15,10 @@ with lib; {
     };
   };
 
-  config = let
-    cfg = config.suites.single-user;
-  in
+  config =
+    let
+      cfg = config.suites.single-user;
+    in
     mkIf cfg.enable {
       assertions = [
         {
@@ -41,6 +41,7 @@ with lib; {
           "video"
           "input"
           "sudo"
+          "plugdev"
         ];
         useDefaultShell = true;
       };

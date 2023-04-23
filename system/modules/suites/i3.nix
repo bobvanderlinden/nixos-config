@@ -162,6 +162,10 @@ with lib; {
                   separator_color = "frame";
                   frame_width = 2;
                   frame_color = "#EC5F67";
+                  corner_radius = 5;
+                  mouse_left = "do_action";
+                  mouse_right = "close_current";
+                  mouse_middle = "close_current";
                 };
 
                 urgency_normal = {
