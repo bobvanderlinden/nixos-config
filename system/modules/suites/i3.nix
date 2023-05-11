@@ -249,6 +249,7 @@ with lib; {
                       (workspace: { key ? workspace }: {
                         "${mod}+${key}" = "workspace ${workspace}";
                         "${mod}+Shift+${key}" = "move container to workspace ${workspace}";
+                        "${mod}+Ctrl+Shift+${key}" = "rename workspace to ${workspace}";
                       })
                       {
                         "1" = { };
