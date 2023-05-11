@@ -282,7 +282,7 @@
       log-lines = 100;
       warn-dirty = false;
     };
-    package = pkgs.nixVersions.stable;
+    package = pkgs.nixVersions.unstable;
   };
 
   system.autoUpgrade = {
