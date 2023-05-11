@@ -228,26 +228,6 @@ with lib; {
                       "${mod}+Shift+g" = "sticky toggle";
                       "${mod}+Shift+f" = "floating toggle";
                       "${mod}+space" = "focus mode_toggle";
-                      "${mod}+1" = "workspace 1";
-                      "${mod}+2" = "workspace 2";
-                      "${mod}+3" = "workspace 3";
-                      "${mod}+4" = "workspace 4";
-                      "${mod}+5" = "workspace 5";
-                      "${mod}+6" = "workspace 6";
-                      "${mod}+7" = "workspace 7";
-                      "${mod}+8" = "workspace 8";
-                      "${mod}+9" = "workspace 9";
-                      "${mod}+0" = "workspace 10";
-                      "${mod}+Shift+1" = "move container to workspace 1";
-                      "${mod}+Shift+2" = "move container to workspace 2";
-                      "${mod}+Shift+3" = "move container to workspace 3";
-                      "${mod}+Shift+4" = "move container to workspace 4";
-                      "${mod}+Shift+5" = "move container to workspace 5";
-                      "${mod}+Shift+6" = "move container to workspace 6";
-                      "${mod}+Shift+7" = "move container to workspace 7";
-                      "${mod}+Shift+8" = "move container to workspace 8";
-                      "${mod}+Shift+9" = "move container to workspace 9";
-                      "${mod}+Shift+0" = "move container to workspace 10";
                       "${mod}+Ctrl+greater" = "move workspace to output right";
                       "${mod}+Ctrl+less" = "move workspace to output left";
                       "${mod}+Shift+r" = "restart";
@@ -265,7 +245,23 @@ with lib; {
                       "XF86AudioPause" = "exec ${pkgs.playerctl}/bin/playerctl pause";
                       "XF86AudioNext" = "exec ${pkgs.playerctl}/bin/playerctl next";
                       "XF86AudioPrev" = "exec ${pkgs.playerctl}/bin/playerctl previous";
-                    };
+                    } // (lib.concatMapAttrs
+                      (workspace: { key ? workspace }: {
+                        "${mod}+${key}" = "workspace ${workspace}";
+                        "${mod}+Shift+${key}" = "move container to workspace ${workspace}";
+                      })
+                      {
+                        "1" = { };
+                        "2" = { };
+                        "3" = { };
+                        "4" = { };
+                        "5" = { };
+                        "6" = { };
+                        "7" = { };
+                        "8" = { };
+                        "9" = { };
+                        "10" = { key = "0"; };
+                      });
 
                   startup = [
                     {
