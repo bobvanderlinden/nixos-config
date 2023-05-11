@@ -115,6 +115,7 @@ in
       du-dust
       fx
       peek
+      cachix
     ];
 
     dconf = {
