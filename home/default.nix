@@ -281,6 +281,14 @@ in
       tray = true;
     };
 
+    services.xsettingsd.enable = true;
+    services.xsettingsd.settings = {
+      "Net/ThemeName" = "Adwaita-dark";
+      "Xft/Antialias" = true;
+      "Xft/Hinting" = true;
+      "Xft/RGBA" = "rgb";
+    };
+
     services.xssproxy.enable = false;
     services.lxqt-policykit-agent.enable = true;
 
