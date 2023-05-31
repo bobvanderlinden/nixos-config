@@ -10,6 +10,7 @@ in
     ./modules/xssproxy.nix
     ./modules/carapace.nix
     ./modules/nushell.nix
+    ./modules/darkman.nix
   ];
   config = {
     home.packages = with pkgs; [
