@@ -363,6 +363,9 @@ in
         branch.sort = "-committerdate";
         tag.sort = "-v:refname";
 
+        # Avoid hint: use --reapply-cherry-picks to include skipped commits
+        advice.skippedCherryPicks = false;
+
         # Source: https://github.com/rust-lang/cargo/issues/3381#issuecomment-1193730972
         # avoid issues where the cargo-edit tool tries to clone from a repo you do not have WRITE access to.
         # we already use SSH for every github repo, and so this puts the clone back to using HTTPS.
