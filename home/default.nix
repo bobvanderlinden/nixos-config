@@ -116,6 +116,8 @@ in
       fx
       peek
       cachix
+      tig
+      dua
     ];
 
     dconf = {
