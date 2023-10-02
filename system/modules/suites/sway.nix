@@ -65,7 +65,7 @@ with lib; {
           wayland.windowManager.sway = rec {
             enable = true;
             wrapperFeatures.gtk = true;
-            systemdIntegration = true;
+            systemd.enable = true;
             xwayland = true;
             extraOptions = [ "--unsupported-gpu" ];
             config = {

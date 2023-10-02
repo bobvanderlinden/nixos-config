@@ -95,7 +95,7 @@
         ];
       };
     };
-    fonts = with pkgs; [
+    packages = with pkgs; [
       (nerdfonts.override { fonts = [ "SourceCodePro" ]; })
       corefonts # Microsoft free fonts
       noto-fonts

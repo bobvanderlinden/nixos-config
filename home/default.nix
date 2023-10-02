@@ -8,7 +8,6 @@ in
     ./modules/blueberry.nix
     ./modules/lxqt-policykit-agent.nix
     ./modules/xssproxy.nix
-    ./modules/carapace.nix
     ./modules/nushell.nix
     ./modules/darkman.nix
   ];
@@ -271,7 +270,8 @@ in
     services.blueberry.enable = true;
     services.mpris-proxy.enable = true;
     services.flameshot.enable = true;
-    services.espanso.enable = true;
+    # Broken on nixpkgs.
+    # services.espanso.enable = true;
     services.redshift = {
       enable = true;
       latitude = "51.985104";
