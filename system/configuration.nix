@@ -182,12 +182,15 @@
   services.redshift.enable = true;
   location.provider = "geoclue2";
 
+  services.gnome.gnome-keyring.enable = true;
+
   # Enable the X11 windowing system.
   services.greetd.enable = true;
   services.xserver = {
     enable = true;
     displayManager.autoLogin.enable = true;
     desktopManager.xterm.enable = false;
+    updateDbusEnvironment = true;
     videoDrivers = [
       # "nouveau"
       "nvidia"
