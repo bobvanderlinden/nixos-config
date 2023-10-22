@@ -270,8 +270,7 @@ in
     services.blueberry.enable = true;
     services.mpris-proxy.enable = true;
     services.flameshot.enable = true;
-    # Broken on nixpkgs.
-    # services.espanso.enable = true;
+    services.espanso.enable = true;
     services.darkman = {
       enable = true;
       settings = {
