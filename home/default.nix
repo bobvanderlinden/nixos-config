@@ -9,7 +9,6 @@ in
     ./modules/lxqt-policykit-agent.nix
     ./modules/xssproxy.nix
     ./modules/nushell.nix
-    ./modules/darkman.nix
   ];
   config = {
     home.packages = with pkgs; [
@@ -273,6 +272,14 @@ in
     services.flameshot.enable = true;
     # Broken on nixpkgs.
     # services.espanso.enable = true;
+    services.darkman = {
+      enable = true;
+      settings = {
+        latitude = "51.985104";
+        longitude = "5.898730";
+        usegeoclue = true;
+      };
+    };
     services.redshift = {
       enable = true;
       latitude = "51.985104";
