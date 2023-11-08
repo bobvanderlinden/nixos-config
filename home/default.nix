@@ -67,7 +67,6 @@ in
       ttf_bitstream_vera
       gnupg
       vlc
-      webtorrent_desktop
       patchelf
       docker-compose
       httpie
