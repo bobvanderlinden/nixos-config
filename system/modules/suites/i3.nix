@@ -15,11 +15,14 @@ with lib; {
       cfg = config.suites.i3;
       pulseaudio = pkgs.pulseaudio;
       backgroundColor = "1a1b26";
-      wallpaper = pkgs.fetchurl {
+      wallpaperSvg = pkgs.fetchurl {
         url = "https://raw.githubusercontent.com/NixOS/nixos-artwork/master/logo/nix-snowflake.svg";
         hash = "sha256-SCuQlSPB14GFTq4XvExJ0QEuK2VIbrd5YYKHLRG/q5I=";
       };
-      lockCmd = "${pkgs.i3lock}/bin/i3lock --nofork --color ${backgroundColor} --image ${wallpaper}";
+      wallpaperPng = pkgs.runCommand "nix-snowflake.png" { } ''
+        ${pkgs.resvg}/bin/resvg --width 1920 --height 1080 ${wallpaperSvg} $out
+      '';
+      lockCmd = "${pkgs.i3lock}/bin/i3lock --nofork --color ${backgroundColor} --image ${wallpaperPng}";
     in
     mkIf cfg.enable {
       services.xserver.displayManager.lightdm.enable = true;
@@ -107,7 +110,7 @@ with lib; {
             };
 
             xsession.initExtra = ''
-              ${pkgs.feh}/bin/feh --bg-center --image-bg '#${backgroundColor}' ${wallpaper}
+              ${pkgs.feh}/bin/feh --bg-center --image-bg '#${backgroundColor}' ${wallpaperSvg}
             '';
 
 
