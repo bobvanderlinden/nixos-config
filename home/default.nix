@@ -54,6 +54,7 @@ in
       git-cola
       git-branchless
       git-absorb
+      git-revise
 
       gnome.file-roller
       clang
