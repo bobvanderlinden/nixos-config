@@ -24,6 +24,9 @@ with lib; {
     mkIf cfg.enable {
       services.xserver.displayManager.lightdm.enable = true;
       services.xserver.displayManager.defaultSession = "none+i3";
+      services.xserver.displayManager.sessionCommands = ''
+        ${lib.getBin pkgs.dbus}/bin/dbus-update-activation-environment --systemd --all
+      '';
       services.xserver.windowManager.i3 = {
         enable = true;
         extraPackages = with pkgs; [ dmenu i3status i3lock ];
@@ -41,6 +44,8 @@ with lib; {
 
       programs.xss-lock.enable = true;
       services.gnome.gnome-keyring.enable = true;
+      services.dbus.packages = [ pkgs.gnome3.gnome-keyring pkgs.gcr ];
+      services.udev.packages = with pkgs; [ gnome3.gnome-settings-daemon ];
       services.gvfs.enable = true;
       programs.seahorse.enable = true;
 

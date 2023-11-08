@@ -182,8 +182,6 @@
   services.redshift.enable = true;
   location.provider = "geoclue2";
 
-  services.gnome.gnome-keyring.enable = true;
-
   # Enable the X11 windowing system.
   services.greetd.enable = true;
   services.xserver = {
