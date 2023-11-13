@@ -22,7 +22,15 @@ with lib; {
       wallpaperPng = pkgs.runCommand "nix-snowflake.png" { } ''
         ${pkgs.resvg}/bin/resvg --width 1920 --height 1080 ${wallpaperSvg} $out
       '';
-      lockCmd = "${pkgs.i3lock}/bin/i3lock --nofork --color ${backgroundColor} --image ${wallpaperPng}";
+      lock = pkgs.writeShellApplication {
+        name = "lock";
+        text = ''
+          SCREEN_RESOLUTION="$(xdpyinfo | grep dimensions | cut -d' ' -f7)"
+          convert -gravity center -background "#${backgroundColor}" "${wallpaperSvg}" -extent "$SCREEN_RESOLUTION" RGB:- | i3lock --nofork --color "${backgroundColor}" --raw "$SCREEN_RESOLUTION":rgb --image /dev/stdin
+        '';
+        runtimeInputs = [ pkgs.imagemagick pkgs.i3lock pkgs.xorg.xdpyinfo pkgs.coreutils ];
+      };
+      lockCmd = "${lock}/bin/lock";
     in
     mkIf cfg.enable {
       services.xserver.displayManager.lightdm.enable = true;
