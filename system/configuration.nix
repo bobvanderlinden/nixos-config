@@ -164,10 +164,11 @@
   };
   services.openssh.enable = false;
 
-  services.printing = {
-    enable = true;
-    drivers = with pkgs; [ gutenprint splix cups-bjnp ];
-  };
+  # No need for printing atm.
+  # services.printing = {
+  #   enable = true;
+  #   drivers = with pkgs; [ gutenprint splix cups-bjnp ];
+  # };
 
   services.avahi = {
     enable = true;
