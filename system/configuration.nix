@@ -1,6 +1,7 @@
 { config
 , pkgs
 , lib
+, inputs
 , ...
 }: {
   imports = [
@@ -293,11 +294,14 @@
   documentation.nixos.enable = false;
 
   nix = {
+    registry.nixpkgs.flake = inputs.nixpkgs;
+
     gc = {
       dates = "weekly";
       automatic = true;
       options = "--delete-older-than 60d";
     };
+
     settings = {
       sandbox = true;
       extra-sandbox-paths = [ "/etc/nix/netrc" ];
