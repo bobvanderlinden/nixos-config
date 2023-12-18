@@ -253,7 +253,6 @@
   programs.tmux.enable = true;
   programs.adb.enable = true;
 
-  services.redis.servers."".enable = true;
 
   # virtualisation.virtualbox.host.enable = true;
   virtualisation.docker = {
