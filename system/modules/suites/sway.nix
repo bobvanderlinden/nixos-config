@@ -52,7 +52,7 @@ with lib; {
             };
           };
         };
-        extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+        extraPortals = [ pkgs.xdg-desktop-portal-wlr ];
         configPackages = config.xdg.portal.extraPortals ++ (with pkgs; [
           gnome.gnome-keyring
         ]);
