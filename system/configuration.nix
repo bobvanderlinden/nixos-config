@@ -253,6 +253,11 @@
   programs.tmux.enable = true;
   programs.adb.enable = true;
 
+  programs._1password.enable = true;
+  programs._1password-gui = {
+    enable = true;
+    polkitPolicyOwners = [ config.suites.single-user.user ];
+  };
 
   # virtualisation.virtualbox.host.enable = true;
   virtualisation.docker = {
