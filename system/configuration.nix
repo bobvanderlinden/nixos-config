@@ -32,6 +32,24 @@
 
   security.sudo.enable = true;
 
+  # On my desktop I don't want to run into file limitations.
+  # Using vite with a large project made Chromium reach the
+  # limit, resulting in weird behaviour without proper errors. Never again.
+  security.pam.loginLimits = [
+    {
+      domain = "*";
+      type = "soft";
+      item = "nofile";
+      value = "-1";
+    }
+    {
+      domain = "*";
+      type = "hard";
+      item = "nofile";
+      value = "-1";
+    }
+  ];
+
   hardware.bluetooth = {
     enable = true;
     # hsphfpd.enable = true;
