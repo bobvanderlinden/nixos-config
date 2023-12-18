@@ -384,6 +384,8 @@ in
     programs.gh = {
       enable = true;
       settings = {
+        # See https://github.com/nix-community/home-manager/issues/4744
+        version = "1";
         editor = "${vscode}/bin/code --wait";
       };
     };
