@@ -251,6 +251,9 @@
   users.defaultUserShell = pkgs.fish;
 
   nixpkgs.config.allowUnfree = true;
+  nixpkgs.config.permittedInsecurePackages = [
+    "electron-25.9.0"
+  ];
 
   # This adds a lot of build time to the system.
   specialisation = {
