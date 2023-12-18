@@ -53,6 +53,9 @@ with lib; {
           };
         };
         extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+        configPackages = config.xdg.portal.extraPortals ++ (with pkgs; [
+          gnome.gnome-keyring
+        ]);
       };
 
       home-manager.sharedModules = [

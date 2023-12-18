@@ -51,6 +51,9 @@ with lib; {
         extraPortals = with pkgs; [
           xdg-desktop-portal-gtk
         ];
+        configPackages = config.xdg.portal.extraPortals ++ (with pkgs; [
+          gnome.gnome-keyring
+        ]);
       };
 
       programs.xss-lock.enable = true;
