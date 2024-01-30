@@ -117,6 +117,7 @@ in
       cachix
       tig
       dua
+      chatgpt-cli
     ];
 
     dconf = {
