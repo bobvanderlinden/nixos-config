@@ -13,64 +13,67 @@ with lib; {
   config =
     let
       cfg = config.suites.sway;
+      backgroundColor = "1a1b26";
+      wallpaperSvg = pkgs.fetchurl {
+        url = "https://raw.githubusercontent.com/NixOS/nixos-artwork/master/logo/nix-snowflake.svg";
+        hash = "sha256-SCuQlSPB14GFTq4XvExJ0QEuK2VIbrd5YYKHLRG/q5I=";
+      };
+      wallpaperPng = pkgs.runCommand "nix-snowflake.png" { } ''
+        ${pkgs.resvg}/bin/resvg --width 1920 --height 1080 ${wallpaperSvg} $out
+      '';
     in
     mkIf cfg.enable {
       suites.wayland.enable = mkDefault true;
 
       services.xserver.displayManager.defaultSession = mkDefault "sway";
 
-      # Prevent restarting sway when using nixos-rebuild switch
-      systemd.services.sway.restartIfChanged = false;
-
-      services.greetd.enable = mkForce false;
-      services.xserver.displayManager.gdm.enable = mkForce true;
-
-
-      programs.sway = {
-        enable = true;
-        wrapperFeatures.gtk = true;
-        extraOptions = [ "--unsupported-gpu" ];
-        extraPackages = with pkgs; [
-          wl-clipboard
-          mako
-          foot
-          wofi
-        ];
-        extraSessionCommands = ''
-          # export WLR_NO_HARDWARE_CURSORS=1
-        '';
-      };
-      xdg.portal = {
-        enable = true;
-        wlr = {
-          enable = true;
-          settings = {
-            screencast = {
-              chooser_type = "none";
-              region = "0,0:3840x2160";
-              cropmode = "pipewire";
-            };
-          };
-        };
-        extraPortals = [ pkgs.xdg-desktop-portal-wlr ];
-        configPackages = config.xdg.portal.extraPortals ++ (with pkgs; [
-          gnome.gnome-keyring
-        ]);
+      security.pam.services.swaylock = {
+        fprintAuth = true;
       };
 
       home-manager.sharedModules = [
+        ({ config, ... }:
         {
-          home.packages = with pkgs; [
-            swaylock
-            wlr-randr
+          services.kanshi.enable = true;
+          xdg.portal = {
+            enable = true;
+            # xdgOpenUsePortal = true;
+            config.common = {
+              default = [
+                "wlr"
+                "gtk"
+                "gnome"
+              ];
+              "org.freedesktop.impl.portal.Secret" = [
+                "gnome-keyring"
+              ];
+            };
+            extraPortals = [
+              pkgs.xdg-desktop-portal-wlr
+              pkgs.xdg-desktop-portal-gtk
+              pkgs.xdg-desktop-portal-gnome
+            ];
+            configPackages = [
+              pkgs.gnome.gnome-session
+              pkgs.gnome.gnome-keyring
+            ];
+          };
+
+          services.gnome-keyring.enable = true;
+
+          home.packages = [
+            pkgs.gnome.seahorse
           ];
+
 
           wayland.windowManager.sway = rec {
             enable = true;
             wrapperFeatures.gtk = true;
-            systemd.enable = true;
+            systemd = {
+              enable = true;
+              xdgAutostart = true;
+            };
             xwayland = true;
-            extraOptions = [ "--unsupported-gpu" ];
             config = {
               modifier = "Mod4";
               input = {
@@ -178,10 +181,8 @@ with lib; {
               default_orientation horizontal
               workspace_layout tabbed
 
-              workspace "10" output DVI-I-0
-
-              for_window [class="Bitwarden"] move scratchpad
-              for_window [class="Bitwarden"] sticky enable
+              for_window [app_id="Bitwarden"] move scratchpad
+              for_window [app_id="Bitwarden"] sticky enable
               for_window [class="gnome-pomodoro"] move scratchpad
               for_window [class="gnome-pomodoro"] sticky enable
               for_window [class="floating"] floating enable
@@ -196,33 +197,43 @@ with lib; {
               for_window [window_type="tooltip"] floating enable
               for_window [window_type="notification"] floating enable
 
-              # From https://www.reddit.com/r/swaywm/comments/l9asbc/comment/h4pwfb4/
-              for_window [app_id="zoom"] floating enable, sticky enable
-              for_window [app_id="zoom" title="Zoom Meeting"] inhibit_idle open
+              # Based on https://www.reddit.com/r/swaywm/comments/l9asbc/comment/h4pwfb4/
+              for_window [app_id="Zoom"] floating enable, sticky enable
+              for_window [app_id="Zoom" title="Zoom Meeting"] inhibit_idle open
 
-              for_window [app_id="zoom" title="^(Zoom|About)$"] border pixel, floating enable
-              for_window [app_id="zoom" title="Settings"] floating enable, floating_minimum_size 960 x 700
-              # Open Zoom Meeting windows on a new workspace (a bit hacky)
-              for_window [app_id="zoom" title="Zoom Meeting(.*)?"] floating disable, inhibit_idle open
+              for_window [app_id="Zoom" title="as_toolbar"] floating enable, sticky enable
+              for_window [app_id="Zoom" title="^(Zoom|About)$"] border pixel
+              for_window [app_id="Zoom" title="Settings"] floating_minimum_size 200 x 200
             '';
           };
 
-          services.swayidle = {
+          services.swayosd.enable = true;
+          programs.swaylock.enable = true;
+          programs.swaylock.package = pkgs.swaylock-fprintd;
+          programs.swaylock.settings = {
+            color = backgroundColor;
+            scaling = "center";
+            image = "${wallpaperPng}";
+          };
+
+          services.swayidle = let
+              swaylock = config.programs.swaylock.package;
+            in {
             enable = true;
             timeouts = [
               {
                 timeout = 5 * 60;
-                command = "swaylock -f";
+                command = "${swaylock}/bin/swaylock --daemonize --fingerprint";
               }
             ];
             events = [
               {
                 event = "before-sleep";
-                command = "swaylock -f";
+                command = "${swaylock}/bin/swaylock --daemonize --fingerprint";
               }
               {
                 event = "lock";
-                command = "swaylock -f";
+                command = "${swaylock}/bin/swaylock --daemonize --fingerprint";
               }
             ];
           };
@@ -263,6 +274,8 @@ with lib; {
                 battery = {
                   format = "{capacity}% {icon}";
                   format-icons = [ "" "" "" "" "" ];
+                  format-charging = "<span font='Font Awesome 5 Free'></span>  <span font='Font Awesome 5 Free 11'>{icon}</span>  {capacity}% - {time}";
+                  format-full = "<span font='Font Awesome 5 Free'></span>  <span font='Font Awesome 5 Free 11'>{icon}</span>  Charged";
                 };
                 clock = {
                   format-alt = "{:%a, %d. %b  %H:%M}";
@@ -290,7 +303,7 @@ with lib; {
           };
 
           services.mako.enable = true;
-        }
+        })
       ];
     };
 }

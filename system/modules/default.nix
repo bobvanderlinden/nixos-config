@@ -5,6 +5,6 @@
   suite-wayland = import ./suites/wayland.nix;
   suite-nix-channels = import ./suites/nix-channels.nix;
   home-manager = import ./home-manager.nix;
-  hp-zbook-studio-g5 = import ./hp-zbook-studio-g5.nix;
+  # hp-zbook-studio-g5 = import ./hp-zbook-studio-g5.nix;
   nvidia-vulkan = import ./nvidia-vulkan.nix;
 }

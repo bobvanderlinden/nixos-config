@@ -5,11 +5,8 @@ with lib;
 
   config = mkIf config.suites.wayland.enable
     {
-      # hardware.nvidia.vulkan.enable = mkDefault true;
-
       services.xserver.enable = mkDefault true;
-      # systemd.services.display-manager.enable = mkDefault true;
-      # services.xserver.displayManager.gdm.wayland = mkDefault true;
+      services.xserver.displayManager.gdm.wayland = mkDefault true;
 
       environment.systemPackages = [
         # Source: https://github.com/NixOS/nixpkgs/blob/45004c6f6330b1ff6f3d6c3a0ea8019f6c18a930/nixos/modules/programs/sway.nix#L47-L53
@@ -37,7 +34,6 @@ with lib;
 
         WLR_DRM_NO_ATOMIC = "1";
         WLR_NO_HARDWARE_CURSORS = "1";
-        LIBVA_DRIVER_NAME = "nvidia";
         MOZ_DISABLE_RDD_SANDBOX = "1";
         EGL_PLATFORM = "wayland";
       };
@@ -45,24 +41,11 @@ with lib;
       home-manager.sharedModules = [
         {
           home.packages = with pkgs; [
-            swaylock
             wlr-randr
           ];
 
           # Source: https://discourse.nixos.org/t/atril-is-blurry-engrampa-is-not-sway-scale-2/2865/2
           xresources.properties."Xft.dpi" = "96";
-
-          # Source: https://wiki.archlinux.org/title/Wayland#Configuration_file
-          home.file.".config/electron-flags.conf".text = ''
-            --enable-features=WaylandWindowDecorations
-            --ozone-platform-hint=auto
-          '';
-
-          # Source: https://wiki.archlinux.org/title/Wayland#Older_Electron_versions
-          home.file.".config/electron13-flags.conf".text = ''
-            --enable-features=UseOzonePlatform
-            --ozone-platform=wayland
-          '';
         }
       ];
     };

@@ -124,6 +124,7 @@ with lib; {
               ${pkgs.feh}/bin/feh --bg-center --image-bg '#${backgroundColor}' ${wallpaperSvg}
             '';
 
+            programs.autorandr.enable = true;
 
             programs.i3status = {
               enable = true;

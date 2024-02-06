@@ -8,42 +8,42 @@
   modulesPath,
   ...
 }: {
-  boot.initrd.availableKernelModules = ["xhci_pci" "ahci" "nvme" "rtsx_pci_sdmmc"];
-  boot.initrd.kernelModules = ["dm-snapshot"];
-  boot.kernelModules = ["kvm-intel"];
-  boot.extraModulePackages = [];
-  boot.loader.grub = {
-    enable = true;
-    efiSupport = true;
-    device = "nodev";
-    gfxmodeEfi = "1280x1024x32,auto";
-    configurationLimit = 5;
-  };
-  boot.loader.efi.canTouchEfiVariables = false;
+  boot.initrd.availableKernelModules = [ "xhci_pci" "nvme" "thunderbolt" "rtsx_pci_sdmmc" ];
+  boot.initrd.kernelModules = [ "dm-snapshot" ];
+  boot.kernelModules = [ "kvm-intel" ];
+  boot.extraModulePackages = [ ];
+
+  boot.loader.systemd-boot.enable = true;
+  boot.loader.systemd-boot.netbootxyz.enable = true;
+  boot.loader.efi.canTouchEfiVariables = true;
   boot.loader.efi.efiSysMountPoint = "/boot/efi";
 
   boot.initrd.luks.devices.luksroot = {
-    device = "/dev/disk/by-uuid/cd9a4de0-421a-4dfa-b029-ec5d167bee8b";
+    device = "/dev/disk/by-uuid/df00d5d2-13d3-4d99-864e-f89169c4b241";
     allowDiscards = true;
-    # fallbackToPassword = true;
+    preLVM = true;
   };
 
-  fileSystems."/" = {
-    device = "/dev/disk/by-uuid/d8273e31-010b-4746-9f3f-74af3895ad7e";
-    fsType = "ext4";
-  };
+  fileSystems."/" =
+    { device = "/dev/disk/by-uuid/115f53cf-99fc-40eb-8dfc-e448593d09cf";
+      fsType = "ext4";
+    };
 
-  fileSystems."/boot" = {
-    device = "/dev/disk/by-uuid/bd487b7d-a609-4548-a6bc-ec1c3fd5490a";
-    fsType = "ext2";
-  };
+  fileSystems."/boot" =
+    { device = "/dev/disk/by-uuid/80c5465e-1983-4e22-90e3-d219fb23f6fb";
+      fsType = "ext4";
+    };
 
-  fileSystems."/boot/efi" = {
-    device = "/dev/disk/by-uuid/F3A7-9DE7";
-    fsType = "vfat";
-  };
+  fileSystems."/boot/efi" =
+    { device = "/dev/disk/by-uuid/199D-2646";
+      fsType = "vfat";
+    };
 
-  swapDevices = [{device = "/dev/disk/by-uuid/e6abca0d-aa89-423f-a2c1-add077c0d83f";}];
+  swapDevices = [
+    {
+      device = "/dev/disk/by-uuid/4d13ef58-33bb-4e0f-95ea-dcfec3371911";
+    }
+  ];
 
   powerManagement.cpuFreqGovernor = lib.mkDefault "powersave";
 }

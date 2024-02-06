@@ -118,6 +118,7 @@ in
       tig
       dua
       chatgpt-cli
+      helix
     ];
 
     dconf = {
@@ -266,12 +267,10 @@ in
     };
 
     services.gpg-agent.enable = true;
-    services.keybase.enable = true;
     services.network-manager-applet.enable = true;
     services.blueberry.enable = true;
     services.mpris-proxy.enable = true;
     services.flameshot.enable = true;
-    services.espanso.enable = true;
     services.darkman = {
       enable = true;
       settings = {
@@ -302,18 +301,6 @@ in
 
     services.pasystray.enable = true;
 
-    systemd.user.services.bitwarden = {
-      Unit = {
-        Description = "Bitwarden";
-        After = [ "graphical-session-pre.target" ];
-        PartOf = [ "graphical-session.target" ];
-      };
-
-      Install = { WantedBy = [ "graphical-session.target" ]; };
-
-      Service = { ExecStart = "${pkgs.bitwarden}/bin/bitwarden"; };
-    };
-
     xdg.enable = true;
     # news.display = "silent";
 
@@ -333,7 +320,6 @@ in
       userName = "Bob van der Linden";
       userEmail = "bobvanderlinden@gmail.com";
       signing.signByDefault = true;
-      signing.key = "EEBE8E3EC4A31364";
       delta.enable = true;
       aliases = {
         unstage = "reset HEAD --";
@@ -396,7 +382,6 @@ in
     home.sessionVariables = {
       BROWSER = "chromium";
     };
-    programs.autorandr.enable = true;
     programs.direnv = {
       enable = true;
       nix-direnv.enable = true;

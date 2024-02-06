@@ -13,10 +13,10 @@
   time.timeZone = "Europe/Amsterdam";
 
   suites.single-user.enable = true;
-  suites.i3.enable = true;
-  suites.sway.enable = false;
+  suites.sway.enable = true;
 
   boot.initrd.systemd.enable = true;
+  boot.plymouth.enable = true;
 
   programs.nix-ld.enable = true;
 
@@ -87,7 +87,7 @@
   };
 
   networking = {
-    hostName = "NVC3919";
+    hostName = "nac44250";
 
     firewall = {
       enable = true;
@@ -140,6 +140,8 @@
     docker
 
     usbutils # lsusb
+
+    polkit_gnome
   ];
 
   # Use experimental nsncd. See https://flokli.de/posts/2022-11-18-nsncd/
@@ -202,51 +204,25 @@
   services.redshift.enable = true;
   location.provider = "geoclue2";
 
-  # Enable the X11 windowing system.
-  services.greetd.enable = true;
-  services.xserver = {
+  services.greetd = {
     enable = true;
-    displayManager.autoLogin.enable = true;
-    desktopManager.xterm.enable = false;
-    updateDbusEnvironment = true;
-    videoDrivers = [
-      # "nouveau"
-      "nvidia"
-      # "modesetting"
-      # "fbdev"
-    ];
-    xrandrHeads = [
-      {
-        output = "DP-0";
-        primary = true;
-      }
-      "HDMI-0"
-    ];
-
-    synaptics.enable = false;
-    # wacom.enable = true;
-    libinput = {
-      enable = true;
-      touchpad = {
-        clickMethod = "clickfinger";
-        disableWhileTyping = true;
-        accelProfile = "adaptive";
-        accelSpeed = "2, 5";
-      };
-      mouse = {
-        accelSpeed = "1";
-      };
+    settings = {
+      default_session.command = "${pkgs.greetd.greetd}/bin/agreety --cmd sway";
     };
   };
 
+  services.xserver.enable = false;
+  services.xserver.displayManager.autoLogin.enable = true;
+
   # Fingerprint reader
-  # services.fprintd.enable = true;
-  # security.pam.services.login.fprintAuth = true;
-  # security.pam.services.xscreensaver.fprintAuth = true;
+  services.fprintd.enable = true;
+  security.pam.services.login.fprintAuth = true;
+  security.pam.services.login.enableGnomeKeyring = true;
+  security.pam.services.xscreensaver.fprintAuth = true;
 
   i18n.inputMethod = {
     enabled = "ibus";
-    ibus.engines = with pkgs.ibus-engines; [ uniemoji ];
+    ibus.engines = with pkgs.ibus-engines; [ uniemoji typing-booster ];
   };
 
   programs.fish.enable = true;
@@ -278,20 +254,12 @@
     "electron-25.9.0"
   ];
 
-  # This adds a lot of build time to the system.
-  specialisation = {
-    wayland.configuration = {
-      suites.i3.enable = pkgs.lib.mkForce false;
-      suites.sway.enable = pkgs.lib.mkForce true;
-    };
-    i3.configuration = {
-      suites.i3.enable = pkgs.lib.mkForce true;
-      suites.sway.enable = pkgs.lib.mkForce false;
-    };
-  };
-
   documentation.enable = false;
   documentation.nixos.enable = false;
+
+  home-manager.sharedModules = [{
+    programs.git.signing.key = "2BA975040411E0DE97B44224D0C37FC5C11D1D60";
+  }];
 
   nix = {
     registry.nixpkgs.flake = inputs.nixpkgs;
