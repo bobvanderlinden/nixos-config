@@ -121,6 +121,7 @@
       (nerdfonts.override { fonts = [ "SourceCodePro" ]; })
       corefonts # Microsoft free fonts
       noto-fonts
+      noto-fonts-emoji
     ];
   };
 
