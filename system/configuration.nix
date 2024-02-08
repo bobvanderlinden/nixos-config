@@ -211,7 +211,13 @@
   services.greetd = {
     enable = true;
     settings = {
-      default_session.command = "${pkgs.greetd.greetd}/bin/agreety --cmd sway";
+      default_session = {
+        command = "${lib.getExe pkgs.cage} ${lib.getExe pkgs.greetd.gtkgreet}";
+      };
+      initial_session = {
+        command = "${lib.getExe pkgs.sway}";
+        user = config.suites.single-user.user;
+      };
     };
   };
 
