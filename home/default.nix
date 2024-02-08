@@ -1,7 +1,6 @@
 { pkgs, config, ... }:
 let
-  vscode = pkgs.vscode;
-  pulseaudio = pkgs.pulseaudioFull;
+  vscode = config.programs.vscode.package;
 in
 {
   imports = [
@@ -75,7 +74,6 @@ in
       feh
       screen
       nixpkgs-review
-      vscode
       leafpad
       mypaint
       tiled
@@ -367,6 +365,10 @@ in
         # we already use SSH for every github repo, and so this puts the clone back to using HTTPS.
         url."https://github.com/RustSec/advisory-db".insteadOf = "https://github.com/RustSec/advisory-db";
       };
+    };
+    programs.vscode = {
+      enable = true;
+      enableUpdateCheck = false;
     };
     programs.gh = {
       enable = true;
