@@ -17,6 +17,9 @@
 
   boot.initrd.systemd.enable = true;
   boot.plymouth.enable = true;
+  boot.consoleLogLevel = 3;
+  boot.kernelParams = [ "quiet" "udev.log_priority=3" ];
+  boot.loader.timeout = 0;
 
   programs.nix-ld.enable = true;
 
