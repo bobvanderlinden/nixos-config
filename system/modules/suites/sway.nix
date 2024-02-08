@@ -31,6 +31,7 @@ with lib; {
         fprintAuth = true;
       };
 
+
       home-manager.sharedModules = [
         ({ config, ... }:
         {
@@ -203,12 +204,14 @@ with lib; {
             '';
           };
 
-          programs.swaylock.enable = true;
-          programs.swaylock.package = pkgs.swaylock-fprintd;
-          programs.swaylock.settings = {
-            color = backgroundColor;
-            scaling = "center";
-            image = "${wallpaperPng}";
+          programs.swaylock = {
+            enable = true;
+            package = pkgs.swaylock-fprintd;
+            settings = {
+              color = backgroundColor;
+              scaling = "center";
+              image = "${wallpaperPng}";
+            };
           };
 
           services.swayidle = let
@@ -255,6 +258,9 @@ with lib; {
                 modules-left = [ "sway/workspaces" "sway/mode" ];
                 modules-center = [ ];
                 modules-right = [ "network" "battery" "clock" "tray" ];
+                "sway/workspaces" = {
+                  enable-bar-scroll = true;
+                };
                 "sway/window" = {
                   max-length = 50;
                 };
