@@ -89,6 +89,7 @@ with lib; {
               ];
               keybindings =
                 let
+                  swayosd = "${pkgs.swayosd}/bin/swayosd-client";
                   mod = config.modifier;
                 in
                 {
@@ -155,12 +156,12 @@ with lib; {
                     exec "i3-nagbar -t warning -m 'You pressed the exit shortcut. Do you really want to exit i3? This will end your X session.' -b 'Yes, exit i3' 'i3-msg exit'"
                   '';
 
-                  "XF86AudioRaiseVolume" = "exec ${pkgs.pamixer}/bin/pamixer --increase 5";
-                  "XF86AudioLowerVolume" = "exec ${pkgs.pamixer}/bin/pamixer --decrease 5";
-                  "XF86AudioMute" = "exec ${pkgs.pamixer}/bin/pamixer --toggle-mute";
+                  "XF86AudioRaiseVolume" = "exec ${swayosd} --output-volume raise";
+                  "XF86AudioLowerVolume" = "exec ${swayosd} --output-volume lower";
+                  "XF86AudioMute" = "exec ${swayosd} --output-volume mute-toggle";
 
-                  "XF86MonBrightnessUp" = "exec ${pkgs.brightnessctl}/bin/brightnessctl set +2%";
-                  "XF86MonBrightnessDown" = "exec ${pkgs.brightnessctl}/bin/brightnessctl set 2%-";
+                  "XF86MonBrightnessUp" = "exec ${swayosd} --brightness raise";
+                  "XF86MonBrightnessDown" = "exec ${swayosd} --brightness lower";
 
                   "XF86AudioPlay" = "exec ${pkgs.playerctl}/bin/playerctl play";
                   "XF86AudioPause" = "exec ${pkgs.playerctl}/bin/playerctl pause";
