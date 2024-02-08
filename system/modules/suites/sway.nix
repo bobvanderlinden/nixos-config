@@ -44,14 +44,12 @@ with lib; {
                 "gtk"
                 "gnome"
               ];
-              "org.freedesktop.impl.portal.Secret" = [
-                "gnome-keyring"
-              ];
             };
             extraPortals = [
               pkgs.xdg-desktop-portal-wlr
               pkgs.xdg-desktop-portal-gtk
               pkgs.xdg-desktop-portal-gnome
+              pkgs.gnome.gnome-keyring
             ];
             configPackages = [
               pkgs.gnome.gnome-session
@@ -59,12 +57,9 @@ with lib; {
             ];
           };
 
-          services.gnome-keyring.enable = true;
-
           home.packages = [
             pkgs.gnome.seahorse
           ];
-
 
           wayland.windowManager.sway = rec {
             enable = true;
