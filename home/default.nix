@@ -371,7 +371,6 @@ in
     };
     programs.vscode = {
       enable = true;
-      enableUpdateCheck = false;
     };
     programs.gh = {
       enable = true;
