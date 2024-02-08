@@ -117,6 +117,7 @@ in
       dua
       chatgpt-cli
       helix
+      xdg-utils
     ];
 
     dconf = {
