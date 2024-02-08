@@ -4,9 +4,6 @@
 , inputs
 , ...
 }: {
-  imports = [
-    ./modules/v4l2loopback.nix
-  ];
   # Allow opening a shell during boot.
   # systemd.additionalUpstreamSystemUnits = ["debug-shell.service"];
 
@@ -78,8 +75,6 @@
     driSupport = true;
     driSupport32Bit = true;
   };
-
-  hardware.v4l2loopback.enable = true;
 
   security.rtkit.enable = true;
   services.pipewire = {
