@@ -117,6 +117,7 @@ in
       dua
       chatgpt-cli
       helix
+      nix-output-monitor
       xdg-utils
     ];
 
