@@ -203,7 +203,6 @@ with lib; {
             '';
           };
 
-          services.swayosd.enable = true;
           programs.swaylock.enable = true;
           programs.swaylock.package = pkgs.swaylock-fprintd;
           programs.swaylock.settings = {
