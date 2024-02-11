@@ -6,6 +6,7 @@ rec {
   coin = callPackage ./coin { };
   git-worktree-shell = callPackage ./git-worktree-shell { };
   swaylock-fprintd = callPackage ./swaylock-fprintd { };
+  sway-open = callPackage ./sway-open { };
   immersed = callPackage ./immersed { };
   disable-firewall = callPackage ./disable-firewall { };
   xrdesktop = callPackage ./xrdesktop { };
