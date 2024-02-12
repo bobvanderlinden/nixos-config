@@ -1,6 +1,19 @@
 { pkgs, config, ... }:
 let
-  vscode = config.programs.vscode.package;
+  vscode-wrapper = pkgs.writeShellScriptBin "code" ''
+    exec ${pkgs.sway-open}/bin/sway-open \
+      --app_id code-url-handler \
+      --new-window-argument="--new-window" \
+      ${config.programs.vscode.package}/bin/code \
+      "$@"
+  '';
+  chromium-wrapper = pkgs.writeShellScriptBin "chromium" ''
+    exec ${pkgs.sway-open}/bin/sway-open \
+      --app_id chromium_browser \
+      --new-window-argument="--new-window" \
+      ${config.programs.chromium.package}/bin/chromium \
+      "$@"
+  '';
 in
 {
   imports = [
@@ -119,6 +132,9 @@ in
       helix
       nix-output-monitor
       xdg-utils
+      # Prioritize the sway-open-wrappers.
+      (lib.hiPrio chromium-wrapper)
+      (lib.hiPrio vscode-wrapper)
     ];
 
     dconf = {
@@ -347,7 +363,7 @@ in
         "workspace.code-workspace"
       ];
       extraConfig = {
-        core.editor = "${vscode}/bin/code --wait";
+        core.editor = "code --wait";
         diff.external = "${pkgs.difftastic}/bin/difft";
         merge.conflictstyle = "diff3";
         push.default = "current";
@@ -378,7 +394,7 @@ in
       settings = {
         # See https://github.com/nix-community/home-manager/issues/4744
         version = "1";
-        editor = "${vscode}/bin/code --wait";
+        editor = "code --wait";
       };
     };
     programs.jq.enable = true;
