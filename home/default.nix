@@ -277,7 +277,15 @@ in
     services.network-manager-applet.enable = true;
     services.blueberry.enable = true;
     services.mpris-proxy.enable = true;
-    services.flameshot.enable = true;
+    services.flameshot = {
+      enable = true;
+      package = pkgs.flameshot.overrideAttrs (oldAttrs: {
+        buildInputs = oldAttrs.buildInputs ++ [ pkgs.libsForQt5.kguiaddons ];
+        cmakeFlags = [
+          "-DUSE_WAYLAND_CLIPBOARD=true"
+        ];
+      });
+    };
     services.darkman = {
       enable = true;
       settings = {
