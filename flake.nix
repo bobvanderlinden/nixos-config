@@ -27,7 +27,7 @@
           inherit system config overlays;
         });
     in
-    {
+    rec {
       overlays.default = final: prev: import ./packages { pkgs = final; };
 
       nixosModules =
@@ -48,18 +48,7 @@
         modules = builtins.attrValues self.nixosModules;
       };
 
-      homeConfigurations.${username} = home-manager.lib.homeManagerConfiguration {
-        # A bit strange to specify pkgs with x86_64-linux here.
-        # See https://github.com/nix-community/home-manager/issues/3075
-        pkgs = mkPkgs { };
-        modules = [
-          ./home
-          {
-            home.username = username;
-            home.homeDirectory = "/home/${username}";
-          }
-        ];
-      };
+      homeConfigurations."${username}@nac44250" = nixosConfigurations.nac44250.config.home-manager.users.${username}.home;
 
       templates = import ./templates;
     }
