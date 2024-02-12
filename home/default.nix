@@ -342,11 +342,13 @@ in
         c = "commit";
         b = "branch";
         p = "push";
+        pf = "push --force-with-lease --force";
         d = "diff";
         a = "add";
         s = "status";
         f = "fetch";
         t = "tag";
+        bl = "blame -w -C -C -C";
         l = "log --graph --pretty='%Cred%h%Creset - %C(bold blue)<%an>%Creset %s%C(yellow)%d%Creset %Cgreen(%cr)' --abbrev-commit --date=relative";
         fixup = "commit --fixup";
         pr-diff = "diff upstream/HEAD..";
@@ -364,11 +366,16 @@ in
         diff.external = "${pkgs.difftastic}/bin/difft";
         merge.conflictstyle = "diff3";
         push.default = "current";
+        push.autoSetupRemote = true;
         pull.rebase = false;
-        init.defaultBranch = "master";
         url."git@github.com:".insteadOf = "https://github.com/";
         branch.sort = "-committerdate";
         tag.sort = "-v:refname";
+        rerere.enabled = true;
+
+        # Sign commits using SSH public key.
+        gpg.format = "ssh";
+        user.signingkey = "~/.ssh/github_ed25519.pub";
 
         # Avoid hint: use --reapply-cherry-picks to include skipped commits
         advice.skippedCherryPicks = false;
