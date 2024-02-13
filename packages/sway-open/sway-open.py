@@ -70,14 +70,14 @@ apps = [
     if app["app_id"] == args.app_id
 ]
 
-program = args.command[0]
+command_program = args.command[0]
 command_args = args.command[1:]
 
 match apps:
     case [app, *_]:
         exec(f'swaymsg [con_id={app["id"]}] focus')
-        os.execvp(program, [program, *command_args])
+        os.execvp(command_program, [command_program, *command_args])
     case []:
-        os.execvp(program, [program, args.new_window_argument, *command_args])
+        os.execvp(command_program, [command_program, args.new_window_argument, *command_args])
     case _:
         raise Exception("unreachable")
