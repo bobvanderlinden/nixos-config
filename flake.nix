@@ -12,9 +12,10 @@
       url = "github:bobvanderlinden/nixpkgs-ruby";
       inputs.nixpkgs.follows = "nixpkgs-stable";
     };
+    lanzaboote.url = "github:nix-community/lanzaboote";
   };
 
-  outputs = { self, nixpkgs, home-manager, flake-utils, nixpkgs-stable, ... } @ inputs:
+  outputs = { self, nixpkgs, home-manager, flake-utils, nixpkgs-stable, lanzaboote, ... } @ inputs:
     let
       username = "bob.vanderlinden";
       mkPkgs =
@@ -37,6 +38,7 @@
           hardware-configuration = import ./system/hardware-configuration.nix;
           system-configuration = import ./system/configuration.nix;
           single-user = { suites.single-user.user = username; };
+          inherit (lanzaboote.nixosModules) lanzaboote;
         };
 
       # System configuration for laptop.

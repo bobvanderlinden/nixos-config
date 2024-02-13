@@ -22,8 +22,15 @@
   hardware.enableAllFirmware = true;
   hardware.enableRedistributableFirmware = true;
 
-  boot.loader.systemd-boot.enable = true;
+  # Disable systemd-boot, as it is replaced by lanzaboote.
+  # boot.loader.systemd-boot.enable = true;
   boot.loader.systemd-boot.netbootxyz.enable = true;
+  
+  # Secure boot
+  boot.loader.systemd-boot.enable = false;
+  boot.lanzaboote.enable = true;
+  boot.lanzaboote.pkiBundle = "/etc/secureboot";
+
   boot.loader.efi.canTouchEfiVariables = true;
   boot.loader.efi.efiSysMountPoint = "/boot/efi";
 

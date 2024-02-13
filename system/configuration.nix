@@ -141,6 +141,8 @@
     usbutils # lsusb
 
     polkit_gnome
+
+    sbctl
   ];
 
   # Use experimental nsncd. See https://flokli.de/posts/2022-11-18-nsncd/
