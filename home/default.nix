@@ -9,7 +9,7 @@ let
   '';
   chromium-wrapper = pkgs.writeShellScriptBin "chromium" ''
     exec ${pkgs.sway-open}/bin/sway-open \
-      --app_id chromium_browser \
+      --app_id chromium-browser \
       --new-window-argument="--new-window" \
       ${config.programs.chromium.package}/bin/chromium \
       "$@"
