@@ -62,7 +62,7 @@ with lib; {
             pkgs.gnome.seahorse
           ];
 
-          wayland.windowManager.sway = rec {
+          wayland.windowManager.sway = {
             enable = true;
             wrapperFeatures.gtk = true;
             systemd = {
@@ -85,8 +85,8 @@ with lib; {
               ];
               keybindings =
                 let
-                  swayosd = "${pkgs.swayosd}/bin/swayosd-client";
-                  mod = config.modifier;
+                  swayosd_client = "${config.services.swayosd.package}/bin/swayosd-client";
+                  mod = config.wayland.windowManager.sway.config.modifier;
                 in
                 {
                   "${mod}+t" = "exec foot";
@@ -152,12 +152,12 @@ with lib; {
                     exec "i3-nagbar -t warning -m 'You pressed the exit shortcut. Do you really want to exit i3? This will end your X session.' -b 'Yes, exit i3' 'i3-msg exit'"
                   '';
 
-                  "XF86AudioRaiseVolume" = "exec ${swayosd} --output-volume raise";
-                  "XF86AudioLowerVolume" = "exec ${swayosd} --output-volume lower";
-                  "XF86AudioMute" = "exec ${swayosd} --output-volume mute-toggle";
+                  "XF86AudioRaiseVolume" = "exec ${swayosd_client} --output-volume raise";
+                  "XF86AudioLowerVolume" = "exec ${swayosd_client} --output-volume lower";
+                  "XF86AudioMute" = "exec ${swayosd_client} --output-volume mute-toggle";
 
-                  "XF86MonBrightnessUp" = "exec ${swayosd} --brightness raise";
-                  "XF86MonBrightnessDown" = "exec ${swayosd} --brightness lower";
+                  "XF86MonBrightnessUp" = "exec ${swayosd_client} --brightness raise";
+                  "XF86MonBrightnessDown" = "exec ${swayosd_client} --brightness lower";
 
                   "XF86AudioPlay" = "exec ${pkgs.playerctl}/bin/playerctl play";
                   "XF86AudioPause" = "exec ${pkgs.playerctl}/bin/playerctl pause";
@@ -213,6 +213,8 @@ with lib; {
               image = "${wallpaperPng}";
             };
           };
+
+          services.swayosd.enable = true;
 
           services.swayidle = let
               swaylock = config.programs.swaylock.package;
