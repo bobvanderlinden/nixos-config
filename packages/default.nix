@@ -7,6 +7,7 @@ rec {
   git-worktree-shell = callPackage ./git-worktree-shell { };
   swaylock-fprintd = callPackage ./swaylock-fprintd { };
   sway-open = callPackage ./sway-open { };
+  lazy-desktop = callPackage ./lazy-desktop { };
   immersed = callPackage ./immersed { };
   disable-firewall = callPackage ./disable-firewall { };
   xrdesktop = callPackage ./xrdesktop { };
