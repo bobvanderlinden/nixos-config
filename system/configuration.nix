@@ -150,7 +150,11 @@
 
   services.acpid.enable = true;
   security.polkit.enable = true;
-  services.upower.enable = true;
+  services.upower = {
+    enable = true;
+    timeAction = 5 * 60;
+    criticalPowerAction = "Hibernate";
+  };
   services.tlp.enable = true;
   services.earlyoom.enable = true;
 
