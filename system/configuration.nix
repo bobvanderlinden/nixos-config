@@ -152,6 +152,8 @@
   security.polkit.enable = true;
   services.upower.enable = true;
   services.tlp.enable = true;
+  services.earlyoom.enable = true;
+
 
   # Set permissions for RTL2832 USB dongle to use with urh.
   hardware.rtl-sdr.enable = true;
