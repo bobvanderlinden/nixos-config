@@ -13,9 +13,10 @@
       inputs.nixpkgs.follows = "nixpkgs-stable";
     };
     lanzaboote.url = "github:nix-community/lanzaboote";
+    nix-index-database.url = "github:nix-community/nix-index-database";
   };
 
-  outputs = { self, nixpkgs, home-manager, flake-utils, nixpkgs-stable, lanzaboote, ... } @ inputs:
+  outputs = { self, nixpkgs, home-manager, flake-utils, nixpkgs-stable, lanzaboote, nix-index-database, ... } @ inputs:
     let
       username = "bob.vanderlinden";
       mkPkgs =
@@ -39,6 +40,8 @@
           system-configuration = import ./system/configuration.nix;
           single-user = { suites.single-user.user = username; };
           inherit (lanzaboote.nixosModules) lanzaboote;
+          # inherit (nix-index-database.nixosModules) nix-index;
+          nix-index-database-home-manager = { home-manager.sharedModules = [ nix-index-database.hmModules.nix-index ]; };
         };
 
       # System configuration for laptop.
