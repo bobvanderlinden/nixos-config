@@ -363,15 +363,39 @@ in
       ];
       extraConfig = {
         core.editor = "code --wait";
+
+        # Show diffs with syntax highlighting.
         diff.external = "${pkgs.difftastic}/bin/difft";
+
+        # Use saner diff prefixes than a/ and b/.
+        diff.mnemonicPrefix = true;
+
+        diff.algorithm = "patience";
+
+        # Show original in-between ours and theirs.
         merge.conflictstyle = "diff3";
+
+        # Show moved lines in diff.
+        diff.colorMoved = "zebra";
+
         push.default = "current";
         push.autoSetupRemote = true;
         pull.rebase = false;
+
+        # Normalize GitHub URLs to SSH to avoid authentication issues with HTTPS.
         url."git@github.com:".insteadOf = "https://github.com/";
+
+        # Sort last committed branches to top.
         branch.sort = "-committerdate";
+
+        # Sort highest version to top.
         tag.sort = "-v:refname";
+
+        # Record and replay conflict resolutions.
         rerere.enabled = true;
+
+        # Show diff in commit message editor.
+        commit.verbose = true;
 
         # Sign commits using SSH public key.
         gpg.format = "ssh";
