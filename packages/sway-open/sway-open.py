@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import subprocess
 import json
 import os
@@ -78,6 +77,10 @@ match apps:
         exec(f'swaymsg [con_id={app["id"]}] focus')
         os.execvp(command_program, [command_program, *command_args])
     case []:
-        os.execvp(command_program, [command_program, args.new_window_argument, *command_args])
+        os.execvp(command_program, [
+            command_program,
+            args.new_window_argument,
+            *command_args
+        ])
     case _:
         raise Exception("unreachable")
