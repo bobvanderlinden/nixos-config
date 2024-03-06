@@ -38,9 +38,10 @@ My system and home configurations are based on nixos-unstable. For development I
 
 I have development shells for the following languages available with various versions:
 
-- [Java](shells/java.nix)
-- [Node](shells/node.nix)
-- [ruby](shells/ruby.nix)
+- [Java](dev-shells/java.nix)
+- [Node](dev-shells/node.nix)
+- [Python](dev-shells/python.nix)
+- [Ruby](dev-shells/ruby.nix)
 
 You can enter a shell using for example:
 
