@@ -26,8 +26,7 @@
         } @ options: import nixpkgs (options // {
           inherit system config overlays;
         });
-    in
-    rec {
+    in {
       overlays.default = final: prev: import ./packages { pkgs = final; };
 
       nixosModules =
@@ -51,7 +50,7 @@
         modules = builtins.attrValues self.nixosModules;
       };
 
-      homeConfigurations."${username}@nac44250" = nixosConfigurations.nac44250.config.home-manager.users.${username}.home;
+      homeConfigurations."${username}@nac44250" = self.nixosConfigurations.nac44250.config.home-manager.users.${username}.home;
 
       templates = import ./templates;
     }
