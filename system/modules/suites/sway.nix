@@ -19,7 +19,7 @@ with lib; {
         hash = "sha256-SCuQlSPB14GFTq4XvExJ0QEuK2VIbrd5YYKHLRG/q5I=";
       };
       wallpaperPng = pkgs.runCommand "nix-snowflake.png" { } ''
-        ${pkgs.resvg}/bin/resvg --width 1920 --height 1080 ${wallpaperSvg} $out
+        ${pkgs.resvg}/bin/resvg ${wallpaperSvg} $out
       '';
     in
     mkIf cfg.enable {
@@ -175,6 +175,8 @@ with lib; {
               ];
             };
             extraConfig = ''
+              swaybg_command ${pkgs.swaybg}/bin/swaybg --mode center --color '#${backgroundColor}' --image ${wallpaperPng}
+
               default_orientation horizontal
               workspace_layout tabbed
 
