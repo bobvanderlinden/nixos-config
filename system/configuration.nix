@@ -289,7 +289,7 @@
       extra-sandbox-paths = [ "/etc/nix/netrc" ];
       trusted-users = [ "root" "${config.suites.single-user.user}" ];
       substituters = [ "https://cachix.cachix.org" ];
-      experimental-features = [ "nix-command" "flakes" ];
+      extra-experimental-features = [ "nix-command" "flakes" "ca-derivations" ];
       netrc-file = "/etc/nix/netrc";
       auto-optimise-store = true;
       log-lines = 100;
