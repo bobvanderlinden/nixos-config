@@ -362,6 +362,10 @@ in
       ignores = [
         "vendor"
         "workspace.code-workspace"
+
+        # Always ignore devenv.sh temporary files.
+        ".devenv"
+        ".devenv.flake.nix"
       ];
       extraConfig = {
         core.editor = "code --wait";
