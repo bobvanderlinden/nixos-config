@@ -384,8 +384,13 @@ in
         push.autoSetupRemote = true;
         pull.rebase = false;
 
-        # Normalize GitHub URLs to SSH to avoid authentication issues with HTTPS.
-        url."git@github.com:".insteadOf = "https://github.com/";
+        url."git@github.com:".insteadOf = [
+          # Normalize GitHub URLs to SSH to avoid authentication issues with HTTPS.
+          "https://github.com/"
+
+          # Allows typing `git clone github:owner/repo`.
+          "github:"
+        ];
 
         # Sort last committed branches to top.
         branch.sort = "-committerdate";
