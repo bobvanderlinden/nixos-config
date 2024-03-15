@@ -368,6 +368,8 @@ in
         ".devenv.flake.nix"
       ];
       extraConfig = {
+        init.defaultBranch = "main";
+
         core.editor = "code --wait";
 
         # Show diffs with syntax highlighting.
