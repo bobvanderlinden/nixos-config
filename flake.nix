@@ -1,6 +1,5 @@
 {
   inputs = {
-    nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-23.11";
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     home-manager = {
       url = "github:nix-community/home-manager";
@@ -10,13 +9,12 @@
     flake-utils.url = "github:numtide/flake-utils";
     nixpkgs-ruby = {
       url = "github:bobvanderlinden/nixpkgs-ruby";
-      inputs.nixpkgs.follows = "nixpkgs-stable";
     };
     lanzaboote.url = "github:nix-community/lanzaboote";
     nix-index-database.url = "github:nix-community/nix-index-database";
   };
 
-  outputs = { self, nixpkgs, home-manager, flake-utils, nixpkgs-stable, lanzaboote, nix-index-database, ... } @ inputs:
+  outputs = { self, nixpkgs, home-manager, flake-utils, lanzaboote, nix-index-database, ... } @ inputs:
     let
       username = "bob.vanderlinden";
       mkPkgs =
@@ -68,30 +66,15 @@
       {
         packages =
           let
-            lib = nixpkgs.lib;
+            lib = pkgs.lib;
           in
           lib.filterAttrs (name: package: (package ? meta) -> (package.meta ? platforms) -> builtins.elem system package.meta.platforms) (import ./packages { inherit pkgs; });
 
-        devShells =
-          (
-            import ./dev-shells {
-              # Use nixpkgs-stable for development shells.
-              pkgs = mkPkgs {
-                nixpkgs = nixpkgs-stable;
-                inherit system;
-                overlays = [ ];
-              };
-              inherit system inputs;
-              inherit (nixpkgs-stable) lib;
-            }
-          )
-          // {
-            # The shell for editing this project.
-            default = pkgs.mkShell {
-              nativeBuildInputs = with pkgs; [
-                nixpkgs-fmt
-              ];
-            };
-          };
+        devShells.default = pkgs.mkShell {
+          nativeBuildInputs = with pkgs; [
+            nixpkgs-fmt
+            nixd
+          ];
+        };
       });
 }
