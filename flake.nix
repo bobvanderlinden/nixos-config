@@ -17,22 +17,32 @@
   outputs = { self, nixpkgs, home-manager, flake-utils, lanzaboote, nix-index-database, ... } @ inputs:
     let
       username = "bob.vanderlinden";
+      defaultOverlays = with self.overlays; [ default workarounds ];
       mkPkgs =
         { system ? "x86_64-linux"
         , nixpkgs ? inputs.nixpkgs
         , config ? { allowUnfree = true; }
-        , overlays ? [ self.overlays.default ]
+        , overlays ? defaultOverlays
         , ...
         } @ options: import nixpkgs (options // {
           inherit system config overlays;
         });
     in {
       overlays.default = final: prev: import ./packages { pkgs = final; };
+      overlays.workarounds = final: prev: {
+        # Workaround build failure: https://github.com/NixOS/nixpkgs/issues/298150
+        fprintd = prev.fprintd.overrideAttrs {
+          mesonCheckFlags = [
+            "--no-suite"
+            "fprintd:TestPamFprintd"
+          ];
+        };
+      };
 
       nixosModules =
         import ./system/modules
         // {
-          overlays = { nixpkgs.overlays = [ self.overlays.default ]; };
+          overlays = { nixpkgs.overlays = defaultOverlays; };
           hardware-configuration = import ./system/hardware-configuration.nix;
           system-configuration = import ./system/configuration.nix;
           single-user = { suites.single-user.user = username; };
