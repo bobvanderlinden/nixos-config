@@ -355,7 +355,7 @@ in
         pr-diff = "diff upstream/HEAD..";
         pr-log = "l upstream/HEAD..";
         pr-edit = "rebase --interactive --autosquash --rerere-autoupdate --rebase-merges --fork-point upstream/HEAD";
-        pr-clean = "-c sequence.editor=true rebase --interactive --autosquash --rerere-autoupdate --empty drop --no-keep-empty --fork-point upstream/HEAD";
+        pr-clean = "rebase --autosquash --rerere-autoupdate --empty drop --no-keep-empty --fork-point upstream/HEAD";
         pr-update = "pull --rebase=merges upstream HEAD";
       };
       ignores = [
