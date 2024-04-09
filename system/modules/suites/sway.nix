@@ -58,6 +58,18 @@ with lib; {
             ];
           };
 
+          # Workaround: https://github.com/nix-community/home-manager/pull/5158#issuecomment-2043691353
+          home.sessionVariables.NIX_XDG_DESKTOP_PORTAL_DIR = lib.mkForce
+            (let
+              root = pkgs.symlinkJoin {
+                name = "root";
+                paths = config.xdg.portal.extraPortals;
+              };
+            in
+              "${root}/share/xdg-desktop-portal/portals"
+            );
+          systemd.user.sessionVariables.NIX_XDG_DESKTOP_PORTAL_DIR = lib.mkForce config.home.sessionVariables.NIX_XDG_DESKTOP_PORTAL_DIR;
+
           i18n.inputMethod = {
             enabled = "fcitx5";
           };
