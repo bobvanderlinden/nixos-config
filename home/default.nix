@@ -134,6 +134,8 @@ in
       helix
       nix-output-monitor
       xdg-utils
+      devenv
+      ast-grep
       # Prioritize the sway-open-wrappers.
       (lib.hiPrio chromium-wrapper)
       (lib.hiPrio vscode-wrapper)
