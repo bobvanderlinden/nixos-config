@@ -38,7 +38,6 @@ with lib; {
           services.kanshi.enable = true;
           xdg.portal = {
             enable = true;
-            # xdgOpenUsePortal = true;
             config.common = {
               default = [
                 "wlr"
