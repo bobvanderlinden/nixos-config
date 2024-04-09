@@ -234,11 +234,6 @@
 
   services.gnome.gnome-keyring.enable = true;
 
-  i18n.inputMethod = {
-    enabled = "ibus";
-    ibus.engines = with pkgs.ibus-engines; [ uniemoji typing-booster ];
-  };
-
   programs.fish.enable = true;
   programs.bash.enableCompletion = true;
   programs.tmux.enable = true;

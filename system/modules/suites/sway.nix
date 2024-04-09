@@ -58,6 +58,10 @@ with lib; {
             ];
           };
 
+          i18n.inputMethod = {
+            enabled = "fcitx5";
+          };
+
           home.packages = [
             pkgs.gnome.seahorse
           ];
