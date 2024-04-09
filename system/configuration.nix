@@ -266,6 +266,18 @@
   documentation.enable = false;
   documentation.nixos.enable = false;
 
+  # system.replaceRuntimeDependencies = [
+  #   ({
+  #     original = pkgs.xz;
+  #     replacement = pkgs.xz.overrideAttrs (oldAttrs: {
+  #       src = pkgs.fetchurl {
+  #         url = "mirror://sourceforge/lzmautils/xz-5.4.6.tar.bz2";
+  #         sha256 = "sha256-kThRsnTo4dMXgeyUnxwj6NvPDs9uc6JDbcIXad0+b0k=";
+  #       };
+  #     });
+  #   })
+  # ];
+
   home-manager.sharedModules = [{
     programs.git.signing.key = "2BA975040411E0DE97B44224D0C37FC5C11D1D60";
   }];
