@@ -5,11 +5,7 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    nixos-hardware.url = "github:NixOS/nixos-hardware";
     flake-utils.url = "github:numtide/flake-utils";
-    nixpkgs-ruby = {
-      url = "github:bobvanderlinden/nixpkgs-ruby";
-    };
     lanzaboote.url = "github:nix-community/lanzaboote";
     nix-index-database.url = "github:nix-community/nix-index-database";
   };
