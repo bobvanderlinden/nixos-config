@@ -61,8 +61,6 @@
       };
 
       homeConfigurations."${username}@nac44250" = self.nixosConfigurations.nac44250.config.home-manager.users.${username}.home;
-
-      templates = import ./templates;
     }
     # Define outputs that allow multiple systems with for all default systems.
     # This is to support OSX and RPI.
