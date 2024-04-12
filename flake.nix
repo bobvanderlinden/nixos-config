@@ -30,13 +30,6 @@
     in {
       overlays.default = final: prev: import ./packages { pkgs = final; };
       overlays.workarounds = final: prev: {
-        # Workaround build failure: https://github.com/NixOS/nixpkgs/issues/298150
-        fprintd = prev.fprintd.overrideAttrs {
-          mesonCheckFlags = [
-            "--no-suite"
-            "fprintd:TestPamFprintd"
-          ];
-        };
       };
 
       nixosModules =
