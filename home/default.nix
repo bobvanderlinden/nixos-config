@@ -276,6 +276,8 @@ in
       };
     };
 
+    programs.zoxide.enable = true;
+
     programs.carapace.enable = true;
     qt = {
       enable = true;
