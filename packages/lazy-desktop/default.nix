@@ -37,6 +37,12 @@ EOF
   done
   '';
   meta = {
+    description = ''
+      A package with desktop files for all packages in the nix-index database.
+      When a .desktop is executed it will run the package using `nix run nixpkgs#package`.
+
+      See https://discourse.nixos.org/t/nixpkgs-desktop/39781
+    '';
     platforms = lib.platforms.all;
   };
 }
