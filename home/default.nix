@@ -297,7 +297,8 @@ in
         usegeoclue = true;
       };
     };
-    services.redshift = {
+
+    services.gammastep = {
       enable = true;
       latitude = "51.985104";
       longitude = "5.898730";
