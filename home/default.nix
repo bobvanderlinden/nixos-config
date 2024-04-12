@@ -292,16 +292,13 @@ in
     services.darkman = {
       enable = true;
       settings = {
-        latitude = "51.985104";
-        longitude = "5.898730";
         usegeoclue = true;
       };
     };
 
     services.gammastep = {
       enable = true;
-      latitude = "51.985104";
-      longitude = "5.898730";
+      provider = "geoclue2";
       temperature.day = 5500;
       temperature.night = 3700;
       tray = true;
