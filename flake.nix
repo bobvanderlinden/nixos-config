@@ -79,6 +79,24 @@
           in
           lib.filterAttrs (name: package: (package ? meta) -> (package.meta ? platforms) -> builtins.elem system package.meta.platforms) (import ./packages { inherit pkgs; });
 
+        apps.switch = {
+          type = "app";
+          program = let
+            switch = pkgs.writeShellApplication {
+              name = "switch";
+              text = ''
+                nom build --impure --keep-going --out-link system-result ${self}#nixosConfigurations."$(hostname)".config.system.build.toplevel
+                nom build --keep-going --out-link home-result ${self}#nixosConfigurations."$(hostname)".config.home-manager.users.\""$USER"\".home.activationPackage
+                ./home-result/activate
+                ${pkgs.coin}/bin/coin
+                sudo nix-env -p /nix/var/nix/profiles/system --set "$(readlink system-result)"
+                sudo system-result/bin/switch-to-configuration switch
+              '';
+              runtimeInputs = [ pkgs.nix-output-monitor ];
+            };
+          in "${switch}/bin/switch";
+        };
+
         devShells.default = pkgs.mkShell {
           nativeBuildInputs = with pkgs; [
             nixpkgs-fmt
