@@ -88,9 +88,12 @@
                 nom build --impure --keep-going --out-link system-result ${self}#nixosConfigurations."$(hostname)".config.system.build.toplevel
                 nom build --keep-going --out-link home-result ${self}#nixosConfigurations."$(hostname)".config.home-manager.users.\""$USER"\".home.activationPackage
                 ./home-result/activate
-                ${pkgs.coin}/bin/coin
-                sudo nix-env -p /nix/var/nix/profiles/system --set "$(readlink system-result)"
-                sudo system-result/bin/switch-to-configuration switch
+                if [[ "$(readlink --canonicalize system-result)" != "$(readlink --canonicalize /nix/var/nix/profiles/system)" ]]
+                then
+                  ${pkgs.coin}/bin/coin
+                  sudo nix-env -p /nix/var/nix/profiles/system --set "$(readlink system-result)"
+                  sudo system-result/bin/switch-to-configuration switch
+                fi
               '';
               runtimeInputs = [ pkgs.nix-output-monitor ];
             };
