@@ -348,7 +348,6 @@ in
       enable = true;
       userName = "Bob van der Linden";
       userEmail = "bobvanderlinden@gmail.com";
-      signing.signByDefault = true;
       delta.enable = true;
       aliases = {
         unstage = "reset HEAD --";
@@ -425,6 +424,9 @@ in
         # Sign commits using SSH public key.
         gpg.format = "ssh";
         user.signingkey = "~/.ssh/github_ed25519.pub";
+        commit.gpgSign = true;
+        tag.gpgSign = true;
+        gpg.program = "${pkgs.gnupg}/bin/gpg2";
 
         # Avoid hint: use --reapply-cherry-picks to include skipped commits
         advice.skippedCherryPicks = false;
