@@ -50,5 +50,6 @@ rec {
       libinputsynth
     ];
   });
+  sejda = callPackage ./sejda { };
 }
 
