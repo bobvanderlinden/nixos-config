@@ -136,6 +136,7 @@ in
       xdg-utils
       devenv
       ast-grep
+      ijq
       # Prioritize the sway-open-wrappers.
       (lib.hiPrio chromium-wrapper)
       (lib.hiPrio vscode-wrapper)
