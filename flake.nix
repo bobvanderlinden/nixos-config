@@ -10,7 +10,7 @@
     nix-index-database.url = "github:nix-community/nix-index-database";
   };
 
-  outputs = { self, nixpkgs, home-manager, flake-utils, lanzaboote, nix-index-database, ... } @ inputs:
+  outputs = { self, nixpkgs, flake-utils, lanzaboote, nix-index-database, ... } @ inputs:
     let
       username = "bob.vanderlinden";
       defaultOverlays = with self.overlays; [ default workarounds ];
@@ -23,10 +23,10 @@
         } @ options: import nixpkgs (options // {
           inherit system config overlays;
         });
-    in {
+    in
+    {
       overlays.default = final: prev: import ./packages { pkgs = final; };
-      overlays.workarounds = final: prev: {
-      };
+      overlays.workarounds = final: prev: { };
 
       nixosModules =
         import ./system/modules
@@ -68,23 +68,25 @@
 
         apps.switch = {
           type = "app";
-          program = let
-            switch = pkgs.writeShellApplication {
-              name = "switch";
-              text = ''
-                nom build --impure --keep-going --out-link system-result ${self}#nixosConfigurations."$(hostname)".config.system.build.toplevel
-                nom build --keep-going --out-link home-result ${self}#nixosConfigurations."$(hostname)".config.home-manager.users.\""$USER"\".home.activationPackage
-                ./home-result/activate
-                if [[ "$(readlink --canonicalize system-result)" != "$(readlink --canonicalize /nix/var/nix/profiles/system)" ]]
-                then
-                  ${pkgs.coin}/bin/coin
-                  sudo nix-env -p /nix/var/nix/profiles/system --set "$(readlink system-result)"
-                  sudo system-result/bin/switch-to-configuration switch
-                fi
-              '';
-              runtimeInputs = [ pkgs.nix-output-monitor ];
-            };
-          in "${switch}/bin/switch";
+          program =
+            let
+              switch = pkgs.writeShellApplication {
+                name = "switch";
+                text = ''
+                  nom build --impure --keep-going --out-link system-result ${self}#nixosConfigurations."$(hostname)".config.system.build.toplevel
+                  nom build --keep-going --out-link home-result ${self}#nixosConfigurations."$(hostname)".config.home-manager.users.\""$USER"\".home.activationPackage
+                  if [[ "$(readlink --canonicalize system-result)" != "$(readlink --canonicalize /nix/var/nix/profiles/system)" ]]
+                  then
+                    ${pkgs.coin}/bin/coin
+                    sudo nix-env -p /nix/var/nix/profiles/system --set "$(readlink system-result)"
+                    sudo system-result/bin/switch-to-configuration switch
+                  fi
+                  ./home-result/activate
+                '';
+                runtimeInputs = [ pkgs.nix-output-monitor ];
+              };
+            in
+            "${switch}/bin/switch";
         };
 
         devShells.default = pkgs.mkShell {
