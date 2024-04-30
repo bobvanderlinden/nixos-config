@@ -60,6 +60,10 @@ in
               ];
             };
 
+            xdg.configFile."xdg-desktop-portal-wlr/config".text = ''
+              [screencast]
+              chooser_style=none
+            '';
 
             i18n.inputMethod = {
               enabled = "fcitx5";
