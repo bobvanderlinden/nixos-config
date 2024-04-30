@@ -3,7 +3,10 @@
 , pkgs
 , ...
 }:
-with lib; {
+let
+  inherit (lib) mkEnableOption mkDefault mkIf;
+in
+{
   options = {
     suites.sway = {
       enable = mkEnableOption "sway suite";
