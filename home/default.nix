@@ -27,7 +27,7 @@ in
   config = {
     home.packages = with pkgs; [
       coin
-      nixfmt
+      nixfmt-rfc-style
       bitwarden
       insomnia
       spotify
@@ -63,14 +63,14 @@ in
       xsel
       lxappearance
 
-      gitAndTools.hub
-      gitAndTools.gh
+      hub
+      gh
       git-cola
       # git-branchless
       git-absorb
       git-revise
 
-      gnome.file-roller
+      file-roller
       clang
       slack
       zoom-us
@@ -95,7 +95,7 @@ in
       maven
       yq-go
       ripgrep
-      gnome.pomodoro
+      pomodoro
       audacity
       ffmpeg-full
       zoxide
@@ -186,11 +186,11 @@ in
       };
       iconTheme = {
         name = "Adwaita";
-        package = pkgs.gnome.adwaita-icon-theme;
+        package = pkgs.adwaita-icon-theme;
       };
       theme = {
         name = "Adwaita-dark";
-        package = pkgs.gnome.gnome-themes-extra;
+        package = pkgs.gnome-themes-extra;
       };
       gtk2.extraConfig = ''
         gtk-error-bell = 0
@@ -281,7 +281,7 @@ in
 
     qt = {
       enable = true;
-      platformTheme = "gnome";
+      platformTheme.name = "adwaita";
       style = {
         name = "adwaita-dark";
         package = pkgs.adwaita-qt;

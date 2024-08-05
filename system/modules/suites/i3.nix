@@ -52,14 +52,14 @@ with lib; {
           xdg-desktop-portal-gtk
         ];
         configPackages = config.xdg.portal.extraPortals ++ (with pkgs; [
-          gnome.gnome-keyring
+          gnome-keyring
         ]);
       };
 
       programs.xss-lock.enable = true;
       services.gnome.gnome-keyring.enable = true;
-      services.dbus.packages = [ pkgs.gnome3.gnome-keyring pkgs.gcr ];
-      services.udev.packages = with pkgs; [ gnome3.gnome-settings-daemon ];
+      services.dbus.packages = with pkgs; [ gnome-keyring gcr ];
+      services.udev.packages = with pkgs; [ gnome-settings-daemon ];
       services.gvfs.enable = true;
       programs.seahorse.enable = true;
 

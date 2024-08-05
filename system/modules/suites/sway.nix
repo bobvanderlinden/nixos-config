@@ -28,7 +28,7 @@ in
     mkIf cfg.enable {
       suites.wayland.enable = mkDefault true;
 
-      services.xserver.displayManager.defaultSession = mkDefault "sway";
+      services.displayManager.defaultSession = mkDefault "sway";
 
       security.pam.services.swaylock = {
         fprintAuth = true;
@@ -52,11 +52,11 @@ in
                 pkgs.xdg-desktop-portal-wlr
                 pkgs.xdg-desktop-portal-gtk
                 pkgs.xdg-desktop-portal-gnome
-                pkgs.gnome.gnome-keyring
+                pkgs.gnome-keyring
               ];
               configPackages = [
                 pkgs.gnome.gnome-session
-                pkgs.gnome.gnome-keyring
+                pkgs.gnome-keyring
               ];
             };
 
@@ -70,7 +70,7 @@ in
             };
 
             home.packages = [
-              pkgs.gnome.seahorse
+              pkgs.seahorse
             ];
 
             wayland.windowManager.sway = {

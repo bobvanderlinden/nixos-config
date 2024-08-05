@@ -23,7 +23,7 @@ rec {
   sk_gpu = callPackage ./sk_gpu { };
   reactphysics3d = callPackage ./reactphysics3d { };
   libinputsynth = callPackage ./libinputsynth {
-    mutter = pkgs.gnome.mutter338;
+    mutter = pkgs.mutter338;
   };
   gnome-shell-xrdesktop = pkgs.gnome.gnome-shell.overrideAttrs (oldAttrs: {
     src = pkgs.fetchFromGitLab {

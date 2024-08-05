@@ -70,11 +70,7 @@
   # Workaround: https://github.com/NixOS/nixpkgs/issues/114222
   systemd.user.services.telephony_client.enable = false;
 
-  hardware.opengl = {
-    enable = true;
-    driSupport = true;
-    driSupport32Bit = true;
-  };
+  hardware.graphics.enable = true;
 
   security.rtkit.enable = true;
   services.pipewire = {
@@ -225,7 +221,7 @@
   };
 
   services.xserver.enable = false;
-  services.xserver.displayManager.autoLogin.enable = true;
+  services.displayManager.autoLogin.enable = true;
 
   # Fingerprint reader
   services.fprintd.enable = true;
@@ -235,7 +231,7 @@
   services.gnome.gnome-keyring.enable = true;
 
   programs.fish.enable = true;
-  programs.bash.enableCompletion = true;
+  programs.bash.completion.enable = true;
   programs.tmux.enable = true;
   programs.adb.enable = true;
 
@@ -298,7 +294,7 @@
       log-lines = 100;
       warn-dirty = false;
     };
-    package = pkgs.nixVersions.unstable;
+    package = pkgs.nixVersions.git;
   };
 
   system.autoUpgrade = {

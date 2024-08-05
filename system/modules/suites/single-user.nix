@@ -46,6 +46,6 @@ with lib; {
         useDefaultShell = true;
       };
 
-      services.xserver.displayManager.autoLogin.user = cfg.user;
+      services.displayManager.autoLogin.user = cfg.user;
     };
 }
