@@ -1,44 +1,43 @@
-{ lib
-, stdenv
-, fetchFromSourcehut
-, fetchFromGitLab
-, meson
-, ninja
-, pkg-config
-, cmake
-, xrdesktop
-, gxr
-, libxkbcommon
-, libdrm
-, wlroots
-, gulkan
-, vulkan-loader
-, graphene
-, udev
-, cglm
-, cairo
-, mesa
-, openxr-loader
-, vulkan-headers
-, pango
-, wayland
-, wayland-protocols
+{
+  lib,
+  stdenv,
+  fetchFromSourcehut,
+  fetchFromGitLab,
+  meson,
+  ninja,
+  pkg-config,
+  cmake,
+  xrdesktop,
+  gxr,
+  libxkbcommon,
+  libdrm,
+  wlroots,
+  gulkan,
+  vulkan-loader,
+  graphene,
+  udev,
+  cglm,
+  cairo,
+  mesa,
+  openxr-loader,
+  vulkan-headers,
+  pango,
+  wayland,
+  wayland-protocols,
 
 }:
 
 let
-  wlroots-0_16 = wlroots.overrideAttrs
-    (oldAttrs: rec {
-      version = "0.16-42ae1e75";
-      src = fetchFromGitLab
-        {
-          domain = "gitlab.freedesktop.org";
-          owner = "wlroots";
-          repo = "wlroots";
-          rev = "42ae1e75aa22c9f8063300dcca846b35c03022e5";
-          sha256 = "sha256-InyL6mZiXbj9UxE+0h+bqyKtXtcl9Ar+5uu2ufMAMaI=";
-        };
-    });
+  wlroots-0_16 = wlroots.overrideAttrs (oldAttrs: rec {
+    version = "0.16-42ae1e75";
+    src = fetchFromGitLab {
+      domain = "gitlab.freedesktop.org";
+      owner = "wlroots";
+      repo = "wlroots";
+      rev = "42ae1e75aa22c9f8063300dcca846b35c03022e5";
+      sha256 = "sha256-InyL6mZiXbj9UxE+0h+bqyKtXtcl9Ar+5uu2ufMAMaI=";
+    };
+  });
 
   cglm-fix = cglm.overrideAttrs (oldAttrs: rec {
     cmakeFlags = [
@@ -100,4 +99,3 @@ stdenv.mkDerivation rec {
     platforms = platforms.linux;
   };
 }
-

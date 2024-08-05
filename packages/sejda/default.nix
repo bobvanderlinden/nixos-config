@@ -1,37 +1,38 @@
-{ lib
-, stdenv
-, fetchurl
-, autoPatchelfHook
-, dpkg
-, makeWrapper
-, alsa-lib
-, at-spi2-atk
-, at-spi2-core
-, atk
-, cairo
-, cups
-, dbus
-, expat
-, ffmpeg
-, fontconfig
-, freetype
-, gdk-pixbuf
-, glib
-, gtk3
-, libappindicator-gtk3
-, libdbusmenu
-, libdrm
-, libnotify
-, libpulseaudio
-, libsecret
-, libuuid
-, libxkbcommon
-, mesa
-, nss
-, pango
-, systemd
-, xdg-utils
-, xorg
+{
+  lib,
+  stdenv,
+  fetchurl,
+  autoPatchelfHook,
+  dpkg,
+  makeWrapper,
+  alsa-lib,
+  at-spi2-atk,
+  at-spi2-core,
+  atk,
+  cairo,
+  cups,
+  dbus,
+  expat,
+  ffmpeg,
+  fontconfig,
+  freetype,
+  gdk-pixbuf,
+  glib,
+  gtk3,
+  libappindicator-gtk3,
+  libdbusmenu,
+  libdrm,
+  libnotify,
+  libpulseaudio,
+  libsecret,
+  libuuid,
+  libxkbcommon,
+  mesa,
+  nss,
+  pango,
+  systemd,
+  xdg-utils,
+  xorg,
 }:
 
 stdenv.mkDerivation (finalAttrs: {
@@ -43,7 +44,11 @@ stdenv.mkDerivation (finalAttrs: {
     hash = "sha256-VIkYo5th8rjg3svkOzynuIQBGc+saQFsgqc253sbPmE=";
   };
 
-  nativeBuildInputs = [ autoPatchelfHook dpkg makeWrapper ];
+  nativeBuildInputs = [
+    autoPatchelfHook
+    dpkg
+    makeWrapper
+  ];
 
   buildInputs = [
     alsa-lib
@@ -86,8 +91,12 @@ stdenv.mkDerivation (finalAttrs: {
     xorg.libXtst
   ];
 
-  runtimeDependencies =
-    [ (lib.getLib systemd) libnotify libdbusmenu xdg-utils ];
+  runtimeDependencies = [
+    (lib.getLib systemd)
+    libnotify
+    libdbusmenu
+    xdg-utils
+  ];
 
   unpackPhase = "dpkg-deb -x $src .";
 

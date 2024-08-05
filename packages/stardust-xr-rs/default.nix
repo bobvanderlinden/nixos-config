@@ -1,9 +1,10 @@
-{ lib
-, stdenv
+{
+  lib,
+  stdenv,
   # , fetchurl
   # , fetchFromGitHub
   # , fetchFromGitLab
-, pkg-config
+  pkg-config,
 }:
 
 stdenv.mkDerivation rec {
@@ -30,12 +31,9 @@ stdenv.mkDerivation rec {
   #   hash = lib.fakeHash;
   # };
 
-  nativeBuildInputs = [
-    pkg-config
-  ];
+  nativeBuildInputs = [ pkg-config ];
 
-  buildInputs = [
-  ];
+  buildInputs = [ ];
 
   meta = with lib; {
     homepage = "https://";

@@ -1,12 +1,13 @@
-{ lib
-, stdenv
-, fetchFromGitHub
-, pkg-config
-, cmake
-, libX11
-, glew
-, libGL
-, libXdamage
+{
+  lib,
+  stdenv,
+  fetchFromGitHub,
+  pkg-config,
+  cmake,
+  libX11,
+  glew,
+  libGL,
+  libXdamage,
 }:
 
 stdenv.mkDerivation rec {

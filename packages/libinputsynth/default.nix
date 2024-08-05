@@ -1,18 +1,19 @@
-{ lib
-, stdenv
-, fetchFromGitLab
-, pkg-config
-, meson
-, ninja
-, cmake
-, gtk2
-, glib
-, libX11
-, libXtst
-, libXi
-, mutter
-, json-glib
-, xdotool
+{
+  lib,
+  stdenv,
+  fetchFromGitLab,
+  pkg-config,
+  meson,
+  ninja,
+  cmake,
+  gtk2,
+  glib,
+  libX11,
+  libXtst,
+  libXi,
+  mutter,
+  json-glib,
+  xdotool,
 }:
 
 stdenv.mkDerivation rec {

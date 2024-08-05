@@ -1,21 +1,22 @@
-{ lib
-, stdenv
-, fetchFromGitLab
-, meson
-, ninja
-, pkg-config
-, cmake
-, gxr
-, gulkan
-, gtk3
-, vulkan-loader
-, graphene
-, shaderc
-, python3
-, python3Packages
-, json-glib
-, openxr-loader
-, wrapGAppsHook
+{
+  lib,
+  stdenv,
+  fetchFromGitLab,
+  meson,
+  ninja,
+  pkg-config,
+  cmake,
+  gxr,
+  gulkan,
+  gtk3,
+  vulkan-loader,
+  graphene,
+  shaderc,
+  python3,
+  python3Packages,
+  json-glib,
+  openxr-loader,
+  wrapGAppsHook,
 }:
 
 stdenv.mkDerivation rec {
@@ -53,9 +54,7 @@ stdenv.mkDerivation rec {
     gtk3
   ];
 
-  pythonPath = [
-    python3Packages.pygobject3
-  ];
+  pythonPath = [ python3Packages.pygobject3 ];
 
   postFixup = ''
     wrapPythonPrograms

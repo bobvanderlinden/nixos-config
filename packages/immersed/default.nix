@@ -1,7 +1,8 @@
-{ lib
-, stdenv
-, fetchurl
-, appimageTools
+{
+  lib,
+  stdenv,
+  fetchurl,
+  appimageTools,
 }:
 appimageTools.wrapType2 {
   name = "immersed";
@@ -19,4 +20,3 @@ appimageTools.wrapType2 {
     maintainers = with maintainers; [ bobvanderlinden ];
   };
 }
-

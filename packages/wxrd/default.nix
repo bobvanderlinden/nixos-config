@@ -1,30 +1,31 @@
-{ lib
-, stdenv
-, fetchFromGitLab
-, meson
-, ninja
-, pkg-config
-, cmake
-, xrdesktop
-, gxr
-, libxkbcommon
-, libdrm
-, wlroots
-, gulkan
-, vulkan-loader
-, graphene
-, udev
-, openxr-loader
+{
+  lib,
+  stdenv,
+  fetchFromGitLab,
+  meson,
+  ninja,
+  pkg-config,
+  cmake,
+  xrdesktop,
+  gxr,
+  libxkbcommon,
+  libdrm,
+  wlroots,
+  gulkan,
+  vulkan-loader,
+  graphene,
+  udev,
+  openxr-loader,
 
-, libinput
-, wrapGAppsHook
-, wayland
-, wayland-protocols
-, libGL
-, libxcb
-, glib
-, cairo
-, gtk3
+  libinput,
+  wrapGAppsHook,
+  wayland,
+  wayland-protocols,
+  libGL,
+  libxcb,
+  glib,
+  cairo,
+  gtk3,
 }:
 
 stdenv.mkDerivation rec {

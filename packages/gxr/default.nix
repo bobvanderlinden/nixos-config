@@ -1,21 +1,22 @@
-{ lib
-, stdenv
-, fetchFromGitLab
-, meson
-, ninja
-, pkg-config
-, cmake
-, gulkan
-, glib
-, vulkan-loader
-, cairo
-, graphene
-, gdk-pixbuf
-, gtk3
-, json-glib
-, shaderc
-, openxr-loader
-, wlroots
+{
+  lib,
+  stdenv,
+  fetchFromGitLab,
+  meson,
+  ninja,
+  pkg-config,
+  cmake,
+  gulkan,
+  glib,
+  vulkan-loader,
+  cairo,
+  graphene,
+  gdk-pixbuf,
+  gtk3,
+  json-glib,
+  shaderc,
+  openxr-loader,
+  wlroots,
 }:
 stdenv.mkDerivation rec {
   pname = "gxr";

@@ -1,11 +1,12 @@
-{ lib
-, stdenv
-, fetchFromGitHub
-, pkg-config
-, cmake
-, ninja
-, makePkgconfigItem
-, copyPkgconfigItems
+{
+  lib,
+  stdenv,
+  fetchFromGitHub,
+  pkg-config,
+  cmake,
+  ninja,
+  makePkgconfigItem,
+  copyPkgconfigItems,
 }:
 
 stdenv.mkDerivation rec {

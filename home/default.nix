@@ -195,7 +195,9 @@ in
         gtk-error-bell = 0
       '';
 
-      gtk3.extraConfig = { gtk-error-bell = 0; };
+      gtk3.extraConfig = {
+        gtk-error-bell = 0;
+      };
     };
     programs.ssh = {
       enable = true;
@@ -244,10 +246,12 @@ in
       enable = true;
       settingss.show_banner = false;
       extraConfig = ''
-        source ${pkgs.fetchurl {
-          url = "https://raw.githubusercontent.com/nushell/nu_scripts/e3b02b38eeece7c4ab8c20198cd36c6b12d5c3e4/background_task/job.nu";
-          hash = "sha256-L+SrTstXey9WhT4gHD4Wu++HEIMsh1LaNjWd2ouRLjI=";
-        }}
+        source ${
+          pkgs.fetchurl {
+            url = "https://raw.githubusercontent.com/nushell/nu_scripts/e3b02b38eeece7c4ab8c20198cd36c6b12d5c3e4/background_task/job.nu";
+            hash = "sha256-L+SrTstXey9WhT4gHD4Wu++HEIMsh1LaNjWd2ouRLjI=";
+          }
+        }
       '';
       shellAliases = config.home.shellAliases;
     };
@@ -296,9 +300,7 @@ in
       enable = true;
       package = pkgs.flameshot.overrideAttrs (oldAttrs: {
         buildInputs = oldAttrs.buildInputs ++ [ pkgs.libsForQt5.kguiaddons ];
-        cmakeFlags = [
-          "-DUSE_WAYLAND_CLIPBOARD=true"
-        ];
+        cmakeFlags = [ "-DUSE_WAYLAND_CLIPBOARD=true" ];
       });
     };
     services.darkman = {
@@ -480,4 +482,3 @@ in
     home.stateVersion = "21.03";
   };
 }
-

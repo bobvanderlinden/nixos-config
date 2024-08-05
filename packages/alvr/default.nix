@@ -1,21 +1,22 @@
-{ lib
-, stdenv
-, fetchFromGitHub
-, pkg-config
-, rustPlatform
-, vulkan-loader
-, ffmpeg-full
-, gtk3
-, libunwind
-, clang
-, alsa-lib
-, libjack2
-, libXrandr
-, openssl
-, imagemagick
-, vulkan-headers
-, llvm
-, llvmPackages
+{
+  lib,
+  stdenv,
+  fetchFromGitHub,
+  pkg-config,
+  rustPlatform,
+  vulkan-loader,
+  ffmpeg-full,
+  gtk3,
+  libunwind,
+  clang,
+  alsa-lib,
+  libjack2,
+  libXrandr,
+  openssl,
+  imagemagick,
+  vulkan-headers,
+  llvm,
+  llvmPackages,
 }:
 
 rustPlatform.buildRustPackage rec {

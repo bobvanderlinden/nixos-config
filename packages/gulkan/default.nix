@@ -1,17 +1,18 @@
-{ lib
-, stdenv
-, fetchFromGitLab
-, fetchpatch
-, meson
-, ninja
-, pkg-config
-, cmake
-, gtk3
-, vulkan-loader
-, graphene
-, cairo
-, shaderc
-, libdrm
+{
+  lib,
+  stdenv,
+  fetchFromGitLab,
+  fetchpatch,
+  meson,
+  ninja,
+  pkg-config,
+  cmake,
+  gtk3,
+  vulkan-loader,
+  graphene,
+  cairo,
+  shaderc,
+  libdrm,
 }:
 
 stdenv.mkDerivation rec {

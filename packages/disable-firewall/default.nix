@@ -1,4 +1,10 @@
-{lib, stdenv, writeTextFile, runtimeShell, iptables }:
+{
+  lib,
+  stdenv,
+  writeTextFile,
+  runtimeShell,
+  iptables,
+}:
 writeTextFile rec {
   name = "disable-firewall";
   executable = true;

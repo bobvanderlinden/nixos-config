@@ -1,11 +1,12 @@
-{ lib
-, stdenv
-, fetchFromGitHub
-, pkg-config
-, meson
-, ninja
-, flatbuffers
-, libxkbcommon
+{
+  lib,
+  stdenv,
+  fetchFromGitHub,
+  pkg-config,
+  meson,
+  ninja,
+  flatbuffers,
+  libxkbcommon,
 }:
 
 stdenv.mkDerivation rec {

@@ -1,23 +1,24 @@
-{ lib
-, stdenv
-, fetchFromGitHub
-, pkg-config
-, cmake
-, meson
-, ninja
-, libX11
-, libGL
-, flatbuffers
-, openxr-loader
-, fontconfig
-, wlroots
-, libstardustxr
-, xdg-utils
-, stereo-kit
-, wayland
-, sk_gpu
-, libxkbcommon
-, udev
+{
+  lib,
+  stdenv,
+  fetchFromGitHub,
+  pkg-config,
+  cmake,
+  meson,
+  ninja,
+  libX11,
+  libGL,
+  flatbuffers,
+  openxr-loader,
+  fontconfig,
+  wlroots,
+  libstardustxr,
+  xdg-utils,
+  stereo-kit,
+  wayland,
+  sk_gpu,
+  libxkbcommon,
+  udev,
 }:
 
 stdenv.mkDerivation rec {

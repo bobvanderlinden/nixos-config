@@ -1,36 +1,37 @@
-{ lib
-, stdenv
-, fetchFromGitHub
-, fetchurl
-, pkg-config
-, cmake
-, libGL
-, libX11
-, fontconfig
-, reactphysics3d
-, openxr-loader
-, glew
-, makePkgconfigItem
-, copyPkgconfigItems
+{
+  lib,
+  stdenv,
+  fetchFromGitHub,
+  fetchurl,
+  pkg-config,
+  cmake,
+  libGL,
+  libX11,
+  fontconfig,
+  reactphysics3d,
+  openxr-loader,
+  glew,
+  makePkgconfigItem,
+  copyPkgconfigItems,
 }:
 let
   cpm = fetchurl {
     url = "https://github.com/cpm-cmake/CPM.cmake/releases/download/v0.32.2/CPM.cmake";
     hash = "sha256-yDHlpqmpAE8CWiwJRoWyaqbuBAg0090G8WJIC2KLHp8=";
   };
-  # reactphysics3d = fetchFromGitHub {
-  #   owner = "DanielChappuis";
-  #   repo = "reactphysics3d";
-  #   rev = "17dd22e677ed861b0d4ece0c00a7e3cb503cc2f0";
-  #   hash = "sha256-aPbQw0vHjh9ltPdrEo6t1+o89ABAjvi8zlAdZ0S7IYI=";
-  # };
-  # openxr = fetchFromGitHub {
-  #   owner = "KhronosGroup";
-  #   repo = "OpenXR-SDK";
-  #   rev = "release-1.0.24";
-  #   hash = "sha256-Bd8mdQgv031sCMEb7QGDBNRyLSO6VwfsYtjyCwfga9I=";
-  # };
 in
+# reactphysics3d = fetchFromGitHub {
+#   owner = "DanielChappuis";
+#   repo = "reactphysics3d";
+#   rev = "17dd22e677ed861b0d4ece0c00a7e3cb503cc2f0";
+#   hash = "sha256-aPbQw0vHjh9ltPdrEo6t1+o89ABAjvi8zlAdZ0S7IYI=";
+# };
+# openxr = fetchFromGitHub {
+#   owner = "KhronosGroup";
+#   repo = "OpenXR-SDK";
+#   rev = "release-1.0.24";
+#   hash = "sha256-Bd8mdQgv031sCMEb7QGDBNRyLSO6VwfsYtjyCwfga9I=";
+# };
 stdenv.mkDerivation rec {
   pname = "StereoKit";
   version = "0.3.6";

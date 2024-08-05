@@ -1,16 +1,17 @@
-{ lib
-, stdenv
-, fetchurl
-, fetchFromGitHub
-, pkg-config
-, cmake
-, python3
-, spirv-tools
-, spirv-cross
-, spirv-headers
-, glslang
-, libX11
-, glew
+{
+  lib,
+  stdenv,
+  fetchurl,
+  fetchFromGitHub,
+  pkg-config,
+  cmake,
+  python3,
+  spirv-tools,
+  spirv-cross,
+  spirv-headers,
+  glslang,
+  libX11,
+  glew,
 }:
 let
   cpm = fetchurl {
@@ -45,7 +46,7 @@ stdenv.mkDerivation rec {
   patchPhase = ''
     mkdir -p build/cmake
     cp -R --no-preserve=mode,ownership ${cpm} build/cmake/CPM_0.32.2.cmake
-    
+
     mkdir -p /build/source/build/skshaderc
     cp -R --no-preserve=mode,ownership ${spirv-cross.src}/ /build/source/build/skshaderc/spirv-cross
     cp -R --no-preserve=mode,ownership ${spirv-headers.src}/ /build/source/build/skshaderc/spirv-headers

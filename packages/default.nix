@@ -22,9 +22,7 @@ rec {
   stereo-kit = callPackage ./stereo-kit { };
   sk_gpu = callPackage ./sk_gpu { };
   reactphysics3d = callPackage ./reactphysics3d { };
-  libinputsynth = callPackage ./libinputsynth {
-    mutter = pkgs.mutter338;
-  };
+  libinputsynth = callPackage ./libinputsynth { mutter = pkgs.mutter338; };
   gnome-shell-xrdesktop = pkgs.gnome.gnome-shell.overrideAttrs (oldAttrs: {
     src = pkgs.fetchFromGitLab {
       domain = "gitlab.freedesktop.org";
@@ -41,15 +39,15 @@ rec {
       rm -f man/gnome-shell.1
     '';
 
-    buildInputs = oldAttrs.buildInputs ++ (with pkgs; [
-      vulkan-loader
-    ]) ++ [
-      xrdesktop
-      gxr
-      gulkan
-      libinputsynth
-    ];
+    buildInputs =
+      oldAttrs.buildInputs
+      ++ (with pkgs; [ vulkan-loader ])
+      ++ [
+        xrdesktop
+        gxr
+        gulkan
+        libinputsynth
+      ];
   });
   sejda = callPackage ./sejda { };
 }
-

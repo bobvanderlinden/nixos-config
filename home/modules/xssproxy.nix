@@ -4,7 +4,8 @@
   pkgs,
   ...
 }:
-with lib; {
+with lib;
+{
   options = {
     services.xssproxy = {
       enable = mkEnableOption "XSSProxy";
@@ -23,11 +24,13 @@ with lib; {
     systemd.user.services.xssproxy = {
       Unit = {
         Description = "forward freedesktop.org Idle Inhibition Service calls to Xss";
-        After = ["graphical-session-pre.target"];
-        PartOf = ["graphical-session.target"];
+        After = [ "graphical-session-pre.target" ];
+        PartOf = [ "graphical-session.target" ];
       };
 
-      Install = {WantedBy = ["graphical-session.target"];};
+      Install = {
+        WantedBy = [ "graphical-session.target" ];
+      };
 
       Service = {
         ExecStart = "${config.services.xssproxy.package}/bin/xssproxy";
