@@ -43,7 +43,6 @@ in
       file
       proot
       qemu
-      awscli
       darkhttpd
       xclip
       jq
@@ -351,6 +350,7 @@ in
       delta.enable = true;
       aliases = {
         unstage = "reset HEAD --";
+        sw = "switch";
         co = "checkout";
         c = "commit";
         b = "branch";
@@ -364,11 +364,15 @@ in
         bl = "blame -w -C -C -C";
         l = "log --graph --pretty='%Cred%h%Creset - %C(bold blue)<%an>%Creset %s%C(yellow)%d%Creset %Cgreen(%cr)' --abbrev-commit --date=relative";
         fixup = "commit --fixup";
+        pr-init = ''
+          !git fetch upstream HEAD && git checkout upstream/HEAD -b
+        '';
         pr-diff = "diff upstream/HEAD..";
         pr-log = "l upstream/HEAD..";
         pr-edit = "rebase --interactive --autosquash --rerere-autoupdate --rebase-merges --fork-point upstream/HEAD";
         pr-clean = "rebase --autosquash --rerere-autoupdate --empty drop --no-keep-empty --fork-point upstream/HEAD";
         pr-update = "pull --rebase=merges upstream HEAD";
+        pr-bisect = "!git bisect start && git bisect bad HEAD; git bisect good $(git merge-base --fork-point upstream/HEAD HEAD)";
       };
       ignores = [
         "vendor"
@@ -431,6 +435,9 @@ in
         # Avoid hint: use --reapply-cherry-picks to include skipped commits
         advice.skippedCherryPicks = false;
 
+        # Avoid hint: use git switch -c <new-branch-name> to retain commits
+        advice.detachedHead = false;
+
         # Source: https://github.com/rust-lang/cargo/issues/3381#issuecomment-1193730972
         # avoid issues where the cargo-edit tool tries to clone from a repo you do not have WRITE access to.
         # we already use SSH for every github repo, and so this puts the clone back to using HTTPS.
@@ -439,6 +446,8 @@ in
         # avoid issues where the `cargo audit` command tries to clone from a repo you do not have WRITE access to.
         # we already use SSH for every github repo, and so this puts the clone back to using HTTPS.
         url."https://github.com/RustSec/advisory-db".insteadOf = "https://github.com/RustSec/advisory-db";
+
+        absorb.maxStack = 100;
       };
     };
     programs.vscode = {
