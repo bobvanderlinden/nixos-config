@@ -158,6 +158,10 @@ in
                     "${mod}+Shift+8" = "move container to workspace 8";
                     "${mod}+Shift+9" = "move container to workspace 9";
                     "${mod}+Shift+0" = "move container to workspace 10";
+                    "${mod}+Control+Shift+Right" = "move workspace to output right";
+                    "${mod}+Control+Shift+Left" = "move workspace to output left";
+                    "${mod}+Control+Shift+Up" = "move workspace to output up";
+                    "${mod}+Control+Shift+Down" = "move workspace to output down";
                     "${mod}+Shift+r" = "restart";
                     "${mod}+Shift+e" = ''
                       exec "i3-nagbar -t warning -m 'You pressed the exit shortcut. Do you really want to exit i3? This will end your X session.' -b 'Yes, exit i3' 'i3-msg exit'"
