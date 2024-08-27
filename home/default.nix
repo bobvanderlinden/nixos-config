@@ -114,7 +114,6 @@ in
       deno
       # jujutsu
       procs
-      element-desktop
       thunderbird
       inkscape
       git-worktree-shell
