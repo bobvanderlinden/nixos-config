@@ -1,7 +1,8 @@
-{ config
-, lib
-, pkgs
-, ...
+{
+  config,
+  lib,
+  pkgs,
+  ...
 }:
 let
   inherit (lib) mkEnableOption mkDefault mkIf;
@@ -34,9 +35,9 @@ in
         fprintAuth = true;
       };
 
-
       home-manager.sharedModules = [
-        ({ config, ... }:
+        (
+          { config, ... }:
           {
             services.kanshi.enable = true;
             xdg.portal = {
@@ -48,15 +49,15 @@ in
                   "gnome"
                 ];
               };
-              extraPortals = [
-                pkgs.xdg-desktop-portal-wlr
-                pkgs.xdg-desktop-portal-gtk
-                pkgs.xdg-desktop-portal-gnome
-                pkgs.gnome-keyring
+              extraPortals = with pkgs; [
+                xdg-desktop-portal-wlr
+                xdg-desktop-portal-gtk
+                xdg-desktop-portal-gnome
+                gnome-keyring
               ];
-              configPackages = [
-                pkgs.gnome.gnome-session
-                pkgs.gnome-keyring
+              configPackages = with pkgs; [
+                gnome.gnome-session
+                gnome-keyring
               ];
             };
 
@@ -69,9 +70,7 @@ in
               enabled = "fcitx5";
             };
 
-            home.packages = [
-              pkgs.seahorse
-            ];
+            home.packages = [ pkgs.seahorse ];
 
             wayland.windowManager.sway = {
               enable = true;
@@ -276,9 +275,17 @@ in
               settings = {
                 mainBar = {
                   position = "bottom";
-                  modules-left = [ "sway/workspaces" "sway/mode" ];
+                  modules-left = [
+                    "sway/workspaces"
+                    "sway/mode"
+                  ];
                   modules-center = [ ];
-                  modules-right = [ "network" "battery" "clock" "tray" ];
+                  modules-right = [
+                    "network"
+                    "battery"
+                    "clock"
+                    "tray"
+                  ];
                   "sway/workspaces" = {
                     enable-bar-scroll = true;
                   };
@@ -295,7 +302,13 @@ in
                   };
                   battery = {
                     format = "{capacity}% {icon}";
-                    format-icons = [ "" "" "" "" "" ];
+                    format-icons = [
+                      ""
+                      ""
+                      ""
+                      ""
+                      ""
+                    ];
                     format-charging = "<span font='Font Awesome 5 Free'></span>  <span font='Font Awesome 5 Free 11'>{icon}</span>  {capacity}% - {time}";
                     format-full = "<span font='Font Awesome 5 Free'></span>  <span font='Font Awesome 5 Free 11'>{icon}</span>  Charged";
                   };
@@ -325,7 +338,8 @@ in
             };
 
             services.mako.enable = true;
-          })
+          }
+        )
       ];
     };
 }
