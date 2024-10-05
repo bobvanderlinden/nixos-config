@@ -76,7 +76,6 @@ in
       watchman
       i3status
       mono
-      inconsolata
       liberation_ttf
       ttf_bitstream_vera
       gnupg
@@ -89,7 +88,7 @@ in
       screen
       nixpkgs-review
       leafpad
-      mypaint
+      # mypaint
       tiled
       maven
       yq-go
@@ -323,6 +322,10 @@ in
       "Xft/Antialias" = true;
       "Xft/Hinting" = true;
       "Xft/RGBA" = "rgb";
+    };
+    programs.kitty = {
+      themeFile = "Adwaita dark";
+      keybindings."ctrl+shift+n" = "new_os_window_with_cwd";
     };
 
     services.xssproxy.enable = false;

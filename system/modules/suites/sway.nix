@@ -56,7 +56,7 @@ in
                 gnome-keyring
               ];
               configPackages = with pkgs; [
-                gnome.gnome-session
+                gnome-session
                 gnome-keyring
               ];
             };
