@@ -5,6 +5,7 @@ in
 rec {
   coin = callPackage ./coin { };
   git-worktree-shell = callPackage ./git-worktree-shell { };
+  wl-screenrecord = callPackage ./wl-screenrecord { };
   swaylock-fprintd = callPackage ./swaylock-fprintd { };
   sway-open = callPackage ./sway-open { };
   lazy-desktop = callPackage ./lazy-desktop { };
