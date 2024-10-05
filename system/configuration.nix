@@ -1,9 +1,11 @@
-{ config
-, pkgs
-, lib
-, inputs
-, ...
-}: {
+{
+  config,
+  pkgs,
+  lib,
+  inputs,
+  ...
+}:
+{
   # Allow opening a shell during boot.
   # systemd.additionalUpstreamSystemUnits = ["debug-shell.service"];
 
@@ -15,7 +17,10 @@
   boot.initrd.systemd.enable = true;
   boot.plymouth.enable = true;
   boot.consoleLogLevel = 3;
-  boot.kernelParams = [ "quiet" "udev.log_priority=3" ];
+  boot.kernelParams = [
+    "quiet"
+    "udev.log_priority=3"
+  ];
   boot.loader.timeout = 0;
 
   programs.nix-ld.enable = true;
@@ -154,7 +159,6 @@
   services.tlp.enable = true;
   services.earlyoom.enable = true;
 
-
   # Set permissions for RTL2832 USB dongle to use with urh.
   hardware.rtl-sdr.enable = true;
 
@@ -286,9 +290,16 @@
     settings = {
       sandbox = true;
       extra-sandbox-paths = [ "/etc/nix/netrc" ];
-      trusted-users = [ "root" "${config.suites.single-user.user}" ];
+      trusted-users = [
+        "root"
+        "${config.suites.single-user.user}"
+      ];
       substituters = [ "https://cachix.cachix.org" ];
-      extra-experimental-features = [ "nix-command" "flakes" "ca-derivations" ];
+      extra-experimental-features = [
+        "nix-command"
+        "flakes"
+        "ca-derivations"
+      ];
       netrc-file = "/etc/nix/netrc";
       auto-optimise-store = true;
       log-lines = 100;
@@ -300,7 +311,11 @@
   system.autoUpgrade = {
     enable = false;
     flake = "/home/bob.vanderlinden/projects/bobvanderlinden/nixos-config";
-    flags = [ "--update-input" "nixpkgs" "--commit-lock-file" ];
+    flags = [
+      "--update-input"
+      "nixpkgs"
+      "--commit-lock-file"
+    ];
     dates = "17:30";
   };
 
