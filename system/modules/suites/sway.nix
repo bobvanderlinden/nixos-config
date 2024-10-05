@@ -184,11 +184,8 @@ in
                   };
 
                 startup = [
-                  {
-                    # Auto-start all *.desktop files in auto-start directories.
-                    command = "${pkgs.dex}/bin/dex -a";
-                  }
-                  { command = "mako"; }
+                  # Auto-start all *.desktop files in auto-start directories.
+                  { command = "${pkgs.dex}/bin/dex -a"; }
                   { command = "nm-applet --indicator"; }
                 ];
               };
@@ -341,7 +338,14 @@ in
               };
             };
 
-            services.mako.enable = true;
+            services.swaync = {
+              enable = true;
+              settings = {
+                positionX = "right";
+                positionY = "bottom";
+                layer = "overlay";
+              };
+            };
           }
         )
       ];
