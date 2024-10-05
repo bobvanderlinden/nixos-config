@@ -102,7 +102,7 @@ in
                     mod = config.wayland.windowManager.sway.config.modifier;
                   in
                   {
-                    "${mod}+t" = "exec foot";
+                    "${mod}+t" = "exec kitty";
                     "${mod}+w" = "exec chromium";
                     "${mod}+e" = "exec thunar";
                     "${mod}+q" = "exec ${pkgs.wofi}/bin/wofi --show run";
@@ -320,9 +320,13 @@ in
               };
             };
 
-            programs.foot = {
+            programs.kitty = {
               enable = true;
-              server.enable = true;
+            };
+
+            programs.foot = {
+              enable = false;
+              server.enable = false;
               settings = {
                 main = {
                   font = "monospace:size=12";
