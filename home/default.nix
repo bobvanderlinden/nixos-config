@@ -369,7 +369,7 @@ in
         l = "log --graph --pretty='%Cred%h%Creset - %C(bold blue)<%an>%Creset %s%C(yellow)%d%Creset %Cgreen(%cr)' --abbrev-commit --date=relative";
         fixup = "commit --fixup";
         pr-init = ''
-          !git fetch upstream HEAD && git checkout upstream/HEAD -b
+          !git fetch upstream HEAD && git checkout upstream/HEAD -b $1
         '';
         pr-diff = "diff upstream/HEAD..";
         pr-log = "l upstream/HEAD..";
