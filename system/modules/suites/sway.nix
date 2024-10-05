@@ -70,7 +70,10 @@ in
               enabled = "fcitx5";
             };
 
-            home.packages = [ pkgs.seahorse ];
+            home.packages = [
+              pkgs.wl-screenrecord
+              pkgs.seahorse
+            ];
 
             wayland.windowManager.sway = {
               enable = true;
@@ -105,6 +108,7 @@ in
                     "${mod}+q" = "exec ${pkgs.wofi}/bin/wofi --show run";
                     "${mod}+Delete" = "exec loginctl lock-session";
                     "${mod}+Print" = "exec flameshot gui";
+                    "${mod}+Shift+Print" = "exec wl-screenrecord";
                     "${mod}+c" = "kill";
 
                     "${mod}+Shift+grave" = "move scratchpad";
