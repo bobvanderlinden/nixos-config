@@ -324,7 +324,7 @@ in
       "Xft/RGBA" = "rgb";
     };
     programs.kitty = {
-      themeFile = "Adwaita dark";
+      themeFile = "adwaita_dark";
       keybindings."ctrl+shift+n" = "new_os_window_with_cwd";
     };
 
