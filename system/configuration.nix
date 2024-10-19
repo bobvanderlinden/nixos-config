@@ -88,14 +88,7 @@
   networking = {
     hostName = "nac44250";
 
-    firewall = {
-      enable = true;
-      allowedTCPPorts = [
-        3000 # Development
-        8080 # Development
-      ];
-      allowPing = true;
-    };
+    firewall.enable = true;
 
     networkmanager = {
       enable = true;
