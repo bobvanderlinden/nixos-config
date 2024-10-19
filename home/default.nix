@@ -135,6 +135,7 @@ in
       ast-grep
       ijq
       dconf
+      lazygit
       # Prioritize the sway-open-wrappers.
       (lib.hiPrio chromium-wrapper)
       (lib.hiPrio vscode-wrapper)
