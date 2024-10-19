@@ -153,8 +153,8 @@
   security.polkit.enable = true;
   services.upower = {
     enable = true;
-    timeAction = 5 * 60;
-    criticalPowerAction = "Hibernate";
+    timeAction = 15 * 60;
+    percentageCritical = 10;
   };
   services.tlp.enable = true;
   services.earlyoom.enable = true;
