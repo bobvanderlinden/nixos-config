@@ -6,7 +6,7 @@ It includes the following:
 
 - A flake-based configuration (see [flake.nix](flake.nix))
 - [NixOS](https://nixos.org/) configuration (see [configuration.nix](system/configuration.nix))
-- [home-manager])(https://github.com/nix-community/home-manager#home-manager-using-nix) configuration (see [home](home/default.nix))
+- [home-manager](https://github.com/nix-community/home-manager#home-manager-using-nix) configuration (see [home](home/default.nix))
 - Custom NixOS modules (see [system/modules/](system/modules/))
 - Custom home-manager modules (see [home/modules/](home/modules/))
 - Custom packages (see [packages/](packages/))
