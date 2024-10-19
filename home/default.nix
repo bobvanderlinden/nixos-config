@@ -134,6 +134,7 @@ in
       devenv
       ast-grep
       ijq
+      dconf
       # Prioritize the sway-open-wrappers.
       (lib.hiPrio chromium-wrapper)
       (lib.hiPrio vscode-wrapper)
