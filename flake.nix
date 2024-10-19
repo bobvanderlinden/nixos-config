@@ -10,50 +10,93 @@
     nix-index-database.url = "github:nix-community/nix-index-database";
   };
 
-  outputs = { self, nixpkgs, flake-utils, lanzaboote, nix-index-database, ... } @ inputs:
+  outputs =
+    {
+      self,
+      flake-utils,
+      lanzaboote,
+      nix-index-database,
+      ...
+    }@inputs:
     let
+      system = "x86_64-linux";
+
+      # We'd like to be able to add patches on top of nixpkgs, like pending pull requests.
+      # Source: https://github.com/NixOS/nixpkgs/pull/142273#issuecomment-948225922
+      nixpkgs =
+        let
+          pkgs = inputs.nixpkgs.legacyPackages.${system};
+        in
+        pkgs.applyPatches {
+          name = "nixpkgs-patched";
+          src = inputs.nixpkgs;
+          patches = [
+            # Fix openvpn3 glibc incompatibility.
+            (pkgs.fetchpatch {
+              url = "https://github.com/NixOS/nixpkgs/pull/326623.patch";
+              hash = "sha256-ziop85PodXV4u3zLbXSQc03xagPIbZx7fCGdFkHLl7Y=";
+            })
+          ];
+        };
       username = "bob.vanderlinden";
-      defaultOverlays = with self.overlays; [ default workarounds ];
+      defaultOverlays = with self.overlays; [
+        default
+        workarounds
+      ];
       mkPkgs =
-        { system ? "x86_64-linux"
-        , nixpkgs ? inputs.nixpkgs
-        , config ? { allowUnfree = true; }
-        , overlays ? defaultOverlays
-        , ...
-        } @ options: import nixpkgs (options // {
-          inherit system config overlays;
-        });
+        {
+          system ? system,
+          nixpkgs ? inputs.nixpkgs,
+          config ? {
+            allowUnfree = true;
+          },
+          overlays ? defaultOverlays,
+          ...
+        }@options:
+        import nixpkgs (
+          options
+          // {
+            inherit system config overlays;
+          }
+        );
+      nixosSystem = import (nixpkgs + "/nixos/lib/eval-config.nix");
     in
     {
       overlays.default = final: prev: import ./packages { pkgs = final; };
       overlays.workarounds = final: prev: { };
 
-      nixosModules =
-        import ./system/modules
-        // {
-          overlays = { nixpkgs.overlays = defaultOverlays; };
-          hardware-configuration = import ./system/hardware-configuration.nix;
-          system-configuration = import ./system/configuration.nix;
-          single-user = { suites.single-user.user = username; };
-          inherit (lanzaboote.nixosModules) lanzaboote;
-          # inherit (nix-index-database.nixosModules) nix-index;
-          nix-index-database-home-manager = { home-manager.sharedModules = [ nix-index-database.hmModules.nix-index ]; };
+      nixosModules = import ./system/modules // {
+        overlays = {
+          nixpkgs.overlays = defaultOverlays;
         };
+        hardware-configuration = import ./system/hardware-configuration.nix;
+        system-configuration = import ./system/configuration.nix;
+        single-user = {
+          suites.single-user.user = username;
+        };
+        inherit (lanzaboote.nixosModules) lanzaboote;
+        # inherit (nix-index-database.nixosModules) nix-index;
+        nix-index-database-home-manager = {
+          home-manager.sharedModules = [ nix-index-database.hmModules.nix-index ];
+        };
+      };
 
       # System configuration for laptop.
-      nixosConfigurations.nac44250 = nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
+      nixosConfigurations.nac44250 = nixosSystem {
+        inherit system;
         specialArgs = {
           inherit inputs;
         };
         modules = builtins.attrValues self.nixosModules;
       };
 
-      homeConfigurations."${username}@nac44250" = self.nixosConfigurations.nac44250.config.home-manager.users.${username}.home;
+      homeConfigurations."${username}@nac44250" =
+        self.nixosConfigurations.nac44250.config.home-manager.users.${username}.home;
     }
     # Define outputs that allow multiple systems with for all default systems.
     # This is to support OSX and RPI.
-    // flake-utils.lib.eachDefaultSystem (system:
+    // flake-utils.lib.eachDefaultSystem (
+      system:
       let
         pkgs = mkPkgs {
           inherit system;
@@ -64,7 +107,10 @@
           let
             lib = pkgs.lib;
           in
-          lib.filterAttrs (name: package: (package ? meta) -> (package.meta ? platforms) -> builtins.elem system package.meta.platforms) (import ./packages { inherit pkgs; });
+          lib.filterAttrs (
+            name: package:
+            (package ? meta) -> (package.meta ? platforms) -> builtins.elem system package.meta.platforms
+          ) (import ./packages { inherit pkgs; });
 
         apps.switch = {
           type = "app";
@@ -95,5 +141,6 @@
             nixd
           ];
         };
-      });
+      }
+    );
 }
