@@ -102,6 +102,8 @@
       plugins = with pkgs; [ networkmanager-openvpn ];
     };
   };
+  services.resolved.enable = true;
+  programs.openvpn3.enable = true;
 
   fonts = {
     fontDir.enable = true;
