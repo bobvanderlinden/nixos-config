@@ -21,11 +21,6 @@ with lib;
       # Source: https://github.com/NixOS/nixpkgs/issues/271461#issuecomment-1934829672
       ELECTRON_OZONE_PLATFORM_HINT = "auto";
 
-      # Source: https://wiki.archlinux.org/title/wayland#Requirements
-      # Source: https://github.com/cole-mickens/nixcfg/blob/707b2db0a5f69ffda027f8008835f01d03954dcb/mixins/nvidia.nix#L7-L13
-      # GBM_BACKEND = "nvidia-drm";
-      # __GLX_VENDOR_LIBRARY_NAME = "nvidia";
-
       # Source: https://github.com/NixOS/nixpkgs/blob/45004c6f6330b1ff6f3d6c3a0ea8019f6c18a930/nixos/modules/programs/sway.nix#L47-L53
       SDL_VIDEODRIVER = "wayland";
       QT_QPA_PLATFORM = "wayland";
