@@ -14,9 +14,8 @@ with lib;
       ];
 
       environment.sessionVariables = {
-        # Source: https://nixos.wiki/wiki/Slack#Wayland
-        # Source: https://nixos.wiki/wiki/Visual_Studio_Code#Wayland
-        NIXOS_OZONE_WL = "1";
+        # Source: https://github.com/NixOS/nixpkgs/issues/271461#issuecomment-1934829672
+        ELECTRON_OZONE_PLATFORM_HINT = "auto";
 
         # Source: https://wiki.archlinux.org/title/wayland#Requirements
         # Source: https://github.com/cole-mickens/nixcfg/blob/707b2db0a5f69ffda027f8008835f01d03954dcb/mixins/nvidia.nix#L7-L13
