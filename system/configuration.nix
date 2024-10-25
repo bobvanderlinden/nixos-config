@@ -15,6 +15,7 @@
   suites.sway.enable = true;
 
   boot.initrd.systemd.enable = true;
+  boot.loader.systemd-boot.configurationLimit = 5;
   boot.plymouth.enable = true;
   boot.consoleLogLevel = 3;
   boot.kernelParams = [
