@@ -105,9 +105,7 @@
     fontconfig = {
       enable = true;
       defaultFonts = {
-        monospace = [
-          "SauceCodePro Nerd Font"
-        ];
+        monospace = [ "SauceCodePro Nerd Font" ];
       };
     };
     packages = with pkgs; [
@@ -256,9 +254,7 @@
   users.defaultUserShell = pkgs.fish;
 
   nixpkgs.config.allowUnfree = true;
-  nixpkgs.config.permittedInsecurePackages = [
-    "electron-25.9.0"
-  ];
+  nixpkgs.config.permittedInsecurePackages = [ "electron-25.9.0" ];
 
   documentation.enable = false;
   documentation.nixos.enable = false;

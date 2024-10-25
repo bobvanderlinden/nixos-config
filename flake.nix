@@ -53,12 +53,7 @@
           overlays ? defaultOverlays,
           ...
         }@options:
-        import nixpkgs (
-          options
-          // {
-            inherit system config overlays;
-          }
-        );
+        import nixpkgs (options // { inherit system config overlays; });
       nixosSystem = import (nixpkgs + "/nixos/lib/eval-config.nix");
     in
     {
@@ -98,9 +93,7 @@
     // flake-utils.lib.eachDefaultSystem (
       system:
       let
-        pkgs = mkPkgs {
-          inherit system;
-        };
+        pkgs = mkPkgs { inherit system; };
       in
       {
         packages =

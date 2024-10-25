@@ -1,8 +1,6 @@
-{ config
-, lib
-, ...
-}:
-with lib; {
+{ config, lib, ... }:
+with lib;
+{
   options = {
     suites.single-user = {
       enable = mkEnableOption "Single-user suite";

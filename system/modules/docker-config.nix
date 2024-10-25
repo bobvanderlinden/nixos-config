@@ -4,15 +4,17 @@
   pkgs,
   ...
 }:
-with lib; let
+with lib;
+let
   cfg = config.virtualisation.docker;
   daemonConfigJson = builtins.toJSON cfg.daemonConfig;
   daemonConfigFile = pkgs.writeText "daemon.json" daemonConfigJson;
-in {
+in
+{
   options.virtualisation.docker = {
     daemonConfig = mkOption {
       type = types.anything;
-      default = {};
+      default = { };
       example = {
         ipv6 = true;
         "fixed-cidr-v6" = "fd00::/80";

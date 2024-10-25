@@ -16,7 +16,6 @@
   graphene,
   udev,
   openxr-loader,
-
   libinput,
   wrapGAppsHook,
   wayland,

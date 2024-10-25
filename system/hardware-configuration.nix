@@ -7,12 +7,24 @@
   pkgs,
   modulesPath,
   ...
-}: {
-  boot.initrd.availableKernelModules = [ "xhci_pci" "nvme" "thunderbolt" "rtsx_pci_sdmmc" "dm-snapshot" "kvm-intel" "i915" ];
+}:
+{
+  boot.initrd.availableKernelModules = [
+    "xhci_pci"
+    "nvme"
+    "thunderbolt"
+    "rtsx_pci_sdmmc"
+    "dm-snapshot"
+    "kvm-intel"
+    "i915"
+  ];
   # boot.initrd.kernelModules = [ "dm-snapshot" ];
   boot.kernelModules = [ "kvm-intel" ];
   # https://wiki.archlinux.org/index.php/Kernel_mode_setting#Early_KMS_start
-  boot.initrd.kernelModules = [ "kvm-intel" "i915" ];
+  boot.initrd.kernelModules = [
+    "kvm-intel"
+    "i915"
+  ];
   # Enable framebuffer compression (FBC)
   # can reduce power consumption while reducing memory bandwidth needed for screen refreshes.
   # https://wiki.archlinux.org/index.php/intel_graphics#Framebuffer_compression_(enable_fbc)
@@ -40,26 +52,22 @@
     preLVM = true;
   };
 
-  fileSystems."/" =
-    { device = "/dev/disk/by-uuid/115f53cf-99fc-40eb-8dfc-e448593d09cf";
-      fsType = "ext4";
-    };
+  fileSystems."/" = {
+    device = "/dev/disk/by-uuid/115f53cf-99fc-40eb-8dfc-e448593d09cf";
+    fsType = "ext4";
+  };
 
-  fileSystems."/boot" =
-    { device = "/dev/disk/by-uuid/80c5465e-1983-4e22-90e3-d219fb23f6fb";
-      fsType = "ext4";
-    };
+  fileSystems."/boot" = {
+    device = "/dev/disk/by-uuid/80c5465e-1983-4e22-90e3-d219fb23f6fb";
+    fsType = "ext4";
+  };
 
-  fileSystems."/boot/efi" =
-    { device = "/dev/disk/by-uuid/199D-2646";
-      fsType = "vfat";
-    };
+  fileSystems."/boot/efi" = {
+    device = "/dev/disk/by-uuid/199D-2646";
+    fsType = "vfat";
+  };
 
-  swapDevices = [
-    {
-      device = "/dev/disk/by-uuid/4d13ef58-33bb-4e0f-95ea-dcfec3371911";
-    }
-  ];
+  swapDevices = [ { device = "/dev/disk/by-uuid/4d13ef58-33bb-4e0f-95ea-dcfec3371911"; } ];
 
   powerManagement.cpuFreqGovernor = lib.mkDefault "powersave";
 }

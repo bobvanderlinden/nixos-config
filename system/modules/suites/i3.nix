@@ -1,9 +1,11 @@
-{ config
-, lib
-, pkgs
-, ...
+{
+  config,
+  lib,
+  pkgs,
+  ...
 }:
-with lib; {
+with lib;
+{
   options = {
     suites.i3 = {
       enable = mkEnableOption "i3 suite";
@@ -28,7 +30,12 @@ with lib; {
           SCREEN_RESOLUTION="$(xdpyinfo | grep dimensions | cut -d' ' -f7)"
           convert -gravity center -background "#${backgroundColor}" "${wallpaperSvg}" -extent "$SCREEN_RESOLUTION" RGB:- | i3lock --nofork --color "${backgroundColor}" --raw "$SCREEN_RESOLUTION":rgb --image /dev/stdin
         '';
-        runtimeInputs = [ pkgs.imagemagick pkgs.i3lock pkgs.xorg.xdpyinfo pkgs.coreutils ];
+        runtimeInputs = [
+          pkgs.imagemagick
+          pkgs.i3lock
+          pkgs.xorg.xdpyinfo
+          pkgs.coreutils
+        ];
       };
       lockCmd = "${lock}/bin/lock";
     in
@@ -40,7 +47,11 @@ with lib; {
       '';
       services.xserver.windowManager.i3 = {
         enable = true;
-        extraPackages = with pkgs; [ dmenu i3status i3lock ];
+        extraPackages = with pkgs; [
+          dmenu
+          i3status
+          i3lock
+        ];
       };
       services.picom = {
         enable = true;
@@ -48,17 +59,16 @@ with lib; {
       };
       xdg.portal = {
         enable = true;
-        extraPortals = with pkgs; [
-          xdg-desktop-portal-gtk
-        ];
-        configPackages = config.xdg.portal.extraPortals ++ (with pkgs; [
-          gnome-keyring
-        ]);
+        extraPortals = with pkgs; [ xdg-desktop-portal-gtk ];
+        configPackages = config.xdg.portal.extraPortals ++ (with pkgs; [ gnome-keyring ]);
       };
 
       programs.xss-lock.enable = true;
       services.gnome.gnome-keyring.enable = true;
-      services.dbus.packages = with pkgs; [ gnome-keyring gcr ];
+      services.dbus.packages = with pkgs; [
+        gnome-keyring
+        gcr
+      ];
       services.udev.packages = with pkgs; [ gnome-settings-daemon ];
       services.gvfs.enable = true;
       programs.seahorse.enable = true;
@@ -83,27 +93,41 @@ with lib; {
           # "Lower Volume" media key
           {
             keys = [ 122 ];
-            events = [ "key" "rep" ];
+            events = [
+              "key"
+              "rep"
+            ];
             command = "${pkgs.alsa-utils}/bin/amixer -q set Master 5%- unmute";
           }
 
           # "Raise Volume" media key
           {
             keys = [ 123 ];
-            events = [ "key" "rep" ];
+            events = [
+              "key"
+              "rep"
+            ];
             command = "${pkgs.alsa-utils}/bin/amixer -q set Master 5%+ unmute";
           }
 
           # "Phone connect"
           {
-            keys = [ 56 125 218 ];
+            keys = [
+              56
+              125
+              218
+            ];
             events = [ "key" ];
             command = "${pulseaudio}/bin/pactl set-card-profile bluez_card.2C:41:A1:C8:E5:04 headset-head-unit";
           }
 
           # "Phone disconnect"
           {
-            keys = [ 29 56 223 ];
+            keys = [
+              29
+              56
+              223
+            ];
             events = [ "key" ];
             command = "${pulseaudio}/bin/pactl set-card-profile bluez_card.2C:41:A1:C8:E5:04 a2dp-sink-aac";
           }
@@ -111,9 +135,12 @@ with lib; {
       };
 
       home-manager.sharedModules = [
-        ({ config, ... }:
+        (
+          { config, ... }:
           {
-            xresources.properties = { "Xft.dpi" = 192; };
+            xresources.properties = {
+              "Xft.dpi" = 192;
+            };
 
             services.screen-locker = {
               enable = true;
@@ -251,8 +278,7 @@ with lib; {
                       "${mod}+Ctrl+greater" = "move workspace to output right";
                       "${mod}+Ctrl+less" = "move workspace to output left";
                       "${mod}+Shift+r" = "restart";
-                      "${mod}+Shift+e" = ''
-                        exec "i3-nagbar -t warning -m 'You pressed the exit shortcut. Do you really want to exit i3? This will end your X session.' -b 'Yes, exit i3' 'i3-msg exit'"'';
+                      "${mod}+Shift+e" = ''exec "i3-nagbar -t warning -m 'You pressed the exit shortcut. Do you really want to exit i3? This will end your X session.' -b 'Yes, exit i3' 'i3-msg exit'"'';
 
                       "XF86AudioRaiseVolume" = "exec ${pulseaudio}/bin/pactl set-sink-volume 0 +5%";
                       "XF86AudioLowerVolume" = "exec ${pulseaudio}/bin/pactl set-sink-volume 0 -5%";
@@ -265,12 +291,19 @@ with lib; {
                       "XF86AudioPause" = "exec ${pkgs.playerctl}/bin/playerctl pause";
                       "XF86AudioNext" = "exec ${pkgs.playerctl}/bin/playerctl next";
                       "XF86AudioPrev" = "exec ${pkgs.playerctl}/bin/playerctl previous";
-                    } // (lib.concatMapAttrs
-                      (workspace: { key ? workspace }: {
-                        "${mod}+${key}" = "workspace ${workspace}";
-                        "${mod}+Shift+${key}" = "move container to workspace ${workspace}";
-                        "${mod}+Ctrl+Shift+${key}" = "rename workspace to ${workspace}";
-                      })
+                    }
+                    // (lib.concatMapAttrs
+                      (
+                        workspace:
+                        {
+                          key ? workspace,
+                        }:
+                        {
+                          "${mod}+${key}" = "workspace ${workspace}";
+                          "${mod}+Shift+${key}" = "move container to workspace ${workspace}";
+                          "${mod}+Ctrl+Shift+${key}" = "rename workspace to ${workspace}";
+                        }
+                      )
                       {
                         "1" = { };
                         "2" = { };
@@ -281,8 +314,11 @@ with lib; {
                         "7" = { };
                         "8" = { };
                         "9" = { };
-                        "10" = { key = "0"; };
-                      });
+                        "10" = {
+                          key = "0";
+                        };
+                      }
+                    );
 
                   startup = [
                     {
@@ -320,7 +356,8 @@ with lib; {
                 '';
               };
             };
-          })
+          }
+        )
       ];
     };
 }

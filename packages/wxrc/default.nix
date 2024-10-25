@@ -24,7 +24,6 @@
   pango,
   wayland,
   wayland-protocols,
-
 }:
 
 let
