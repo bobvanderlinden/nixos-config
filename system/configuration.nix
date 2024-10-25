@@ -18,6 +18,7 @@
   boot.loader.systemd-boot.configurationLimit = 5;
   boot.plymouth.enable = true;
   boot.consoleLogLevel = 3;
+  boot.kernelPackages = pkgs.linuxPackages_latest;
   boot.kernelParams = [
     "quiet"
     "udev.log_priority=3"
