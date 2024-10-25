@@ -135,9 +135,14 @@
             "${switch}/bin/switch";
         };
 
+        formatter = {
+          type = "app";
+          program = "${pkgs.nixfmt-rfc-style}/bin/nixfmt";
+        };
+
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [
-            nixpkgs-fmt
+            nixfmt-rfc-style
             nixd
           ];
         };
