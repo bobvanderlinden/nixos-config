@@ -8,6 +8,7 @@ in
   wl-screenrecord = callPackage ./wl-screenrecord { };
   swaylock-fprintd = callPackage ./swaylock-fprintd { };
   sway-open = callPackage ./sway-open { };
+  nixos-efi-gc = callPackage ./nixos-efi-gc { };
   lazy-desktop = callPackage ./lazy-desktop { };
   immersed = callPackage ./immersed { };
   disable-firewall = callPackage ./disable-firewall { };
