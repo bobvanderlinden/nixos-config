@@ -87,7 +87,6 @@ in
       feh
       screen
       nixpkgs-review
-      leafpad
       # mypaint
       tiled
       maven
