@@ -300,10 +300,10 @@
     };
     package = pkgs.nixVersions.git.overrideAttrs (oldAttrs: {
       patches = [
-        # (pkgs.fetchpatch {
-        #   url = "https://github.com/NixOS/nix/pull/11695.patch";
-        #   hash = "";
-        # })
+        (pkgs.fetchpatch {
+          url = "https://github.com/NixOS/nix/pull/11695.patch";
+          hash = "sha256-2cFZCDWvFPux9ogenGW7JNR50yxWsgX/v+LUqDS1aZk=";
+        })
       ];
     });
   };
