@@ -135,7 +135,6 @@ in
       ast-grep
       ijq
       dconf
-      lazygit
       # Prioritize the sway-open-wrappers.
       (lib.hiPrio chromium-wrapper)
       (lib.hiPrio vscode-wrapper)
@@ -152,6 +151,20 @@ in
     };
 
     programs.chromium.enable = true;
+
+    programs.lazygit = {
+      enable = true;
+      settings = {
+        git.overrideGpg = true;
+        customCommands = [
+          {
+            key = "N";
+            context = "global";
+            command = "git fetch origin HEAD && git checkout FETCH_HEAD";
+          }
+        ];
+      };
+    };
 
     programs.terminator = {
       enable = true;
