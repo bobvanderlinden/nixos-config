@@ -2,10 +2,7 @@
 # and may be overwritten by future invocations.  Please make changes
 # to /etc/nixos/configuration.nix instead.
 {
-  config,
   lib,
-  pkgs,
-  modulesPath,
   ...
 }:
 {
@@ -36,8 +33,8 @@
 
   # Disable systemd-boot, as it is replaced by lanzaboote.
   # boot.loader.systemd-boot.enable = true;
-  boot.loader.systemd-boot.netbootxyz.enable = true;
-  
+  # boot.loader.systemd-boot.netbootxyz.enable = true;
+
   # Secure boot
   boot.loader.systemd-boot.enable = false;
   boot.lanzaboote.enable = true;
