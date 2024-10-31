@@ -1,6 +1,7 @@
 {
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-24.05";
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -58,7 +59,18 @@
     in
     {
       overlays.default = final: prev: import ./packages { pkgs = final; };
-      overlays.workarounds = final: prev: { };
+      overlays.workarounds =
+        final: prev:
+        let
+          pkgsStable = import inputs.nixpkgs-stable {
+            system = prev.system;
+            config.allowUnfree = true;
+          };
+        in
+        {
+          _1password-cli = pkgsStable._1password;
+          _1password-gui = pkgsStable._1password-gui;
+        };
 
       nixosModules = import ./system/modules // {
         overlays = {
