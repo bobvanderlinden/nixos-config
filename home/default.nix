@@ -29,118 +29,133 @@ in
   ];
   config = {
     home.packages = with pkgs; [
-      coin
+      # Development Tools
       nixfmt-rfc-style
-      bitwarden
-      insomnia
-      spotify
-      pavucontrol
-      fortune
-      cowsay
       gdb
-      mplayer
-      imagemagick
       nodejs
-      entr
+      clang
+      jdk
+      maven
+      deno
+      devenv
+      watchman
+
+      # Version Control
+      hub
+      gh
+      git-cola
+      git-absorb
+      git-revise
+      git-worktree-shell
+      tig
+
+      # Text Processing & Search
+      ripgrep
+      fd
+      sd
+      xsv
+      q-text-as-data
+      delta
+      ast-grep
+
+      # System Tools
       socat
       file
-      proot
       qemu
       darkhttpd
-      xclip
-      jq
+      lsof
+      bottom
+      procs
+      dua
+      nix-output-monitor
+
+      # Network Tools
       nmap
-      graphviz
+      httpie
+      insomnia
+      docker-compose
+
+      # File Management
       xfce.thunar
       xfce.xfconf
       xfce.tumbler
       xfce.exo
-      volumeicon
-      keepassxc
-      jdk
-      libreoffice
-      speedcrunch
-      ffmpegthumbnailer
-      networkmanagerapplet
-      xsel
-      lxappearance
-
-      hub
-      gh
-      git-cola
-      # git-branchless
-      git-absorb
-      git-revise
-
       file-roller
-      clang
-      slack
-      zoom-us
-      watchman
-      i3status
-      mono
-      liberation_ttf
-      ttf_bitstream_vera
-      gnupg
+      meld
+
+      # Media & Graphics
+      mplayer
+      imagemagick
       vlc
-      patchelf
-      docker-compose
-      httpie
       gimp
       feh
-      screen
-      nixpkgs-review
-      # mypaint
-      tiled
-      maven
-      yq-go
-      ripgrep
-      pomodoro
-      audacity
       ffmpeg-full
-      zoxide
-      fd
-      procs
-      sd
-      bottom
-      # neo4j-desktop
-      watchexec
-      bitwarden-cli
-      xsv
-      q-text-as-data
-      httpie
-      delta
-      # luakit
-      nodePackages.zx
-      deno
-      # jujutsu
-      procs
-      thunderbird
+      ffmpegthumbnailer
+      audacity
       inkscape
-      git-worktree-shell
-      # monado
-      meld
-      lsof
-      home-manager
+      peek
+
+      # Desktop Environment
+      pavucontrol
+      volumeicon
+      lxappearance
+      i3status
+      networkmanagerapplet
+      dconf
+
+      # Security & Privacy
+      bitwarden
+      bitwarden-cli
+      keepassxc
+      gnupg
+
+      # Communication & Collaboration
+      slack
+      zoom-us
+      thunderbird
+
+      # Text Editors & IDEs
+      helix
       (lib.hiPrio cursor-wrapper)
+      (lib.hiPrio chromium-wrapper)
       cursor-alias
+
+      # Productivity
+      pomodoro
+      libreoffice
+      speedcrunch
+      chatgpt-cli
+
+      # CLI Utilities
+      entr
+      xclip
+      jq
+      graphviz
+      screen
+      yq-go
+      watchexec
       difftastic
       du-dust
       fx
-      peek
       cachix
-      tig
-      dua
-      chatgpt-cli
-      helix
-      nix-output-monitor
-      xdg-utils
-      devenv
-      ast-grep
       ijq
-      dconf
-      # Prioritize the sway-open-wrappers.
-      (lib.hiPrio chromium-wrapper)
+      zoxide
+      nodePackages.zx
+      xdg-utils
+      nixpkgs-review
+
+      # Fonts
+      liberation_ttf
+      ttf_bitstream_vera
+
+      # Misc
+      coin
+      spotify
+      mono
+      patchelf
+      tiled
+      home-manager
+      xsel
     ];
 
     dconf = {
