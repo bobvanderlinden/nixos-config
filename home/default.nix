@@ -1,11 +1,14 @@
 { pkgs, config, ... }:
 let
-  vscode-wrapper = pkgs.writeShellScriptBin "code" ''
+  cursor-alias = pkgs.writeShellScriptBin "code" ''
+    exec cursor "$@"
+  '';
+  cursor-wrapper = pkgs.writeShellScriptBin "cursor" ''
     exec ${pkgs.sway-open}/bin/sway-open \
       --app_id code-url-handler \
       --new-window-argument="--new-window" \
       -- \
-      ${config.programs.vscode.package}/bin/code \
+      ${pkgs.code-cursor}/bin/cursor \
       "$@"
   '';
   chromium-wrapper = pkgs.writeShellScriptBin "chromium" ''
@@ -119,6 +122,8 @@ in
       meld
       lsof
       home-manager
+      (lib.hiPrio cursor-wrapper)
+      cursor-alias
       difftastic
       du-dust
       fx
@@ -136,7 +141,6 @@ in
       dconf
       # Prioritize the sway-open-wrappers.
       (lib.hiPrio chromium-wrapper)
-      (lib.hiPrio vscode-wrapper)
     ];
 
     dconf = {
@@ -467,9 +471,6 @@ in
 
         absorb.maxStack = 100;
       };
-    };
-    programs.vscode = {
-      enable = true;
     };
     programs.gh = {
       enable = true;
