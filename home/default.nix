@@ -232,7 +232,8 @@ in
     };
     programs.ssh = {
       enable = true;
-
+      forwardAgent = false;
+      serverAliveInterval = 180;
       matchBlocks = {
         "beheer1.ioservice.net beheer1.stpst.nl beheer2.ioservice.net beheer2.stpst.nl" = {
           user = "bob.vanderlinden";
@@ -244,15 +245,17 @@ in
           user = "bob.vanderlinden";
           forwardAgent = false;
           identityFile = "~/.ssh/nedap_rsa";
-          extraOptions."VerifyHostKeyDNS" = "no";
-          extraOptions."ProxyJump" = "beheer1.ioservice.net";
+          extraOptions = {
+            VerifyHostKeyDNS = "no";
+            ProxyJump = "beheer1.ioservice.net";
+          };
         };
 
         "127.0.0.1" = {
           user = "bob.vanderlinden";
           forwardAgent = false;
           identityFile = "~/.ssh/nedap_rsa";
-          extraOptions."VerifyHostKeyDNS" = "no";
+          extraOptions.VerifyHostKeyDNS = "no";
         };
 
         "github.com" = {
@@ -260,9 +263,6 @@ in
           identityFile = "~/.ssh/github_ed25519";
         };
       };
-
-      forwardAgent = false;
-      serverAliveInterval = 180;
     };
     programs.fzf.enable = true;
     programs.bat.enable = true;
