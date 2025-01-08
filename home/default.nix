@@ -39,6 +39,8 @@ in
       deno
       devenv
       watchman
+      strace
+      ltrace
 
       # Version Control
       hub
@@ -48,6 +50,7 @@ in
       git-revise
       git-worktree-shell
       tig
+      mergiraf
 
       # Text Processing & Search
       ripgrep
@@ -84,7 +87,6 @@ in
       meld
 
       # Media & Graphics
-      mplayer
       imagemagick
       vlc
       gimp
@@ -143,6 +145,7 @@ in
       nodePackages.zx
       xdg-utils
       nixpkgs-review
+      tabiew
 
       # Fonts
       liberation_ttf
@@ -178,9 +181,15 @@ in
           {
             key = "N";
             context = "global";
-            command = "git fetch origin HEAD && git checkout FETCH_HEAD";
+            command = "git fetch upstream HEAD && git checkout FETCH_HEAD";
           }
         ];
+        os.copyToClipboardCmd = ''
+          ${pkgs.wl-clipboard-rs}/bin/wl-copy '{{text}}'
+        '';
+        os.readFromClipboardCmd = ''
+          ${pkgs.wl-clipboard-rs}/bin/wl-paste
+        '';
       };
     };
 
@@ -228,6 +237,9 @@ in
 
       gtk3.extraConfig = {
         gtk-error-bell = 0;
+      };
+      gtk4.extraConfig = {
+        gtk-application-prefer-dark-theme = true;
       };
     };
     programs.ssh = {
@@ -333,17 +345,25 @@ in
         buildInputs = oldAttrs.buildInputs ++ [ pkgs.libsForQt5.kguiaddons ];
         cmakeFlags = [ "-DUSE_WAYLAND_CLIPBOARD=true" ];
       });
+      settings = {
+        General = {
+          showDesktopNotification = false;
+          showStartupLaunchMessage = false;
+        };
+      };
     };
     services.darkman = {
       enable = true;
       settings = {
-        usegeoclue = true;
+        lat = 51.974882858758626;
+        lng = 5.9115896491034565;
       };
     };
 
     services.gammastep = {
       enable = true;
-      provider = "geoclue2";
+      latitude = 51.974882858758626;
+      longitude = 5.9115896491034565;
       temperature.day = 5500;
       temperature.night = 3700;
       tray = true;
@@ -359,6 +379,11 @@ in
     programs.kitty = {
       themeFile = "adwaita_dark";
       keybindings."ctrl+shift+n" = "new_os_window_with_cwd";
+      settings = {
+        scrollback_lines = 10000;
+        enable_audio_bell = false;
+        update_check_interval = 0;
+      };
     };
 
     services.xssproxy.enable = false;
@@ -382,6 +407,7 @@ in
 
     programs.git = {
       enable = true;
+      package = pkgs.gitFull;
       userName = "Bob van der Linden";
       userEmail = "bobvanderlinden@gmail.com";
       delta.enable = true;
@@ -419,6 +445,34 @@ in
         ".devenv"
         ".devenv.flake.nix"
       ];
+      attributes =
+        let
+          mergirafExtensions = [
+            "java"
+            "rs"
+            "go"
+            "js"
+            "jsx"
+            "json"
+            "yml"
+            "yaml"
+            "html"
+            "htm"
+            "xhtml"
+            "xml"
+            "c"
+            "cc"
+            "h"
+            "cpp"
+            "hpp"
+            "cs"
+            "dart"
+            "ts"
+            "py"
+          ];
+          mergirafAttribute = extension: "*.${extension} merge=${pkgs.mergiraf}/bin/mergiraf";
+        in
+        map mergirafAttribute mergirafExtensions;
       extraConfig = {
         init.defaultBranch = "main";
 
@@ -469,6 +523,8 @@ in
         tag.gpgSign = true;
         gpg.program = "${pkgs.gnupg}/bin/gpg2";
 
+        credential.helper = "${config.programs.git.package}/bin/git-credential-libsecret";
+
         # Avoid hint: use --reapply-cherry-picks to include skipped commits
         advice.skippedCherryPicks = false;
 
@@ -478,7 +534,8 @@ in
         # Source: https://github.com/rust-lang/cargo/issues/3381#issuecomment-1193730972
         # avoid issues where the cargo-edit tool tries to clone from a repo you do not have WRITE access to.
         # we already use SSH for every github repo, and so this puts the clone back to using HTTPS.
-        url."https://github.com/rust-lang/crates.io-index".insteadOf = "https://github.com/rust-lang/crates.io-index";
+        url."https://github.com/rust-lang/crates.io-index".insteadOf =
+          "https://github.com/rust-lang/crates.io-index";
 
         # avoid issues where the `cargo audit` command tries to clone from a repo you do not have WRITE access to.
         # we already use SSH for every github repo, and so this puts the clone back to using HTTPS.

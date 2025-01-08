@@ -108,12 +108,16 @@
         monospace = [ "SauceCodePro Nerd Font" ];
       };
     };
-    packages = with pkgs; [
-      (nerdfonts.override { fonts = [ "SourceCodePro" ]; })
-      corefonts # Microsoft free fonts
-      noto-fonts
-      noto-fonts-emoji
-    ];
+    packages =
+      with pkgs;
+      [
+        corefonts # Microsoft free fonts
+        noto-fonts
+        noto-fonts-emoji
+      ]
+      ++ (with nerd-fonts; [
+        sauce-code-pro
+      ]);
   };
 
   environment.systemPackages = with pkgs; [
@@ -203,8 +207,13 @@
     publish.enable = false;
   };
 
-  services.redshift.enable = true;
-  location.provider = "geoclue2";
+  location = {
+    # https://github.com/jonls/redshift/issues/318.
+    # provider = "geoclue2";
+    provider = "manual";
+    latitude = 51.974882858758626;
+    longitude = 5.9115896491034565;
+  };
 
   services.greetd = {
     enable = true;
@@ -300,10 +309,10 @@
     };
     package = pkgs.nixVersions.git.overrideAttrs (oldAttrs: {
       patches = [
-        (pkgs.fetchpatch {
-          url = "https://github.com/NixOS/nix/pull/11695.patch";
-          hash = "sha256-2cFZCDWvFPux9ogenGW7JNR50yxWsgX/v+LUqDS1aZk=";
-        })
+        # (pkgs.fetchpatch {
+        #   url = "https://github.com/NixOS/nix/pull/11695.patch";
+        #   hash = "sha256-2cFZCDWvFPux9ogenGW7JNR50yxWsgX/v+LUqDS1aZk=";
+        # })
       ];
     });
   };
@@ -326,4 +335,8 @@
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "21.03"; # Did you read the comment?
+
+  programs.localsend = {
+    enable = true;
+  };
 }

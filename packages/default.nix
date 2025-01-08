@@ -6,6 +6,7 @@ in
   coin = callPackage ./coin { };
   git-worktree-shell = callPackage ./git-worktree-shell { };
   wl-screenrecord = callPackage ./wl-screenrecord { };
+  wl-screenshot = callPackage ./wl-screenshot { };
   swaylock-fprintd = callPackage ./swaylock-fprintd { };
   sway-open = callPackage ./sway-open { };
   nixos-efi-gc = callPackage ./nixos-efi-gc { };

@@ -11,4 +11,4 @@ EOF
 notify-send --replace-id "$notification_id" --urgency normal --expire-time 5000 "$title" "Recorded video placed on clipboard"
 
 echo -n "file://$video_file" | wl-copy --regular --primary --type text/uri-list
-mplayer -loop 0 "$video_file"
+xdg-open "$video_file"

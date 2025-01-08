@@ -32,11 +32,10 @@
           name = "nixpkgs-patched";
           src = inputs.nixpkgs;
           patches = [
-            # Fix openvpn3 glibc incompatibility.
-            (pkgs.fetchpatch {
-              url = "https://github.com/NixOS/nixpkgs/pull/326623.patch";
-              hash = "sha256-ziop85PodXV4u3zLbXSQc03xagPIbZx7fCGdFkHLl7Y=";
-            })
+            # (pkgs.fetchpatch {
+            #   url = "https://github.com/NixOS/nixpkgs/pull/326623.patch";
+            #   hash = "sha256-ziop85PodXV4u3zLbXSQc03xagPIbZx7fCGdFkHLl7Y=";
+            # })
           ];
         };
       username = "bob.vanderlinden";
@@ -70,6 +69,14 @@
         {
           _1password-cli = pkgsStable._1password;
           _1password-gui = pkgsStable._1password-gui;
+          wf-recorder = prev.wf-recorder.overrideAttrs (old: {
+            patches = [
+              (final.fetchpatch {
+                url = "https://github.com/ammen99/wf-recorder/commit/560bb92d3ddaeb31d7af77d22d01b0050b45bebe.patch";
+                hash = "sha256-7jbX5k8dh4dWfolMkZXiERuM72zVrkarsamXnd+1YoI=";
+              })
+            ];
+          });
         };
 
       nixosModules = import ./system/modules // {

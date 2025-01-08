@@ -5,7 +5,7 @@
   slurp,
   wf-recorder,
   wl-clipboard-rs,
-  mplayer,
+  xdg-utils,
 }:
 writeShellApplication {
   name = "wl-screenrecord";
@@ -16,6 +16,6 @@ writeShellApplication {
     slurp
     wf-recorder
     wl-clipboard-rs
-    mplayer
+    xdg-utils
   ];
 }
