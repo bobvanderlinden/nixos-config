@@ -1,7 +1,7 @@
 {
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-24.05";
+    nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-24.11";
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -67,16 +67,12 @@
           };
         in
         {
-          _1password-cli = pkgsStable._1password;
+          _1password-cli = pkgsStable._1password-cli;
           _1password-gui = pkgsStable._1password-gui;
-          wf-recorder = prev.wf-recorder.overrideAttrs (old: {
-            patches = [
-              (final.fetchpatch {
-                url = "https://github.com/ammen99/wf-recorder/commit/560bb92d3ddaeb31d7af77d22d01b0050b45bebe.patch";
-                hash = "sha256-7jbX5k8dh4dWfolMkZXiERuM72zVrkarsamXnd+1YoI=";
-              })
-            ];
-          });
+
+          # Pin zoom-us to avoid continuous breaking changes.
+          # Latest one: https://github.com/NixOS/nixpkgs/issues/371488
+          zoom-us = pkgsStable.zoom-us;
         };
 
       nixosModules = import ./system/modules // {
