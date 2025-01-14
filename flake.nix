@@ -67,8 +67,20 @@
           };
         in
         {
-          _1password-cli = pkgsStable._1password-cli;
-          _1password-gui = pkgsStable._1password-gui;
+          # Downgrade 1password-gui to 8.10.40, as 8.10.44+ has a problem with the CLI.
+          # See: https://github.com/NixOS/nixpkgs/issues/373415
+          _1password-gui =
+            let
+              version = "8.10.40";
+            in
+            prev._1password-gui.overrideAttrs (prevAttrs: {
+              inherit version;
+              src = final.fetchurl {
+                url = "https://downloads.1password.com/linux/tar/stable/x86_64/1password-${version}.x64.tar.gz";
+                hash = "sha256-viY0SOUhrOvmue6Nolau356rIqwDo2nLzMilFFmNb9g=";
+              };
+            });
+          # _1password = _1passwordPkgs._1password;
 
           # Pin zoom-us to avoid continuous breaking changes.
           # Latest one: https://github.com/NixOS/nixpkgs/issues/371488
