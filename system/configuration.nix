@@ -24,6 +24,7 @@
     "udev.log_priority=3"
   ];
   boot.loader.timeout = 0;
+  boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
 
   programs.nix-ld.enable = true;
 
