@@ -9,7 +9,7 @@ let
       --new-window-argument="--new-window" \
       -- \
       ${pkgs.code-cursor}/bin/cursor \
-      "$@"
+      "$@" > /dev/null 2>&1
   '';
   chromium-wrapper = pkgs.writeShellScriptBin "chromium" ''
     exec ${pkgs.sway-open}/bin/sway-open \
@@ -41,6 +41,9 @@ in
       watchman
       strace
       ltrace
+      kubectl
+      k9s
+      pgcli
 
       # Version Control
       hub
@@ -56,7 +59,6 @@ in
       ripgrep
       fd
       sd
-      xsv
       q-text-as-data
       delta
       ast-grep
@@ -106,7 +108,7 @@ in
       dconf
 
       # Security & Privacy
-      bitwarden
+      bitwarden-desktop
       bitwarden-cli
       keepassxc
       gnupg
@@ -153,12 +155,12 @@ in
 
       # Misc
       coin
-      spotify
       mono
       patchelf
       tiled
       home-manager
       xsel
+      wl-clipboard-rs
     ];
 
     dconf = {
@@ -182,6 +184,11 @@ in
             key = "N";
             context = "global";
             command = "git fetch upstream HEAD && git checkout FETCH_HEAD";
+          }
+          {
+            key = "U";
+            context = "global";
+            command = "git pull upstream HEAD";
           }
         ];
         os.copyToClipboardCmd = ''
@@ -270,7 +277,7 @@ in
           extraOptions.VerifyHostKeyDNS = "no";
         };
 
-        "github.com" = {
+        "github.com gist.github.com" = {
           user = "git";
           identityFile = "~/.ssh/github_ed25519";
         };
@@ -394,6 +401,10 @@ in
     xdg.enable = true;
     # news.display = "silent";
 
+    xdg.configFile."git/attributes".source = pkgs.runCommand "mergiraf-git-attributes" { } ''
+      ${pkgs.mergiraf}/bin/mergiraf languages --gitattributes > $out
+    '';
+
     home.pointerCursor = {
       x11.enable = true;
       name = "Vanilla-DMZ";
@@ -410,7 +421,33 @@ in
       package = pkgs.gitFull;
       userName = "Bob van der Linden";
       userEmail = "bobvanderlinden@gmail.com";
-      delta.enable = true;
+
+      # Use specific configuration for work projects.
+      includes =
+        let
+          nedap-config = {
+            user.name = "Bob van der Linden";
+            user.email = "bob.vanderlinden@nedap.com";
+          };
+        in
+        [
+          {
+            condition = "gitdir:~/projects/nedap/**";
+            contents = nedap-config;
+          }
+          {
+            condition = "gitdir:~/projects/meditools/**";
+            contents = nedap-config;
+          }
+        ];
+
+      signing = {
+        key = "~/.ssh/github_ed25519.pub";
+        signByDefault = true;
+        format = "ssh";
+      };
+
+      difftastic.enable = true;
       aliases = {
         unstage = "reset HEAD --";
         sw = "switch";
@@ -430,7 +467,7 @@ in
         pr-init = ''
           !git fetch upstream HEAD && git checkout upstream/HEAD -b $1
         '';
-        pr-diff = "diff upstream/HEAD..";
+        pr-diff = "diff upstream/HEAD...HEAD";
         pr-log = "l upstream/HEAD..";
         pr-edit = "rebase --interactive --autosquash --rerere-autoupdate --rebase-merges --fork-point upstream/HEAD";
         pr-clean = "rebase --autosquash --rerere-autoupdate --empty drop --no-keep-empty --fork-point upstream/HEAD";
@@ -445,83 +482,47 @@ in
         ".devenv"
         ".devenv.flake.nix"
       ];
-      attributes =
-        let
-          mergirafExtensions = [
-            "java"
-            "rs"
-            "go"
-            "js"
-            "jsx"
-            "json"
-            "yml"
-            "yaml"
-            "html"
-            "htm"
-            "xhtml"
-            "xml"
-            "c"
-            "cc"
-            "h"
-            "cpp"
-            "hpp"
-            "cs"
-            "dart"
-            "ts"
-            "py"
-          ];
-          mergirafAttribute = extension: "*.${extension} merge=${pkgs.mergiraf}/bin/mergiraf";
-        in
-        map mergirafAttribute mergirafExtensions;
       extraConfig = {
         init.defaultBranch = "main";
 
+        column.ui = "auto";
+
         core.editor = "code --wait";
 
-        # Show diffs with syntax highlighting.
-        diff.external = "${pkgs.difftastic}/bin/difft";
+        # Show diff in commit message editor.
+        commit.verbose = true;
 
-        # Use saner diff prefixes than a/ and b/.
+        # Use more descriptive diff prefixes than a/ and b/.
+        # See https://git-scm.com/docs/diff-config#Documentation/diff-config.txt-diffmnemonicPrefix
         diff.mnemonicPrefix = true;
 
         diff.algorithm = "patience";
 
-        # Show original in-between ours and theirs.
-        merge.conflictstyle = "diff3";
-
         # Show moved lines in diff.
         diff.colorMoved = "zebra";
 
+        diff.renames = true;
+
         push.default = "current";
         push.autoSetupRemote = true;
-        pull.rebase = false;
+        pull.rebase = true;
 
-        url."git@github.com:".insteadOf = [
-          # Normalize GitHub URLs to SSH to avoid authentication issues with HTTPS.
-          "https://github.com/"
+        rebase.autoSquash = true;
+        rebase.autoStash = true;
+        rebase.updateRefs = true;
 
-          # Allows typing `git clone github:owner/repo`.
-          "github:"
-        ];
+        # Show original in-between ours and theirs.
+        merge.conflictstyle = "zdiff3";
+
+        # Record and replay conflict resolutions.
+        rerere.enabled = true;
+        rerere.autoupdate = true;
 
         # Sort last committed branches to top.
         branch.sort = "-committerdate";
 
         # Sort highest version to top.
         tag.sort = "-v:refname";
-
-        # Record and replay conflict resolutions.
-        rerere.enabled = true;
-
-        # Show diff in commit message editor.
-        commit.verbose = true;
-
-        # Sign commits using SSH public key.
-        gpg.format = "ssh";
-        user.signingkey = "~/.ssh/github_ed25519.pub";
-        commit.gpgSign = true;
-        tag.gpgSign = true;
-        gpg.program = "${pkgs.gnupg}/bin/gpg2";
 
         credential.helper = "${config.programs.git.package}/bin/git-credential-libsecret";
 
@@ -530,6 +531,16 @@ in
 
         # Avoid hint: use git switch -c <new-branch-name> to retain commits
         advice.detachedHead = false;
+
+        help.autocorrect = "prompt";
+
+        url."git@github.com:".insteadOf = [
+          # Normalize GitHub URLs to SSH to avoid authentication issues with HTTPS.
+          "https://github.com/"
+
+          # Allows typing `git clone github:owner/repo`.
+          "github:"
+        ];
 
         # Source: https://github.com/rust-lang/cargo/issues/3381#issuecomment-1193730972
         # avoid issues where the cargo-edit tool tries to clone from a repo you do not have WRITE access to.
@@ -541,6 +552,7 @@ in
         # we already use SSH for every github repo, and so this puts the clone back to using HTTPS.
         url."https://github.com/RustSec/advisory-db".insteadOf = "https://github.com/RustSec/advisory-db";
 
+        # Let git absorb look at 100 parents.
         absorb.maxStack = 100;
       };
     };
@@ -557,6 +569,7 @@ in
     programs.nix-index.enable = true;
     home.sessionVariables = {
       BROWSER = "chromium";
+      EDITOR = "code --wait";
     };
     programs.direnv = {
       enable = true;
