@@ -13,6 +13,7 @@ in
   home-manager.verbose = true;
   home-manager.useGlobalPkgs = true;
   home-manager.useUserPackages = true;
+  home-manager.backupFileExtension = "backup";
   environment.pathsToLink = [
     "/share/xdg-desktop-portal"
     "/share/applications"

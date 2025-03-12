@@ -265,7 +265,7 @@
   nixpkgs.config.allowUnfree = true;
   nixpkgs.config.permittedInsecurePackages = [ "electron-25.9.0" ];
 
-  documentation.enable = false;
+  documentation.man.generateCaches = false;
   documentation.nixos.enable = false;
 
   # system.replaceRuntimeDependencies = [

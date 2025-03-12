@@ -155,7 +155,7 @@ in
                     "${mod}+e" = "exec thunar";
                     "${mod}+q" = "exec ${pkgs.wofi}/bin/wofi --show run";
                     "${mod}+Delete" = "exec loginctl lock-session";
-                    "${mod}+Print" = "exec wl-screenshot";
+                    "${mod}+Print" = "exec flameshot gui";
                     "${mod}+Shift+Print" = "exec wl-screenrecord";
                     "${mod}+c" = "kill";
 

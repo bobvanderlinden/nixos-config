@@ -1,7 +1,7 @@
 {
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-24.11";
+    # nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-24.11";
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -24,7 +24,7 @@
 
       # We'd like to be able to add patches on top of nixpkgs, like pending pull requests.
       # Source: https://github.com/NixOS/nixpkgs/pull/142273#issuecomment-948225922
-      nixpkgs =
+      patchedNixpkgs =
         let
           pkgs = inputs.nixpkgs.legacyPackages.${system};
         in
@@ -32,10 +32,6 @@
           name = "nixpkgs-patched";
           src = inputs.nixpkgs;
           patches = [
-            # (pkgs.fetchpatch {
-            #   url = "https://github.com/NixOS/nixpkgs/pull/326623.patch";
-            #   hash = "sha256-ziop85PodXV4u3zLbXSQc03xagPIbZx7fCGdFkHLl7Y=";
-            # })
           ];
         };
       username = "bob.vanderlinden";
@@ -46,7 +42,7 @@
       mkPkgs =
         {
           system ? system,
-          nixpkgs ? inputs.nixpkgs,
+          nixpkgs ? patchedNixpkgs,
           config ? {
             allowUnfree = true;
           },
@@ -54,18 +50,18 @@
           ...
         }@options:
         import nixpkgs (options // { inherit system config overlays; });
-      nixosSystem = import (nixpkgs + "/nixos/lib/eval-config.nix");
+      nixosSystem = import (patchedNixpkgs + "/nixos/lib/eval-config.nix");
     in
     {
       overlays.default = final: prev: import ./packages { pkgs = final; };
       overlays.workarounds =
         final: prev:
-        let
-          pkgsStable = import inputs.nixpkgs-stable {
-            system = prev.system;
-            config.allowUnfree = true;
-          };
-        in
+        # let
+        #   pkgsStable = import inputs.nixpkgs-stable {
+        #     system = prev.system;
+        #     config.allowUnfree = true;
+        #   };
+        # in
         {
           # Downgrade 1password-gui to 8.10.40, as 8.10.44+ has a problem with the CLI.
           # See: https://github.com/NixOS/nixpkgs/issues/373415
@@ -84,7 +80,17 @@
 
           # Pin zoom-us to avoid continuous breaking changes.
           # Latest one: https://github.com/NixOS/nixpkgs/issues/371488
-          zoom-us = pkgsStable.zoom-us;
+          # zoom-us =
+          #   let
+          #     version = "6.3.5.6065";
+          #   in
+          #   prev.zoom-us.overrideAttrs (prevAttrs: {
+          #     inherit version;
+          #     src = final.fetchurl {
+          #       url = "https://zoom.us/client/${version}/zoom_x86_64.pkg.tar.xz";
+          #       hash = "sha256-JOkQsiYWcVq3LoMI2LyMZ1YXBtiAf612T2bdbduqry8=";
+          #     };
+          #   });
         };
 
       nixosModules = import ./system/modules // {
@@ -127,10 +133,17 @@
           let
             lib = pkgs.lib;
           in
-          lib.filterAttrs (
-            name: package:
-            (package ? meta) -> (package.meta ? platforms) -> builtins.elem system package.meta.platforms
-          ) (import ./packages { inherit pkgs; });
+          lib.filterAttrs
+            (
+              name: package:
+              (package ? meta) -> (package.meta ? platforms) -> builtins.elem system package.meta.platforms
+            )
+            (
+              (import ./packages { inherit pkgs; })
+              // {
+                # zoom-us = pkgs.zoom-us;
+              }
+            );
 
         apps.switch = {
           type = "app";
