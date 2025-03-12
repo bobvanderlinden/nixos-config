@@ -287,6 +287,17 @@ in
               in
               {
                 enable = true;
+                package = pkgs.swayidle.overrideAttrs (oldAttrs: {
+                  patches = [
+                    # Support for org.freedesktop.ScreenSaver
+                    # Needed to avoid locking screen while video-calling in Zoom
+                    # See https://github.com/swaywm/swayidle/pull/164
+                    (pkgs.fetchpatch {
+                      url = "https://github.com/bobvanderlinden/swayidle/compare/f554943b..f7ba70e5.patch";
+                      hash = "sha256-ff7Ffd1fl6wRWK8XQW21Pybivv7XhtHhoV2P8pBE+ts=";
+                    })
+                  ];
+                });
                 timeouts = [
                   {
                     timeout = 5 * 60;
