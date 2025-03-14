@@ -145,6 +145,22 @@
               }
             );
 
+        apps.switch-home = {
+          type = "app";
+          program =
+            let
+              switch-home = pkgs.writeShellApplication {
+                name = "switch-home";
+                text = ''
+                  nom build --keep-going --out-link home-result ${self}#nixosConfigurations."$(hostname)".config.home-manager.users.\""$USER"\".home.activationPackage
+                  ./home-result/activate
+                '';
+                runtimeInputs = [ pkgs.nix-output-monitor ];
+              };
+            in
+            "${switch-home}/bin/switch-home";
+        };
+
         apps.switch = {
           type = "app";
           program =
