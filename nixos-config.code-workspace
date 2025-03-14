@@ -1,0 +1,35 @@
+{
+  "folders": [
+	{
+		"path": "."
+	},
+	{
+		"path": "../nixpkgs"
+	},
+	{
+		"path": "../lanzaboote"
+	}
+],
+  "settings": {
+    "nix.enableLanguageServer": true,
+    "nix.serverPath": "nixd",
+    "nix.serverSettings": {
+      "nixpkgs": {
+        "expr": "import <nixpkgs> {}"
+      },
+      "nixd": {
+        "formatting": {
+          "command": ["nixfmt"]
+        },
+        "options": {
+          "nixos": {
+            "expr": "(builtins.getFlake \"/home/bob.vanderlinden/projects/nixos-config\").nixosConfigurations.nac44250.options"
+          },
+          "home-manager": {
+            "expr": "(builtins.getFlake \"/home/bob.vanderlinden/projects/nixos-config\").homeConfigurations.\"bob.vanderlinden@nac44250\".options"
+          }
+        }
+      }
+    }
+  }
+}

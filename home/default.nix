@@ -26,6 +26,8 @@ in
     ./modules/lxqt-policykit-agent.nix
     ./modules/xssproxy.nix
     ./modules/nushell.nix
+    ./modules/mergiraf.nix
+    ./modules/hyprpolkitagent.nix
   ];
   config = {
     home.packages = with pkgs; [
@@ -401,10 +403,6 @@ in
     xdg.enable = true;
     # news.display = "silent";
 
-    xdg.configFile."git/attributes".source = pkgs.runCommand "mergiraf-git-attributes" { } ''
-      ${pkgs.mergiraf}/bin/mergiraf languages --gitattributes > $out
-    '';
-
     home.pointerCursor = {
       x11.enable = true;
       name = "Vanilla-DMZ";
@@ -554,13 +552,9 @@ in
 
         # Let git absorb look at 100 parents.
         absorb.maxStack = 100;
-
-        merge.mergiraf = {
-          name = "mergiraf";
-          driver = "mergiraf merge --git %O %A %B -s %S -x %X -y %Y -p %P -l %L";
-        };
       };
     };
+    programs.mergiraf.enable = true;
     programs.gh = {
       enable = true;
       settings = {
