@@ -25,6 +25,7 @@ in
     ./modules/blueberry.nix
     ./modules/lxqt-policykit-agent.nix
     ./modules/xssproxy.nix
+    ./modules/polkit-gnome.nix
     ./modules/nushell.nix
     ./modules/mergiraf.nix
     ./modules/hyprpolkitagent.nix
@@ -396,7 +397,9 @@ in
     };
 
     services.xssproxy.enable = false;
-    services.lxqt-policykit-agent.enable = true;
+    services.lxqt-policykit-agent.enable = false;
+    services.polkit-gnome.enable = true;
+    services.hyprpolkitagent.enable = false;
 
     services.pasystray.enable = true;
 

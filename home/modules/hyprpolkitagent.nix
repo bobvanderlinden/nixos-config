@@ -12,27 +12,27 @@ let
     literalExample
     mkIf
     ;
-  cfg = config.services.lxqt-policykit-agent;
+  cfg = config.services.hyprpolkitagent;
 in
 {
   options = {
-    services.lxqt-policykit-agent = {
-      enable = mkEnableOption "LXQT Policykit Agent";
+    services.hyprpolkitagent = {
+      enable = mkEnableOption "Hyprland Policykit Agent";
       package = mkOption {
         type = types.package;
-        default = pkgs.lxqt.lxqt-policykit;
-        defaultText = literalExample "pkgs.lxqt.lxqt-policykit";
+        default = pkgs.hyprpolkitagent;
+        defaultText = literalExample "pkgs.hyprpolkitagent";
         description = ''
-          LXQT Policykit package to use
+          Hyprland Policykit package to use
         '';
       };
     };
   };
 
   config = mkIf cfg.enable {
-    systemd.user.services.lxqt-policykit-agent = {
+    systemd.user.services.hyprpolkitagent = {
       Unit = {
-        Description = "LXQT PolicyKit Agent";
+        Description = "Hyprland PolicyKit Agent";
         After = [ "graphical-session-pre.target" ];
         PartOf = [ "graphical-session.target" ];
       };
@@ -42,7 +42,7 @@ in
       };
 
       Service = {
-        ExecStart = "${cfg.package}/bin/lxqt-policykit-agent";
+        ExecStart = "${cfg.package}/libexec/hyprpolkitagent";
       };
     };
   };

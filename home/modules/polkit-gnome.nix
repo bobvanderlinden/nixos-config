@@ -12,27 +12,27 @@ let
     literalExample
     mkIf
     ;
-  cfg = config.services.lxqt-policykit-agent;
+  cfg = config.services.polkit-gnome;
 in
 {
   options = {
-    services.lxqt-policykit-agent = {
-      enable = mkEnableOption "LXQT Policykit Agent";
+    services.polkit-gnome = {
+      enable = mkEnableOption "GNOME Policykit Agent";
       package = mkOption {
         type = types.package;
-        default = pkgs.lxqt.lxqt-policykit;
-        defaultText = literalExample "pkgs.lxqt.lxqt-policykit";
+        default = pkgs.polkit_gnome;
+        defaultText = literalExample "pkgs.polkit_gnome";
         description = ''
-          LXQT Policykit package to use
+          GNOME Policykit package to use
         '';
       };
     };
   };
 
   config = mkIf cfg.enable {
-    systemd.user.services.lxqt-policykit-agent = {
+    systemd.user.services.polkit-gnome = {
       Unit = {
-        Description = "LXQT PolicyKit Agent";
+        Description = "GNOME PolicyKit Agent";
         After = [ "graphical-session-pre.target" ];
         PartOf = [ "graphical-session.target" ];
       };
@@ -42,7 +42,7 @@ in
       };
 
       Service = {
-        ExecStart = "${cfg.package}/bin/lxqt-policykit-agent";
+        ExecStart = "${cfg.package}/libexec/polkit-gnome-authentication-agent-1";
       };
     };
   };
