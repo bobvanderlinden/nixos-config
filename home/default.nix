@@ -554,6 +554,11 @@ in
 
         # Let git absorb look at 100 parents.
         absorb.maxStack = 100;
+
+        merge.mergiraf = {
+          name = "mergiraf";
+          driver = "mergiraf merge --git %O %A %B -s %S -x %X -y %Y -p %P -l %L";
+        };
       };
     };
     programs.gh = {
