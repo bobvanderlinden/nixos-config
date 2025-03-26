@@ -27,4 +27,5 @@ in
   reactphysics3d = callPackage ./reactphysics3d { };
   libinputsynth = callPackage ./libinputsynth { mutter = pkgs.mutter338; };
   sejda = callPackage ./sejda { };
+  git-xargs = callPackage ./git-xargs { };
 }
