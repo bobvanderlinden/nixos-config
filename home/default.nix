@@ -23,12 +23,8 @@ in
 {
   imports = [
     ./modules/blueberry.nix
-    ./modules/lxqt-policykit-agent.nix
     ./modules/xssproxy.nix
-    ./modules/polkit-gnome.nix
     ./modules/nushell.nix
-    ./modules/mergiraf.nix
-    ./modules/hyprpolkitagent.nix
   ];
   config = {
     home.packages = with pkgs; [
@@ -55,6 +51,7 @@ in
       git-absorb
       git-revise
       git-worktree-shell
+      git-xargs
       tig
       mergiraf
 
@@ -120,6 +117,7 @@ in
       slack
       zoom-us
       thunderbird
+      signal-desktop
 
       # Text Editors & IDEs
       helix
