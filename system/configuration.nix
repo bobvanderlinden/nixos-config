@@ -184,6 +184,9 @@
 
     # For OpenHMD
     SUBSYSTEM=="usb", ATTRS{idVendor}=="2833", TAG+="uaccess"
+
+    # Allow wheel users to access all USB drives.
+    SUBSYSTEMS=="usb|mmc", ENV{DEVTYPE}=="disk", MODE="0660", GROUP="wheel"
   '';
 
   services.locate = {
