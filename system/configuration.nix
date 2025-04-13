@@ -311,7 +311,7 @@
       log-lines = 100;
       warn-dirty = false;
     };
-    package = pkgs.nixVersions.git.overrideAttrs (oldAttrs: {
+    package = pkgs.nixVersions.latest.overrideAttrs (oldAttrs: {
       patches = [
         # (pkgs.fetchpatch {
         #   url = "https://github.com/NixOS/nix/pull/11695.patch";
