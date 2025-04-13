@@ -103,7 +103,6 @@ in
       pavucontrol
       volumeicon
       lxappearance
-      i3status
       networkmanagerapplet
       dconf
 
