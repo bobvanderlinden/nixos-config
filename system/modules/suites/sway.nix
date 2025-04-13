@@ -110,7 +110,7 @@ in
             xdg.configFile."xdg-desktop-portal-wlr/sway".text = ''
               [screencast]
               output_name=eDP-1
-              chooser_style=none
+              chooser_type=none
             '';
 
             i18n.inputMethod = {
