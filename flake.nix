@@ -32,6 +32,10 @@
           name = "nixpkgs-patched";
           src = inputs.nixpkgs;
           patches = [
+            # (pkgs.fetchurl {
+            #   url = "https://github.com/NixOS/nixpkgs/pull/402547.patch";
+            #   hash = "sha256-6y6l8AvbxnoPuDpFM4+HcROfqXRQVo1K3Q3YHWhDGmw=";
+            # })
           ];
         };
       username = "bob.vanderlinden";
