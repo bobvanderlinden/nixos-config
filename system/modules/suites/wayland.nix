@@ -30,8 +30,6 @@ with lib;
       # Source: https://wiki.archlinux.org/title/Wayland#Clutter
       CLUTTER_BACKEND = "wayland";
 
-      WLR_DRM_NO_ATOMIC = "1";
-      WLR_NO_HARDWARE_CURSORS = "1";
       MOZ_DISABLE_RDD_SANDBOX = "1";
       EGL_PLATFORM = "wayland";
     };
@@ -42,6 +40,9 @@ with lib;
 
         # Source: https://discourse.nixos.org/t/atril-is-blurry-engrampa-is-not-sway-scale-2/2865/2
         xresources.properties."Xft.dpi" = "96";
+
+        # Make Chromium and Electron use Ozone Wayland support
+        home.sessionVariables.NIXOS_OZONE_WL = "1";
       }
     ];
   };

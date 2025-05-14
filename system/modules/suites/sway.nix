@@ -113,8 +113,11 @@ in
               chooser_type=none
             '';
 
+            home.pointerCursor.sway.enable = true;
+
             i18n.inputMethod = {
-              enabled = "fcitx5";
+              enable = true;
+              type = "fcitx5";
             };
 
             home.packages = [
@@ -254,7 +257,7 @@ in
                 for_window [window_type="dropdown_menu"] floating enable
                 for_window [window_type="popup_menu"] floating enable
                 for_window [window_type="tooltip"] floating enable
-                for_window [window_type="notification"] floating enable
+                for_window [window_type="notification"] floating enable/
 
                 # Based on https://www.reddit.com/r/swaywm/comments/l9asbc/comment/h4pwfb4/
                 for_window [app_id="Zoom"] floating enable, sticky enable
@@ -263,6 +266,7 @@ in
                 for_window [app_id="Zoom" title="as_toolbar"] floating enable, sticky enable
                 for_window [app_id="Zoom" title="^(Zoom|About)$"] border pixel
                 for_window [app_id="Zoom" title="Settings"] floating_minimum_size 200 x 200
+                for_window [class="zoom"] floating enable
               '';
             };
 

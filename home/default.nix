@@ -155,7 +155,6 @@ in
 
       # Misc
       coin
-      mono
       patchelf
       tiled
       home-manager
@@ -405,6 +404,7 @@ in
 
     home.pointerCursor = {
       x11.enable = true;
+      gtk.enable = true;
       name = "Vanilla-DMZ";
       package = pkgs.vanilla-dmz;
       size = 128;
