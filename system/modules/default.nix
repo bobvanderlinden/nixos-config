@@ -4,5 +4,4 @@
   suite-wayland = import ./suites/wayland.nix;
   suite-nix-channels = import ./suites/nix-channels.nix;
   home-manager = import ./home-manager.nix;
-  gtklock = import ./gtklock.nix;
 }
