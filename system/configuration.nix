@@ -100,6 +100,7 @@
   };
   services.resolved.enable = true;
   programs.openvpn3.enable = true;
+  services.tailscale.enable = true;
 
   fonts = {
     fontDir.enable = true;
