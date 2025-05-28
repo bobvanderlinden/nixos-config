@@ -1,22 +1,45 @@
-{ pkgs, config, ... }:
+{
+  pkgs,
+  config,
+  lib,
+  ...
+}:
 let
+  backgroundColor = "1a1b26";
+  wallpaperSvg = pkgs.fetchurl {
+    url = "https://raw.githubusercontent.com/NixOS/nixos-artwork/4ad062cee62116f6055e2876e9638e7bb399d219/logo/nix-snowflake-colours.svg";
+    hash = "sha256-43taHBHoFJbp1GrwSQiVGtprq6pBbWcKquSTTM6RLrI=";
+  };
+  wallpaperPng = pkgs.runCommand "nix-snowflake.png" { } ''
+    ${pkgs.resvg}/bin/resvg ${wallpaperSvg} $out
+  '';
+
   cursor-alias = pkgs.writeShellScriptBin "code" ''
     exec cursor "$@"
   '';
   cursor-wrapper = pkgs.writeShellScriptBin "cursor" ''
-    exec ${pkgs.sway-open}/bin/sway-open \
-      --app_id code-url-handler \
+    # Disable any custom node options that some projects might have.
+    # These conflict with node inside cursor/vscode.
+    export NODE_OPTIONS=""
+
+    # Open files in the cursor instance on the current workspace.
+    # Otherwise, open a new instance on the current workspace.
+    exec ${lib.getExe pkgs.hypr-open} \
+      --window-class cursor \
       --new-window-argument="--new-window" \
       -- \
-      ${pkgs.code-cursor}/bin/cursor \
+      ${lib.getExe pkgs.code-cursor} \
       "$@" > /dev/null 2>&1
   '';
+
+  # Open URLs in the chromium instance on the current workspace.
+  # Otherwise, open a new instance on the current workspace.
   chromium-wrapper = pkgs.writeShellScriptBin "chromium" ''
-    exec ${pkgs.sway-open}/bin/sway-open \
-      --app_id chromium-browser \
+    exec ${lib.getExe pkgs.hypr-open} \
+      --window-class chromium-browser \
       --new-window-argument="--new-window" \
       -- \
-      ${config.programs.chromium.package}/bin/chromium \
+      ${lib.getExe config.programs.chromium.package} \
       "$@"
   '';
 in
@@ -25,9 +48,15 @@ in
     ./modules/blueberry.nix
     ./modules/xssproxy.nix
     ./modules/nushell.nix
+    ./modules/swaybg.nix
+    ./modules/xdg-desktop-portal.nix
+    ./modules/xdg-desktop-portal-hyprland.nix
   ];
   config = {
     home.packages = with pkgs; [
+      darkman
+      gnome-keyring
+      grim
       # Development Tools
       nixfmt-rfc-style
       gdb
@@ -160,7 +189,381 @@ in
       home-manager
       xsel
       wl-clipboard-rs
+
+      wl-screenrecord
+      wl-screenshot
+      seahorse
     ];
+
+    i18n.inputMethod = {
+      enable = true;
+      type = "fcitx5";
+    };
+
+    programs.rofi = {
+      enable = true;
+      package = pkgs.rofi-wayland;
+      plugins = [
+        pkgs.rofi-calc
+        pkgs.rofi-emoji
+        pkgs.rofi-file-browser
+        pkgs.rofi-rbw
+        pkgs.rofi-bluetooth
+        pkgs.rofi-power-menu
+        pkgs.rofi-screenshot
+      ];
+      theme =
+        let
+          rofi-themes-collection = pkgs.fetchFromGitHub {
+            owner = "newmanls";
+            repo = "rofi-themes-collection";
+            rev = "ec731cef79d39fc7ae12ef2a70a2a0dd384f9730";
+            hash = "sha256-96wSyOp++1nXomnl8rbX5vMzaqRhTi/N7FUq6y0ukS8=";
+          };
+        in
+        "${rofi-themes-collection}/themes/rounded-blue-dark.rasi";
+    };
+
+    wayland.windowManager.hyprland = {
+      enable = true;
+      systemd.variables = [ "--all" ];
+      settings = {
+        "$mod" = "SUPER";
+        general = {
+          gaps_in = 0;
+          gaps_out = 0;
+        };
+        bind =
+          let
+            swayosd_client = "${config.services.swayosd.package}/bin/swayosd-client";
+          in
+          [
+            "$mod, T, exec, kitty"
+            "$mod, W, exec, chromium"
+            "$mod, E, exec, thunar"
+            "$mod, Q, exec, ${config.programs.rofi.finalPackage}/bin/rofi -show run"
+            "$mod, Delete, exec, loginctl lock-session"
+            "$mod, Print, exec, flameshot gui"
+            "$mod SHIFT, Print, exec, wl-screenrecord"
+            "$mod, C, killactive"
+
+            # Focus movement
+            "$mod, H, movefocus, l"
+            "$mod, J, movefocus, u"
+            "$mod, K, movefocus, d"
+            "$mod, L, movefocus, r"
+            "$mod, Left, movefocus, l"
+            "$mod, Up, movefocus, u"
+            "$mod, Down, movefocus, d"
+            "$mod, Right, movefocus, r"
+            "$mod, Tab, changegroupactive, f"
+            "$mod SHIFT, Tab, changegroupactive, b"
+
+            # Move window
+            "$mod SHIFT, H, movewindow, l"
+            "$mod SHIFT, K, movewindow, u"
+            "$mod SHIFT, J, movewindow, d"
+            "$mod SHIFT, L, movewindow, r"
+            "$mod SHIFT, Left, movewindow, l"
+            "$mod SHIFT, Up, movewindow, u"
+            "$mod SHIFT, Down, movewindow, d"
+            "$mod SHIFT, Right, movewindow, r"
+
+            # Resize window
+            "$mod CTRL, Left, resizeactive, -20 0"
+            "$mod CTRL, Down, resizeactive, 0 20"
+            "$mod CTRL, Up, resizeactive, 0 -20"
+            "$mod CTRL, Right, resizeactive, 20 0"
+
+            # Split/Fullscreen/Layout
+            "$mod, G, togglegroup"
+            "$mod, F, fullscreen, 1"
+            "$mod SHIFT, F, togglefloating"
+
+            # Workspaces
+            "$mod, 1, workspace, 1"
+            "$mod, 2, workspace, 2"
+            "$mod, 3, workspace, 3"
+            "$mod, 4, workspace, 4"
+            "$mod, 5, workspace, 5"
+            "$mod, 6, workspace, 6"
+            "$mod, 7, workspace, 7"
+            "$mod, 8, workspace, 8"
+            "$mod, 9, workspace, 9"
+            "$mod, 0, workspace, 10"
+            "$mod SHIFT, 1, movetoworkspace, 1"
+            "$mod SHIFT, 2, movetoworkspace, 2"
+            "$mod SHIFT, 3, movetoworkspace, 3"
+            "$mod SHIFT, 4, movetoworkspace, 4"
+            "$mod SHIFT, 5, movetoworkspace, 5"
+            "$mod SHIFT, 6, movetoworkspace, 6"
+            "$mod SHIFT, 7, movetoworkspace, 7"
+            "$mod SHIFT, 8, movetoworkspace, 8"
+            "$mod SHIFT, 9, movetoworkspace, 9"
+            "$mod SHIFT, 0, movetoworkspace, 10"
+
+            # Restart Hyprland
+            "$mod SHIFT, R, exec, hyprctl reload"
+
+            # Media keys
+            " , XF86AudioRaiseVolume, exec, ${swayosd_client} --output-volume raise"
+            " , XF86AudioLowerVolume, exec, ${swayosd_client} --output-volume lower"
+            " , XF86AudioMute, exec, ${swayosd_client} --output-volume mute-toggle"
+            " , XF86AudioPlay, exec, ${pkgs.playerctl}/bin/playerctl play"
+            " , XF86AudioPause, exec, ${pkgs.playerctl}/bin/playerctl pause"
+            " , XF86AudioNext, exec, ${pkgs.playerctl}/bin/playerctl next"
+            " , XF86AudioPrev, exec, ${pkgs.playerctl}/bin/playerctl previous"
+
+            # Brightness
+            " , XF86MonBrightnessUp, exec, ${swayosd_client} --brightness raise"
+            " , XF86MonBrightnessDown, exec, ${swayosd_client} --brightness lower"
+          ];
+
+        bindm = [
+          "$mod, mouse:272, movewindow" # Drag window with SUPER + Left Mouse Button
+          "$mod, mouse:273, resizewindow" # Resize window with SUPER + Right Mouse Button
+        ];
+        bindl = [
+          "$mod, switch:[Lid Switch], exec, hyprlock"
+        ];
+
+        # Disable all Hyprland animations (see https://wiki.hyprland.org/Configuring/Animations/)
+        animation = [
+          "global, 0"
+          "fade, 0"
+          "windows, 0"
+          "workspaces, 0"
+        ];
+
+        misc = {
+          disable_hyprland_logo = true;
+          disable_splash_rendering = true;
+          background_color = "rgb(${backgroundColor})";
+        };
+      };
+    };
+
+    programs.hyprlock = {
+      enable = true;
+      settings = {
+        background = {
+          color = "rgba(${backgroundColor})";
+        };
+        image = {
+          path = "${wallpaperPng}";
+          size = 535;
+          rounding = 0;
+          border_size = 0;
+        };
+        input-field = {
+          size = "500, 64";
+          position = "0, -300";
+          font_size = 24;
+          font_color = "rgba(255, 255, 255, 0.8)";
+          inner_color = "rgba(0, 0, 0, 0)";
+          outer_color = "rgba(255, 255, 255, 0.1)";
+          outline_thickness = 1;
+        };
+        auth.fingerprint.enabled = true;
+        animations.enabled = false;
+      };
+    };
+
+    services.hypridle = {
+      enable = true;
+      settings = {
+        general = {
+          lock_cmd = "pidof hyprlock || hyprlock";
+          before_sleep_cmd = "loginctl lock-session";
+          after_sleep_cmd = "hyprctl dispatch dpms on";
+        };
+
+        listener = {
+          timeout = 150;
+          on-timeout = "brightnessctl -s set 10";
+          on-resume = "brightnessctl -r";
+        };
+      };
+    };
+    services.swayosd.enable = true;
+    services.swaync = {
+      enable = true;
+      settings = {
+        positionX = "right";
+        positionY = "bottom";
+        layer = "overlay";
+      };
+    };
+
+    programs.swaybg = {
+      enable = true;
+      outputs."*" = {
+        mode = "center";
+        color = "#${backgroundColor}";
+        image = "${wallpaperPng}";
+      };
+    };
+
+    programs.waybar = {
+      enable = true;
+      systemd.enable = true;
+      style = ''
+        @import "${config.programs.waybar.package}/etc/xdg/waybar/style.css";
+
+        #workspaces button.active {
+          background-color: #64727D;
+          box-shadow: inset 0 -3px #ffffff;
+        }
+
+        #privacy-item.screenshare {
+            background-color: #cf5700;
+        }
+
+        #privacy-item.audio-in {
+            background-color: #cf5700;
+        }
+
+        #privacy-item.audio-out {
+            background-color: #cf5700;
+        }
+
+        #custom-docker {
+          padding: 0 10px;
+          background-color: #1D63ED;
+        }
+      '';
+      settings = {
+        mainBar = {
+          position = "bottom";
+          modules-left = [
+            "hyprland/workspaces"
+          ];
+          modules-center = [ ];
+          modules-right = [
+            "systemd_failed_units"
+            "privacy"
+            "custom/docker"
+            "network"
+            "battery"
+            # "cpu"
+            "clock"
+            "tray"
+          ];
+          "hyprland/workspaces" = {
+            format = "{icon}";
+            on-scroll-up = "hyprctl dispatch workspace e+1";
+            on-scroll-down = "hyprctl dispatch workspace e-1";
+          };
+          "hyprland/window" = {
+            separate-outputs = true;
+          };
+          systemd_failed_units = { };
+          privacy = {
+            icon-size = 12;
+          };
+          "custom/docker" = {
+            format = "{}  ";
+            interval = 10;
+            tooltip-format = "{} containers running";
+            exec =
+              let
+                docker-count = pkgs.writeShellApplication {
+                  name = "docker-count";
+                  text = ''
+                    docker ps --format json | jq --slurp 'length'
+                  '';
+                  runtimeInputs = [
+                    pkgs.docker
+                    pkgs.jq
+                  ];
+                };
+              in
+              "${docker-count}/bin/docker-count";
+          };
+          network = {
+            format = "";
+            format-wired = "";
+            format-linked = "";
+            format-wifi = "{essid}  ";
+            format-disconnected = "";
+            tooltip-format = "{ifname}\n{ipaddr}\n{essid} ({signalStrength}%)";
+          };
+          cpu = {
+            interval = 10;
+            format = "{}% ";
+            max-length = 10;
+          };
+          battery = {
+            format = "{capacity}% {icon}";
+            format-icons = [
+              ""
+              ""
+              ""
+              ""
+              ""
+            ];
+            format-charging = "<span font='Font Awesome 5 Free'></span>  {capacity}% - {time} <span font='Font Awesome 5 Free 11'>{icon}</span>";
+            format-full = "<span font='Font Awesome 5 Free'></span>  Charged <span font='Font Awesome 5 Free 11'>{icon}</span>";
+          };
+          clock = {
+            format = "{:%a, %d. %b  %H:%M}";
+          };
+        };
+      };
+    };
+
+    services.xdg-desktop-portal = {
+      enable = true;
+      verbose = true;
+      portals = with pkgs; [
+        darkman
+        xdg-desktop-portal-gtk
+        gnome-keyring
+      ];
+    };
+    services.xdg-desktop-portal-hyprland = {
+      enable = true;
+      settings = {
+        # Skip the interactive screencopy picker and pick the current monitor non-interactively.
+        screencopy.custom_picker_binary =
+          let
+            screencopy-picker = pkgs.writeShellApplication {
+              name = "screencopy-picker";
+              runtimeInputs = [
+                config.wayland.windowManager.hyprland.finalPackage
+                pkgs.jq
+              ];
+              text = ''
+                echo "[SELECTION]/screen:$(hyprctl activeworkspace -j | jq --raw-output .monitor)"
+              '';
+            };
+          in
+          "${screencopy-picker}/bin/screencopy-picker";
+      };
+    };
+    # xdg.portal = {
+    #   enable = true;
+    #   xdgOpenUsePortal = true;
+    #   config.hyprland = {
+    #     default = [
+    #       "darkman"
+    #       "hyprland"
+    #       "gtk"
+
+    #     ];
+    #   };
+    #   extraPortals = with pkgs; [
+    #     xdg-desktop-portal-hyprland
+    #     xdg-desktop-portal-gtk
+    #     gnome-keyring
+    #     darkman
+    #   ];
+    #   configPackages = with pkgs; [
+    #     gnome-session
+    #     gnome-keyring
+    #     darkman
+    #   ];
+    # };
 
     dconf = {
       enable = true;
@@ -347,17 +750,30 @@ in
     services.mpris-proxy.enable = true;
     services.flameshot = {
       enable = true;
-      package = pkgs.flameshot.overrideAttrs (oldAttrs: {
-        buildInputs = oldAttrs.buildInputs ++ [ pkgs.libsForQt5.kguiaddons ];
-        cmakeFlags = [ "-DUSE_WAYLAND_CLIPBOARD=true" ];
+      package = pkgs.flameshot.overrideAttrs (old: {
+        src = pkgs.fetchFromGitHub {
+          owner = "flameshot-org";
+          repo = "flameshot";
+          rev = "f7a049ee78531b7dfa36ead4945ce9c721d90bfe";
+          hash = "sha256-teAvx50AvMjKcW44pdWxThTuJvUBeK4YI5fUmBQD9lI=";
+        };
+        patches = [ ];
+        postFixup = ''
+          wrapProgram $out/bin/flameshot \
+            --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.grim ]} \
+            ''${qtWrapperArgs[@]}
+        '';
       });
       settings = {
         General = {
           showDesktopNotification = false;
           showStartupLaunchMessage = false;
+          # useGrimAdapter = true;
+          # disabledGrimWarning = true;
         };
       };
     };
+
     services.darkman = {
       enable = true;
       settings = {
@@ -382,13 +798,17 @@ in
       "Xft/Hinting" = true;
       "Xft/RGBA" = "rgb";
     };
-    programs.kitty = {
-      themeFile = "adwaita_dark";
-      keybindings."ctrl+shift+n" = "new_os_window_with_cwd";
+
+    programs.ghostty = {
+      enable = true;
       settings = {
-        scrollback_lines = 10000;
-        enable_audio_bell = false;
-        update_check_interval = 0;
+        window-decoration = false;
+        resize-overlay = "never";
+        theme = "dark:Adwaita Dark,light:Adwaita";
+        scrollback-limit = 10000;
+        keybind = [
+          "shift+enter=text:\\n"
+        ];
       };
     };
 
@@ -405,6 +825,7 @@ in
     home.pointerCursor = {
       x11.enable = true;
       gtk.enable = true;
+      hyprcursor.enable = true;
       name = "Vanilla-DMZ";
       package = pkgs.vanilla-dmz;
       size = 128;

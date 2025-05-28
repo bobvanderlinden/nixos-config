@@ -12,7 +12,7 @@
   time.timeZone = "Europe/Amsterdam";
 
   suites.single-user.enable = true;
-  suites.sway.enable = true;
+  suites.wayland.enable = true;
 
   boot.initrd.systemd.enable = true;
   boot.loader.systemd-boot.configurationLimit = 5;
@@ -220,6 +220,8 @@
     longitude = 5.9115896491034565;
   };
 
+  programs.hyprland.enable = true;
+
   services.greetd = {
     enable = true;
     settings = {
@@ -227,7 +229,7 @@
         command = "${lib.getExe pkgs.cage} ${lib.getExe pkgs.greetd.gtkgreet}";
       };
       initial_session = {
-        command = "${lib.getExe pkgs.sway}";
+        command = "${lib.getExe config.programs.hyprland.package}";
         user = config.suites.single-user.user;
       };
     };
@@ -239,6 +241,7 @@
   # Fingerprint reader
   services.fprintd.enable = true;
   security.pam.services.login.fprintAuth = true;
+  security.pam.services.hyprlock = { };
 
   services.gnome.gnome-keyring.enable = true;
 

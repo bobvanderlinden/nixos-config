@@ -9,6 +9,7 @@ in
   wl-screenshot = callPackage ./wl-screenshot { };
   swaylock-fprintd = callPackage ./swaylock-fprintd { };
   sway-open = callPackage ./sway-open { };
+  hypr-open = callPackage ./hypr-open { };
   nixos-efi-gc = callPackage ./nixos-efi-gc { };
   lazy-desktop = callPackage ./lazy-desktop { };
   immersed = callPackage ./immersed { };
