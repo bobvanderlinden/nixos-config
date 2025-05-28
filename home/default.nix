@@ -243,7 +243,7 @@ in
             "$mod, T, exec, kitty"
             "$mod, W, exec, chromium"
             "$mod, E, exec, thunar"
-            "$mod, Q, exec, ${config.programs.rofi.finalPackage}/bin/rofi -show run"
+            "$mod, Q, exec, ${config.programs.rofi.finalPackage}/bin/rofi -show combi -modes combi -combi-modes run,emoji -combi-hide-mode-prefix"
             "$mod, Delete, exec, loginctl lock-session"
             "$mod, Print, exec, flameshot gui"
             "$mod SHIFT, Print, exec, wl-screenrecord"
