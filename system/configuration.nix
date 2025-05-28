@@ -12,7 +12,6 @@
   time.timeZone = "Europe/Amsterdam";
 
   suites.single-user.enable = true;
-  suites.wayland.enable = true;
 
   boot.initrd.systemd.enable = true;
   boot.loader.systemd-boot.configurationLimit = 5;
@@ -235,7 +234,6 @@
     };
   };
 
-  services.xserver.enable = false;
   services.displayManager.autoLogin.enable = true;
 
   # Fingerprint reader
