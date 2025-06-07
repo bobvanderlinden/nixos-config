@@ -219,8 +219,10 @@
     longitude = 5.9115896491034565;
   };
 
-  programs.hyprland.enable = true;
-
+  programs.hyprland = {
+    enable = true;
+    withUWSM = true;
+  };
   services.greetd = {
     enable = true;
     settings = {
