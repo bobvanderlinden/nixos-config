@@ -703,24 +703,6 @@ in
       '';
     };
 
-    programs.nushell = {
-      enable = true;
-      settingss.show_banner = false;
-      extraConfig = ''
-        source ${
-          pkgs.fetchurl {
-            url = "https://raw.githubusercontent.com/nushell/nu_scripts/e3b02b38eeece7c4ab8c20198cd36c6b12d5c3e4/background_task/job.nu";
-            hash = "sha256-L+SrTstXey9WhT4gHD4Wu++HEIMsh1LaNjWd2ouRLjI=";
-          }
-        }
-      '';
-      shellAliases = config.home.shellAliases;
-    };
-    services.pueue = {
-      enable = true;
-      settings.shared.use_unix_socket = true;
-    };
-
     programs.starship = {
       enable = true;
       settings = {
