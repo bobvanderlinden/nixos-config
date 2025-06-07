@@ -634,29 +634,6 @@ in
       };
     };
 
-    programs.terminator = {
-      enable = true;
-      config = {
-        global_config = {
-          inactive_color_offset = "1.0";
-        };
-        keybindings = {
-          go_next = "";
-          new_window = "<Primary><Shift>n";
-        };
-        profiles.default = {
-          background_color = "#002b36";
-          cursor_color = "#aaaaaa";
-          font = "SauceCodePro Nerd Font 11";
-          use_system_font = false;
-          foreground_color = "#839496";
-          show_titlebar = false;
-          scrollback_lines = 10000;
-          palette = "#073642:#dc322f:#859900:#b58900:#268bd2:#d33682:#2aa198:#eee8d5:#002b36:#cb4b16:#586e75:#657b83:#839496:#6c71c4:#93a1a1:#fdf6e3";
-        };
-      };
-    };
-
     fonts.fontconfig.enable = true;
     gtk = {
       enable = true;
