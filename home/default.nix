@@ -782,12 +782,14 @@ in
       tray = true;
     };
 
-    services.xsettingsd.enable = true;
-    services.xsettingsd.settings = {
-      "Net/ThemeName" = "Adwaita-dark";
-      "Xft/Antialias" = true;
-      "Xft/Hinting" = true;
-      "Xft/RGBA" = "rgb";
+    services.xsettingsd = {
+      enable = true;
+      settings = {
+        "Net/ThemeName" = "Adwaita-dark";
+        "Xft/Antialias" = true;
+        "Xft/Hinting" = true;
+        "Xft/RGBA" = "rgb";
+      };
     };
 
     programs.ghostty = {
