@@ -231,16 +231,46 @@ in
       systemd.variables = [ "--all" ];
       settings = {
         "$mod" = "SUPER";
+
         general = {
           gaps_in = 0;
           gaps_out = 0;
         };
+
+        #
+        env =
+          let
+            envkv = {
+              BROWSER = "chromium";
+              EDITOR = "code --wait";
+
+              # Source: https://github.com/NixOS/nixpkgs/issues/271461#issuecomment-1934829672
+              ELECTRON_OZONE_PLATFORM_HINT = "wayland";
+
+              # Source: https://github.com/NixOS/nixpkgs/blob/45004c6f6330b1ff6f3d6c3a0ea8019f6c18a930/nixos/modules/programs/sway.nix#L47-L53
+              SDL_VIDEODRIVER = "wayland";
+              QT_QPA_PLATFORM = "wayland";
+              QT_WAYLAND_DISABLE_WINDOWDECORATION = "1";
+              _JAVA_AWT_WM_NONREPARENTING = "1";
+
+              # Source: https://wiki.archlinux.org/title/Wayland#Clutter
+              CLUTTER_BACKEND = "wayland";
+
+              MOZ_DISABLE_RDD_SANDBOX = "1";
+              EGL_PLATFORM = "wayland";
+
+              # Make Chromium and Electron use Ozone Wayland support
+              NIXOS_OZONE_WL = "1";
+            };
+          in
+          mapAttrsToList (k: v: "${k},${v}") envkv;
+
         bind =
           let
             swayosd_client = "${config.services.swayosd.package}/bin/swayosd-client";
           in
           [
-            "$mod, T, exec, kitty"
+            "$mod, T, exec, ghostty"
             "$mod, W, exec, chromium"
             "$mod, E, exec, thunar"
             "$mod, Q, exec, ${config.programs.rofi.finalPackage}/bin/rofi -show combi -modes combi -combi-modes run,emoji -combi-hide-mode-prefix"
@@ -989,28 +1019,6 @@ in
     programs.jq.enable = true;
     programs.neovim.enable = true;
     programs.nix-index.enable = true;
-    home.sessionVariables = {
-      BROWSER = "chromium";
-      EDITOR = "code --wait";
-
-      # Source: https://github.com/NixOS/nixpkgs/issues/271461#issuecomment-1934829672
-      ELECTRON_OZONE_PLATFORM_HINT = "auto";
-
-      # Source: https://github.com/NixOS/nixpkgs/blob/45004c6f6330b1ff6f3d6c3a0ea8019f6c18a930/nixos/modules/programs/sway.nix#L47-L53
-      SDL_VIDEODRIVER = "wayland";
-      QT_QPA_PLATFORM = "wayland";
-      QT_WAYLAND_DISABLE_WINDOWDECORATION = "1";
-      _JAVA_AWT_WM_NONREPARENTING = "1";
-
-      # Source: https://wiki.archlinux.org/title/Wayland#Clutter
-      CLUTTER_BACKEND = "wayland";
-
-      MOZ_DISABLE_RDD_SANDBOX = "1";
-      EGL_PLATFORM = "wayland";
-
-      # Make Chromium and Electron use Ozone Wayland support
-      NIXOS_OZONE_WL = "1";
-    };
 
     # Source: https://discourse.nixos.org/t/atril-is-blurry-engrampa-is-not-sway-scale-2/2865/2
     xresources.properties."Xft.dpi" = "96";
