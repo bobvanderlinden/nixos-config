@@ -15,7 +15,6 @@ in
   home-manager.useUserPackages = true;
   home-manager.backupFileExtension = "backup";
   environment.pathsToLink = [
-    "/share/xdg-desktop-portal"
     "/share/applications"
   ];
   home-manager.users."${username}".imports = [ ./../../home ];

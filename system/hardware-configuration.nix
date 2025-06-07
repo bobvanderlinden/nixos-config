@@ -38,7 +38,7 @@
   # Secure boot
   boot.loader.systemd-boot.enable = false;
   boot.lanzaboote.enable = true;
-  boot.lanzaboote.pkiBundle = "/etc/secureboot";
+  boot.lanzaboote.pkiBundle = "/var/lib/sbctl";
 
   boot.loader.efi.canTouchEfiVariables = true;
   boot.loader.efi.efiSysMountPoint = "/boot/efi";
@@ -62,6 +62,7 @@
   fileSystems."/boot/efi" = {
     device = "/dev/disk/by-uuid/199D-2646";
     fsType = "vfat";
+    options = [ "fmask=177" "dmask=077" ];
   };
   swapDevices = [
     { device = "/dev/disk/by-uuid/4d13ef58-33bb-4e0f-95ea-dcfec3371911"; }

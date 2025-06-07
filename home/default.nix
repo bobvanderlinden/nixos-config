@@ -73,7 +73,7 @@ in
       ltrace
       kubectl
       k9s
-      pgcli
+      postgresql
 
       # Version Control
       hub
@@ -136,12 +136,16 @@ in
       lxappearance
       networkmanagerapplet
       dconf
+      wl-clipboard-rs
+      wl-screenrecord
+      wl-screenshot
 
       # Security & Privacy
       bitwarden-desktop
       bitwarden-cli
       keepassxc
       gnupg
+      seahorse
 
       # Communication & Collaboration
       slack
@@ -174,7 +178,6 @@ in
       fx
       cachix
       ijq
-      zoxide
       nodePackages.zx
       xdg-utils
       nixpkgs-review
@@ -187,19 +190,13 @@ in
       # Misc
       coin
       patchelf
-      tiled
       home-manager
-      xsel
-      wl-clipboard-rs
-
-      wl-screenrecord
-      wl-screenshot
-      seahorse
     ];
 
     i18n.inputMethod = {
       enable = true;
       type = "fcitx5";
+      fcitx5.waylandFrontend = true;
     };
 
     programs.rofi = {
@@ -355,6 +352,7 @@ in
           "$mod, mouse:272, movewindow" # Drag window with SUPER + Left Mouse Button
           "$mod, mouse:273, resizewindow" # Resize window with SUPER + Right Mouse Button
         ];
+
         bindl = [
           "$mod, switch:[Lid Switch], exec, hyprlock"
         ];
@@ -436,6 +434,7 @@ in
       };
     };
 
+    systemd.user.services.waybar.Unit.Requisite = config.programs.waybar.systemd.target;
     programs.waybar = {
       enable = true;
       systemd.enable = true;
@@ -553,6 +552,7 @@ in
         gnome-keyring
       ];
     };
+
     services.xdg-desktop-portal-hyprland = {
       enable = true;
       settings = {

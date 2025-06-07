@@ -21,6 +21,8 @@
   boot.kernelParams = [
     "quiet"
     "udev.log_priority=3"
+    "plymouth.use-simpledrm"
+    "plymouth.boot-log=/dev/null"
   ];
   boot.loader.timeout = 0;
   boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
@@ -60,7 +62,6 @@
 
   hardware.bluetooth = {
     enable = true;
-    # hsphfpd.enable = true;
     settings = {
       General = {
         # To enable BlueZ Battery Provider
@@ -73,9 +74,6 @@
     enable = true;
     enableGraphical = true;
   };
-
-  # Workaround: https://github.com/NixOS/nixpkgs/issues/114222
-  systemd.user.services.telephony_client.enable = false;
 
   hardware.graphics.enable = true;
 
@@ -150,6 +148,12 @@
   services.nscd.enableNsncd = true;
 
   services.acpid.enable = true;
+  services.fwupd = {
+    enable = true;
+    uefiCapsuleSettings = {
+      EnableEfiDebugging = true;
+    };
+  };
   security.polkit.enable = true;
   services.upower = {
     enable = true;

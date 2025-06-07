@@ -28,12 +28,10 @@ with lib;
     systemd.user.services.blueberry = {
       Unit = {
         Description = "blueberry applet";
-        Requires = [ "tray.target" ];
-        After = [
-          "graphical-session-pre.target"
-          "tray.target"
-        ];
-        PartOf = [ "graphical-session.target" ];
+        # Avoid depencency cycle, resulting in waybar not starting.
+        # Requires = [ "tray.target" ];
+        After = [ "tray.target" ];
+        ConditionEnvironment = "WAYLAND_DISPLAY";
       };
 
       Install = {
