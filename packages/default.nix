@@ -29,4 +29,5 @@ in
   libinputsynth = callPackage ./libinputsynth { mutter = pkgs.mutter338; };
   sejda = callPackage ./sejda { };
   git-xargs = callPackage ./git-xargs { };
+  aw-watcher-window-hyprland = callPackage ./aw-watcher-window-hyprland { };
 }

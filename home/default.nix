@@ -1025,6 +1025,33 @@ in
     };
     programs.htop.enable = true;
 
+    services.activitywatch = {
+      enable = true;
+      watchers = {
+        aw-watcher-afk = {
+          package = pkgs.activitywatch;
+        };
+      };
+    };
+
+    systemd.user.services.activitywatch-watcher-window-hyprland = {
+      Unit = {
+        Description = "ActivityWatch watcher 'aw-watcher-window-hyprland'";
+        After = [
+          "graphical-session.target"
+          "activitywatch.service"
+        ];
+        BindsTo = [ "activitywatch.target" ];
+        ConditionEnvironment = "WAYLAND_DISPLAY";
+      };
+      Service = {
+        ExecStart = lib.getExe pkgs.aw-watcher-window-hyprland;
+      };
+      Install = {
+        WantedBy = [ "activitywatch.target" ];
+      };
+    };
+
     home.stateVersion = "21.03";
   };
 }
