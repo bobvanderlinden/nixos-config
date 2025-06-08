@@ -573,29 +573,6 @@ in
           "${screencopy-picker}/bin/screencopy-picker";
       };
     };
-    # xdg.portal = {
-    #   enable = true;
-    #   xdgOpenUsePortal = true;
-    #   config.hyprland = {
-    #     default = [
-    #       "darkman"
-    #       "hyprland"
-    #       "gtk"
-
-    #     ];
-    #   };
-    #   extraPortals = with pkgs; [
-    #     xdg-desktop-portal-hyprland
-    #     xdg-desktop-portal-gtk
-    #     gnome-keyring
-    #     darkman
-    #   ];
-    #   configPackages = with pkgs; [
-    #     gnome-session
-    #     gnome-keyring
-    #     darkman
-    #   ];
-    # };
 
     dconf = {
       enable = true;

@@ -4,7 +4,12 @@
   pkgs,
   ...
 }:
-
+# This is a replacement implementation for the xdg.portal module in home-manager.
+# It automatically generates default portals based on the packages provided.
+# It allows running xdg-desktop-portal in verbose mode, so it is possible to see any errors that might occur.
+# It creates a portals directory in Nix, instead of in the user's profile directory. This avoids issues with packages in
+# the profile, but not in the xdg-portal option being used as usable portals.
+# It avoids using `home.sessionVariables`, which only applies to applications run from the shell and not those run from the compositor.
 let
   cfg = config.services.xdg-desktop-portal;
   portalDir =
