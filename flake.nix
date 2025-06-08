@@ -57,7 +57,12 @@
       nixosSystem = import (patchedNixpkgs + "/nixos/lib/eval-config.nix");
     in
     {
-      overlays.default = final: prev: import ./packages { pkgs = final; };
+      overlays.default =
+        final: prev:
+        prev.lib.packagesFromDirectoryRecursive {
+          inherit (final) callPackage;
+          directory = ./packages;
+        };
       overlays.workarounds =
         final: prev:
         # let
@@ -135,19 +140,27 @@
       {
         packages =
           let
-            lib = pkgs.lib;
-          in
-          lib.filterAttrs
-            (
+            inherit (builtins) attrNames;
+            inherit (pkgs.lib) genAttrs filterAttrs;
+            # We're going to use overlays.default to create an attrbute set of my packages.
+            packageOverlay = self.overlays.default;
+            # We extract the package names from the overlay without actually applying it (which would result in _all_ packages)
+            # We'll use these names to extract the custom packages from pkgs
+            packageNames =
+              let
+                fakePrev = { inherit (pkgs) callPackage; };
+                fakeFinal = { inherit (pkgs) lib; };
+              in
+              attrNames (packageOverlay fakePrev fakeFinal);
+            # finalPkgs contain _all_ packages (those from packageOverlay as well as all of nixpkgs), we need to pick those defined in packageOverlay.
+            finalPackages = genAttrs packageNames (packageName: pkgs.${packageName});
+            # Filter packages that are not compatible with the current system
+            compatiblePackages = filterAttrs (
               name: package:
               (package ? meta) -> (package.meta ? platforms) -> builtins.elem system package.meta.platforms
-            )
-            (
-              (import ./packages { inherit pkgs; })
-              // {
-                # zoom-us = pkgs.zoom-us;
-              }
-            );
+            ) finalPackages;
+          in
+          compatiblePackages;
 
         apps.switch-home = {
           type = "app";
