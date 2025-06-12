@@ -406,6 +406,7 @@ in
           lock_cmd = "pidof hyprlock || hyprlock";
           before_sleep_cmd = "loginctl lock-session";
           after_sleep_cmd = "hyprctl dispatch dpms on";
+          on_unlock_cmd = "${lib.getExe pkgs.session-time} --reset";
         };
 
         listener = {
@@ -462,6 +463,11 @@ in
           padding: 0 10px;
           background-color: #1D63ED;
         }
+
+        #custom-session_time {
+          padding: 0 10px;
+          background-color:#008261;
+        }
       '';
       settings = {
         mainBar = {
@@ -474,6 +480,7 @@ in
             "systemd_failed_units"
             "privacy"
             "custom/docker"
+            "custom/session_time"
             "network"
             "battery"
             # "cpu"
@@ -510,6 +517,11 @@ in
                 };
               in
               "${docker-count}/bin/docker-count";
+          };
+          "custom/session_time" = {
+            format = "{} 🔒";
+            interval = 60;
+            exec = "${lib.getExe pkgs.session-time}";
           };
           network = {
             format = "";
