@@ -97,7 +97,7 @@
   };
   services.resolved.enable = true;
   programs.openvpn3.enable = true;
-  services.tailscale.enable = true;
+  # services.tailscale.enable = true;
 
   fonts = {
     fontDir.enable = true;
@@ -160,7 +160,45 @@
     timeAction = 15 * 60;
     percentageCritical = 10;
   };
-  services.tlp.enable = true;
+  services.tlp = {
+    enable = true;
+    settings = {
+      # Reduce power consumption and fan noise on AC power
+      # Source: https://linrunner.de/tlp/support/optimizing.html#reduce-power-consumption-fan-noise-on-ac-power
+
+      # CPU frequency scaling
+      CPU_SCALING_GOVERNOR_ON_AC = "powersave";
+      CPU_SCALING_GOVERNOR_ON_BAT = "powersave";
+
+      # CPU energy performance preference
+      CPU_ENERGY_PERF_POLICY_ON_AC = "power";
+      CPU_ENERGY_PERF_POLICY_ON_BAT = "power";
+
+      # CPU boost
+      CPU_BOOST_ON_AC = 0;
+      CPU_BOOST_ON_BAT = 0;
+
+      # CPU HWP dynamic boost
+      CPU_HWP_DYN_BOOST_ON_AC = 0;
+      CPU_HWP_DYN_BOOST_ON_BAT = 0;
+
+      # Platform profile
+      PLATFORM_PROFILE_ON_AC = "low-power";
+      PLATFORM_PROFILE_ON_BAT = "low-power";
+
+      # PCIe Active State Power Management
+      PCIE_ASPM_ON_AC = "powersupersave";
+      PCIE_ASPM_ON_BAT = "powersupersave";
+
+      # Runtime power management
+      RUNTIME_PM_ON_AC = "auto";
+      RUNTIME_PM_ON_BAT = "auto";
+
+      # WiFi power saving
+      WIFI_PWR_ON_AC = "on";
+      WIFI_PWR_ON_BAT = "on";
+    };
+  };
   services.earlyoom.enable = true;
 
   # Set permissions for RTL2832 USB dongle to use with urh.
@@ -231,7 +269,7 @@
     enable = true;
     settings = {
       default_session = {
-        command = "${lib.getExe pkgs.cage} ${lib.getExe pkgs.greetd.gtkgreet}";
+        command = "${lib.getExe pkgs.cage} ${lib.getExe pkgs.gtkgreet}";
       };
       initial_session = {
         command = "${lib.getExe config.programs.hyprland.package}";
@@ -239,6 +277,7 @@
       };
     };
   };
+  services.systemd-lock-handler.enable = true;
 
   services.displayManager.autoLogin.enable = true;
 
@@ -268,6 +307,10 @@
     #   "fixed-cidr-v6" = "fd00::/80";
     # };
     autoPrune.enable = true;
+  };
+
+  virtualisation.podman = {
+    enable = true;
   };
   networking.firewall.trustedInterfaces = [ "docker0" ];
 
@@ -301,6 +344,9 @@
     };
 
     settings = {
+      # Source: https://github.com/NixOS/nix/issues/11728
+      download-buffer-size = 524288000;
+
       sandbox = true;
       extra-sandbox-paths = [ "/etc/nix/netrc" ];
       trusted-users = [
@@ -308,6 +354,8 @@
         "${config.suites.single-user.user}"
       ];
       substituters = [ "https://cachix.cachix.org" ];
+      extra-substituters = [ "https://install.determinate.systems" ];
+      extra-trusted-public-keys = [ "cache.flakehub.com-3:hJuILl5sVK4iKm86JzgdXW12Y2Hwd5G07qKtHTOcDCM=" ];
       extra-experimental-features = [
         "nix-command"
         "flakes"
@@ -317,15 +365,8 @@
       auto-optimise-store = true;
       log-lines = 100;
       warn-dirty = false;
+      lazy-trees = true;
     };
-    package = pkgs.nixVersions.latest.overrideAttrs (oldAttrs: {
-      patches = [
-        # (pkgs.fetchpatch {
-        #   url = "https://github.com/NixOS/nix/pull/11695.patch";
-        #   hash = "sha256-2cFZCDWvFPux9ogenGW7JNR50yxWsgX/v+LUqDS1aZk=";
-        # })
-      ];
-    });
   };
 
   system.autoUpgrade = {

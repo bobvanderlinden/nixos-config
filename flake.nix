@@ -9,6 +9,16 @@
     flake-utils.url = "github:numtide/flake-utils";
     lanzaboote.url = "github:nix-community/lanzaboote";
     nix-index-database.url = "github:nix-community/nix-index-database";
+    determinate.url = "https://flakehub.com/f/DeterminateSystems/determinate/*";
+  };
+
+  nixConfig = {
+    extra-substituters = [
+      "https://install.determinate.systems"
+    ];
+    extra-trusted-public-keys = [
+      "cache.flakehub.com-3:hJuILl5sVK4iKm86JzgdXW12Y2Hwd5G07qKtHTOcDCM="
+    ];
   };
 
   outputs =
@@ -33,8 +43,8 @@
           src = inputs.nixpkgs;
           patches = [
             # (pkgs.fetchurl {
-            #   url = "https://github.com/NixOS/nixpkgs/pull/402547.patch";
-            #   hash = "sha256-6y6l8AvbxnoPuDpFM4+HcROfqXRQVo1K3Q3YHWhDGmw=";
+            #   url = "https://github.com/NixOS/nixpkgs/pull/424956.patch";
+            #   hash = "sha256-Oa6tSxOlzeEBOmyYS3BZCzz451FQ+e4STUugiyI7cIE=";
             # })
           ];
         };
@@ -72,7 +82,7 @@
         #   };
         # in
         {
-          # Downgrade 1password-gui to 8.10.40, as 8.10.44+ has a problem with the CLI.
+          # Downgrade 1password-gui to 8.10.40, as 8.10.44+ has a problem with showing the unlock prompt on Hyprland.
           # See: https://github.com/NixOS/nixpkgs/issues/373415
           _1password-gui =
             let
@@ -85,21 +95,6 @@
                 hash = "sha256-viY0SOUhrOvmue6Nolau356rIqwDo2nLzMilFFmNb9g=";
               };
             });
-          # _1password = _1passwordPkgs._1password;
-
-          # Pin zoom-us to avoid continuous breaking changes.
-          # Latest one: https://github.com/NixOS/nixpkgs/issues/371488
-          # zoom-us =
-          #   let
-          #     version = "6.3.5.6065";
-          #   in
-          #   prev.zoom-us.overrideAttrs (prevAttrs: {
-          #     inherit version;
-          #     src = final.fetchurl {
-          #       url = "https://zoom.us/client/${version}/zoom_x86_64.pkg.tar.xz";
-          #       hash = "sha256-JOkQsiYWcVq3LoMI2LyMZ1YXBtiAf612T2bdbduqry8=";
-          #     };
-          #   });
         };
 
       nixosModules = import ./system/modules // {
@@ -112,9 +107,10 @@
           suites.single-user.user = username;
         };
         inherit (lanzaboote.nixosModules) lanzaboote;
+        determinite = inputs.determinate.nixosModules.default;
         # inherit (nix-index-database.nixosModules) nix-index;
         nix-index-database-home-manager = {
-          home-manager.sharedModules = [ nix-index-database.hmModules.nix-index ];
+          home-manager.sharedModules = [ nix-index-database.homeModules.nix-index ];
         };
       };
 
@@ -127,8 +123,8 @@
         modules = builtins.attrValues self.nixosModules;
       };
 
-      homeConfigurations."${username}@nac44250" =
-        self.nixosConfigurations.nac44250.config.home-manager.users.${username}.home;
+      homeConfigurations."${username}@nac44250".config =
+        self.nixosConfigurations.nac44250.config.home-manager.users.${username};
     }
     # Define outputs that allow multiple systems with for all default systems.
     # This is to support OSX and RPI.

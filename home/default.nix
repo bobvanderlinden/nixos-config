@@ -16,9 +16,6 @@ let
     ${pkgs.resvg}/bin/resvg ${wallpaperSvg} $out
   '';
 
-  cursor-alias = pkgs.writeShellScriptBin "code" ''
-    exec cursor "$@"
-  '';
   cursor-wrapper = pkgs.writeShellScriptBin "cursor" ''
     # Disable any custom node options that some projects might have.
     # These conflict with node inside cursor/vscode.
@@ -59,6 +56,7 @@ in
       darkman
       gnome-keyring
       grim
+
       # Development Tools
       nixfmt-rfc-style
       gdb
@@ -74,6 +72,8 @@ in
       kubectl
       k9s
       postgresql
+      # azure-cli
+      # (jetbrains.idea-ultimate.override { forceWayland = true; })
 
       # Version Control
       hub
@@ -104,6 +104,7 @@ in
       procs
       dua
       nix-output-monitor
+      nh
 
       # Network Tools
       nmap
@@ -122,7 +123,7 @@ in
       # Media & Graphics
       imagemagick
       vlc
-      gimp
+      gimp3
       feh
       ffmpeg-full
       ffmpegthumbnailer
@@ -132,7 +133,6 @@ in
 
       # Desktop Environment
       pavucontrol
-      volumeicon
       lxappearance
       networkmanagerapplet
       dconf
@@ -150,14 +150,13 @@ in
       # Communication & Collaboration
       slack
       zoom-us
-      thunderbird
       signal-desktop
 
       # Text Editors & IDEs
       helix
-      (lib.hiPrio cursor-wrapper)
+      code-cursor
+      # (lib.hiPrio cursor-wrapper)
       (lib.hiPrio chromium-wrapper)
-      cursor-alias
 
       # Productivity
       pomodoro
@@ -191,6 +190,7 @@ in
       coin
       patchelf
       home-manager
+      claude-code
     ];
 
     i18n.inputMethod = {
@@ -201,7 +201,6 @@ in
 
     programs.rofi = {
       enable = true;
-      package = pkgs.rofi-wayland;
       plugins = [
         pkgs.rofi-calc
         pkgs.rofi-emoji
@@ -234,12 +233,22 @@ in
           gaps_out = 0;
         };
 
+        windowrule = [
+          # IntelliJ IDEs
+          "noinitialfocus,class:(jetbrains-.*),title:^win(.*)"
+          "size 672 700,class:(jetbrains-.*),title:(),floating:1"
+
+          # Zoom-us
+          "float,class:(Zoom Workplace)"
+          # "move onscreen 50% 100%,class:(Zoom Workplace),title:(as_toolbar)"
+        ];
+
         #
         env =
           let
             envkv = {
               BROWSER = "chromium";
-              EDITOR = "code --wait";
+              EDITOR = "cursor --wait";
 
               # Source: https://github.com/NixOS/nixpkgs/issues/271461#issuecomment-1934829672
               ELECTRON_OZONE_PLATFORM_HINT = "wayland";
@@ -330,6 +339,10 @@ in
             "$mod SHIFT, 8, movetoworkspace, 8"
             "$mod SHIFT, 9, movetoworkspace, 9"
             "$mod SHIFT, 0, movetoworkspace, 10"
+
+            # Move workspace to monitor
+            "CTRL ALT $mod SHIFT, Left, movecurrentworkspacetomonitor, l"
+            "CTRL ALT $mod SHIFT, Right, movecurrentworkspacetomonitor, r"
 
             # Restart Hyprland
             "$mod SHIFT, R, exec, hyprctl reload"
@@ -614,9 +627,19 @@ in
             command = "git pull upstream HEAD";
           }
         ];
-        os.copyToClipboardCmd = ''
-          ${pkgs.wl-clipboard-rs}/bin/wl-copy '{{text}}'
-        '';
+        os.copyToClipboardCmd =
+          let
+            copyToClipboard = pkgs.writeShellScriptBin "copyToClipboard" ''
+              if [[ "$TERM" =~ ^(screen|tmux) ]]; then
+                printf "\033Ptmux;\033\033]52;c;$(printf "$@" | base64 -w 0)\a\033\\" > /dev/tty
+              else
+                printf "\033]52;c;$(printf "$@" | base64 -w 0)\a" > /dev/tty
+              fi
+            '';
+          in
+          ''
+            ${copyToClipboard}/bin/copyToClipboard {{text}}
+          '';
         os.readFromClipboardCmd = ''
           ${pkgs.wl-clipboard-rs}/bin/wl-paste
         '';
@@ -651,9 +674,10 @@ in
     };
     programs.ssh = {
       enable = true;
-      forwardAgent = false;
-      serverAliveInterval = 180;
+      # To prepare for default config deprecation.
+      enableDefaultConfig = false;
       matchBlocks = {
+        "*".serverAliveInterval = 180;
         "beheer1.ioservice.net beheer1.stpst.nl beheer2.ioservice.net beheer2.stpst.nl" = {
           user = "bob.vanderlinden";
           forwardAgent = false;
@@ -730,20 +754,20 @@ in
     services.mpris-proxy.enable = true;
     services.flameshot = {
       enable = true;
-      package = pkgs.flameshot.overrideAttrs (old: {
-        src = pkgs.fetchFromGitHub {
-          owner = "flameshot-org";
-          repo = "flameshot";
-          rev = "f7a049ee78531b7dfa36ead4945ce9c721d90bfe";
-          hash = "sha256-teAvx50AvMjKcW44pdWxThTuJvUBeK4YI5fUmBQD9lI=";
-        };
-        patches = [ ];
-        postFixup = ''
-          wrapProgram $out/bin/flameshot \
-            --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.grim ]} \
-            ''${qtWrapperArgs[@]}
-        '';
-      });
+      # package = pkgs.flameshot.overrideAttrs (old: {
+      #   src = pkgs.fetchFromGitHub {
+      #     owner = "flameshot-org";
+      #     repo = "flameshot";
+      #     rev = "f7a049ee78531b7dfa36ead4945ce9c721d90bfe";
+      #     hash = "sha256-teAvx50AvMjKcW44pdWxThTuJvUBeK4YI5fUmBQD9lI=";
+      #   };
+      #   patches = [ ];
+      #   postFixup = ''
+      #     wrapProgram $out/bin/flameshot \
+      #       --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.grim ]} \
+      #       ''${qtWrapperArgs[@]}
+      #   '';
+      # });
       settings = {
         General = {
           showDesktopNotification = false;
@@ -787,10 +811,13 @@ in
         window-decoration = false;
         resize-overlay = "never";
         theme = "dark:Adwaita Dark,light:Adwaita";
-        scrollback-limit = 10000;
         keybind = [
           "shift+enter=text:\\n"
         ];
+        app-notifications = [
+          "no-clipboard-copy"
+        ];
+
       };
     };
 
@@ -888,7 +915,7 @@ in
 
         column.ui = "auto";
 
-        core.editor = "code --wait";
+        core.editor = "cursor --wait";
 
         # Show diff in commit message editor.
         commit.verbose = true;
@@ -963,7 +990,7 @@ in
       settings = {
         # See https://github.com/nix-community/home-manager/issues/4744
         version = "1";
-        editor = "code --wait";
+        editor = "cursor --wait";
       };
     };
     programs.jq.enable = true;
