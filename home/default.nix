@@ -72,8 +72,9 @@ in
       kubectl
       k9s
       postgresql
+      oauth2c
       # azure-cli
-      # (jetbrains.idea-ultimate.override { forceWayland = true; })
+      (jetbrains.idea-ultimate.override { forceWayland = true; })
 
       # Version Control
       hub
@@ -202,13 +203,7 @@ in
     programs.rofi = {
       enable = true;
       plugins = [
-        pkgs.rofi-calc
         pkgs.rofi-emoji
-        pkgs.rofi-file-browser
-        pkgs.rofi-rbw
-        pkgs.rofi-bluetooth
-        pkgs.rofi-power-menu
-        pkgs.rofi-screenshot
       ];
       theme =
         let
@@ -847,8 +842,6 @@ in
     programs.git = {
       enable = true;
       package = pkgs.gitFull;
-      userName = "Bob van der Linden";
-      userEmail = "bobvanderlinden@gmail.com";
 
       # Use specific configuration for work projects.
       includes =
@@ -875,33 +868,6 @@ in
         format = "ssh";
       };
 
-      difftastic.enable = true;
-      aliases = {
-        unstage = "reset HEAD --";
-        sw = "switch";
-        co = "checkout";
-        c = "commit";
-        b = "branch";
-        p = "push";
-        pf = "push --force-with-lease --force";
-        d = "diff";
-        a = "add";
-        s = "status";
-        f = "fetch";
-        t = "tag";
-        bl = "blame -w -C -C -C";
-        l = "log --graph --pretty='%Cred%h%Creset - %C(bold blue)<%an>%Creset %s%C(yellow)%d%Creset %Cgreen(%cr)' --abbrev-commit --date=relative";
-        fixup = "commit --fixup";
-        pr-init = ''
-          !git fetch upstream HEAD && git checkout upstream/HEAD -b $1
-        '';
-        pr-diff = "diff upstream/HEAD...HEAD";
-        pr-log = "l upstream/HEAD..";
-        pr-edit = "rebase --interactive --autosquash --rerere-autoupdate --rebase-merges --fork-point upstream/HEAD";
-        pr-clean = "rebase --autosquash --rerere-autoupdate --empty drop --no-keep-empty --fork-point upstream/HEAD";
-        pr-update = "pull --rebase=merges upstream HEAD";
-        pr-bisect = "!git bisect start && git bisect bad HEAD; git bisect good $(git merge-base --fork-point upstream/HEAD HEAD)";
-      };
       ignores = [
         "vendor"
         "workspace.code-workspace"
@@ -910,7 +876,39 @@ in
         ".devenv"
         ".devenv.flake.nix"
       ];
-      extraConfig = {
+      settings = {
+        user = {
+          name = "Bob van der Linden";
+          email = "bobvanderlinden@gmail.com";
+        };
+
+        aliases = {
+          unstage = "reset HEAD --";
+          sw = "switch";
+          co = "checkout";
+          c = "commit";
+          b = "branch";
+          p = "push";
+          pf = "push --force-with-lease --force";
+          d = "diff";
+          a = "add";
+          s = "status";
+          f = "fetch";
+          t = "tag";
+          bl = "blame -w -C -C -C";
+          l = "log --graph --pretty='%Cred%h%Creset - %C(bold blue)<%an>%Creset %s%C(yellow)%d%Creset %Cgreen(%cr)' --abbrev-commit --date=relative";
+          fixup = "commit --fixup";
+          pr-init = ''
+            !git fetch upstream HEAD && git checkout upstream/HEAD -b $1
+          '';
+          pr-diff = "diff upstream/HEAD...HEAD";
+          pr-log = "l upstream/HEAD..";
+          pr-edit = "rebase --interactive --autosquash --rerere-autoupdate --rebase-merges --fork-point upstream/HEAD";
+          pr-clean = "rebase --autosquash --rerere-autoupdate --empty drop --no-keep-empty --fork-point upstream/HEAD";
+          pr-update = "pull --rebase=merges upstream HEAD";
+          pr-bisect = "!git bisect start && git bisect bad HEAD; git bisect good $(git merge-base --fork-point upstream/HEAD HEAD)";
+        };
+
         init.defaultBranch = "main";
 
         column.ui = "auto";
@@ -938,9 +936,6 @@ in
         rebase.autoSquash = true;
         rebase.autoStash = true;
         rebase.updateRefs = true;
-
-        # Show original in-between ours and theirs.
-        merge.conflictstyle = "zdiff3";
 
         # Record and replay conflict resolutions.
         rerere.enabled = true;
@@ -984,6 +979,12 @@ in
         absorb.maxStack = 100;
       };
     };
+
+    programs.difftastic = {
+      enable = true;
+      git.enable = true;
+    };
+
     programs.mergiraf.enable = true;
     programs.gh = {
       enable = true;
