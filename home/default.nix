@@ -2,6 +2,7 @@
   pkgs,
   config,
   lib,
+  inputs,
   ...
 }:
 let
@@ -58,7 +59,7 @@ in
       grim
 
       # Development Tools
-      nixfmt-rfc-style
+      nixfmt
       gdb
       nodejs
       clang
@@ -74,7 +75,7 @@ in
       postgresql
       oauth2c
       # azure-cli
-      (jetbrains.idea-ultimate.override { forceWayland = true; })
+      (jetbrains.idea.override { forceWayland = true; })
 
       # Version Control
       hub
@@ -114,10 +115,10 @@ in
       docker-compose
 
       # File Management
-      xfce.thunar
-      xfce.xfconf
-      xfce.tumbler
-      xfce.exo
+      thunar
+      xfconf
+      tumbler
+      xfce4-exo
       file-roller
       meld
 
@@ -174,11 +175,11 @@ in
       yq-go
       watchexec
       difftastic
-      du-dust
+      dust
       fx
       cachix
       ijq
-      nodePackages.zx
+      # nodePackages.zx
       xdg-utils
       nixpkgs-review
       tabiew
@@ -228,7 +229,7 @@ in
           gaps_out = 0;
         };
 
-        windowrule = [
+        windowrulev2 = [
           # IntelliJ IDEs
           "noinitialfocus,class:(jetbrains-.*),title:^win(.*)"
           "size 672 700,class:(jetbrains-.*),title:(),floating:1"
@@ -271,7 +272,7 @@ in
             swayosd_client = "${config.services.swayosd.package}/bin/swayosd-client";
           in
           [
-            "$mod, T, exec, ghostty"
+            "$mod, T, exec, ghostty --working-directory=$HOME"
             "$mod, W, exec, chromium"
             "$mod, E, exec, thunar"
             "$mod, Q, exec, ${config.programs.rofi.finalPackage}/bin/rofi -show combi -modes combi -combi-modes run,emoji -combi-hide-mode-prefix"
@@ -354,7 +355,15 @@ in
             # Brightness
             " , XF86MonBrightnessUp, exec, ${swayosd_client} --brightness raise"
             " , XF86MonBrightnessDown, exec, ${swayosd_client} --brightness lower"
+
+            # Voxtype voice-to-text (push-to-talk: press to record)
+            "$mod, V, exec, ${config.programs.voxtype.package}/bin/voxtype record start"
           ];
+
+        bindr = [
+          # Voxtype voice-to-text (push-to-talk: release to stop and transcribe)
+          "$mod, V, exec, ${config.programs.voxtype.package}/bin/voxtype record stop"
+        ];
 
         bindm = [
           "$mod, mouse:272, movewindow" # Drag window with SUPER + Left Mouse Button
@@ -467,6 +476,10 @@ in
             background-color: #cf5700;
         }
 
+        #custom-voxtype {
+          background-color: #999999;
+        }
+
         #custom-docker {
           padding: 0 10px;
           background-color: #1D63ED;
@@ -489,8 +502,10 @@ in
             "privacy"
             "custom/docker"
             "custom/session_time"
+            "custom/voxtype"
             "network"
             "battery"
+            "wireplumber"
             # "cpu"
             "clock"
             "tray"
@@ -531,6 +546,12 @@ in
             interval = 60;
             exec = "${lib.getExe pkgs.session-time}";
           };
+          "custom/voxtype" = {
+            exec = "${config.programs.voxtype.package}/bin/voxtype status --follow --format json";
+            return-type = "json";
+            format = "{}";
+            tooltip = true;
+          };
           network = {
             format = "";
             format-wired = "";
@@ -555,6 +576,8 @@ in
             ];
             format-charging = "<span font='Font Awesome 5 Free'></span>  {capacity}% - {time} <span font='Font Awesome 5 Free 11'>{icon}</span>";
             format-full = "<span font='Font Awesome 5 Free'></span>  Charged <span font='Font Awesome 5 Free 11'>{icon}</span>";
+          };
+          wireplumber = {
           };
           clock = {
             format = "{:%a, %d. %b  %H:%M}";
@@ -663,9 +686,6 @@ in
       gtk3.extraConfig = {
         gtk-error-bell = 0;
       };
-      gtk4.extraConfig = {
-        gtk-application-prefer-dark-theme = true;
-      };
     };
     programs.ssh = {
       enable = true;
@@ -737,7 +757,7 @@ in
       enable = true;
       platformTheme.name = "adwaita";
       style = {
-        name = "adwaita-dark";
+        name = "adwaita";
         package = pkgs.adwaita-qt;
       };
     };
@@ -822,6 +842,27 @@ in
     services.hyprpolkitagent.enable = false;
 
     services.pasystray.enable = true;
+    programs.voxtype = {
+      enable = true;
+      package = inputs.voxtype.packages.${pkgs.system}.default;
+      service.enable = true;
+      model.name = "base.en";
+      settings = {
+        state_file = "auto";
+        hotkey.enabled = false; # Using Hyprland keybindings instead
+        audio = {
+          device = "default";
+          sample_rate = 16000;
+          max_duration_secs = 60;
+        };
+        whisper.language = "en";
+        output = {
+          mode = "type";
+          notification.on_transcription = true;
+        };
+        status.icon_theme = "emoji";
+      };
+    };
 
     xdg.enable = true;
     # news.display = "silent";
@@ -882,7 +923,7 @@ in
           email = "bobvanderlinden@gmail.com";
         };
 
-        aliases = {
+        alias = {
           unstage = "reset HEAD --";
           sw = "switch";
           co = "checkout";
@@ -1017,24 +1058,9 @@ in
         aw-watcher-afk = {
           package = pkgs.activitywatch;
         };
-      };
-    };
-
-    systemd.user.services.activitywatch-watcher-window-hyprland = {
-      Unit = {
-        Description = "ActivityWatch watcher 'aw-watcher-window-hyprland'";
-        After = [
-          "graphical-session.target"
-          "activitywatch.service"
-        ];
-        BindsTo = [ "activitywatch.target" ];
-        ConditionEnvironment = "WAYLAND_DISPLAY";
-      };
-      Service = {
-        ExecStart = lib.getExe pkgs.aw-watcher-window-hyprland;
-      };
-      Install = {
-        WantedBy = [ "activitywatch.target" ];
+        aw-watcher-window-hyprland = {
+          package = pkgs.aw-watcher-window-hyprland;
+        };
       };
     };
 
