@@ -2,7 +2,7 @@
 { pkgs, ... }:
 {
   nix.nixPath = [ "nixpkgs=/run/current-system/nixpkgs" ];
-  system.extraSystemBuilderCmds = ''
+  system.systemBuilderCommands = ''
     ln -sv ${pkgs.path} $out/nixpkgs
   '';
 }

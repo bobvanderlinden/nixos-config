@@ -97,7 +97,7 @@
   };
   services.resolved.enable = true;
   programs.openvpn3.enable = true;
-  # services.tailscale.enable = true;
+  services.tailscale.enable = true;
 
   fonts = {
     fontDir.enable = true;
@@ -112,7 +112,7 @@
       [
         corefonts # Microsoft free fonts
         noto-fonts
-        noto-fonts-emoji
+        noto-fonts-color-emoji
       ]
       ++ (with nerd-fonts; [
         sauce-code-pro
@@ -142,6 +142,8 @@
     polkit_gnome
 
     sbctl
+
+    android-tools
   ];
 
   # Use experimental nsncd. See https://flokli.de/posts/2022-11-18-nsncd/
@@ -263,7 +265,6 @@
 
   programs.hyprland = {
     enable = true;
-    withUWSM = true;
   };
   services.greetd = {
     enable = true;
@@ -291,13 +292,14 @@
   programs.fish.enable = true;
   programs.bash.completion.enable = true;
   programs.tmux.enable = true;
-  programs.adb.enable = true;
 
   programs._1password.enable = true;
   programs._1password-gui = {
     enable = true;
     polkitPolicyOwners = [ config.suites.single-user.user ];
   };
+
+  services.flatpak.enable = true;
 
   # virtualisation.virtualbox.host.enable = true;
   virtualisation.docker = {
@@ -359,13 +361,15 @@
       extra-experimental-features = [
         "nix-command"
         "flakes"
-        "ca-derivations"
+        # Bug in Determinate-Nix: https://github.com/cachix/devenv/issues/2364
+        # "ca-derivations"
       ];
       netrc-file = "/etc/nix/netrc";
       auto-optimise-store = true;
       log-lines = 100;
       warn-dirty = false;
-      lazy-trees = true;
+      # Only for Determinate-Nix
+      # lazy-trees = true;
     };
   };
 

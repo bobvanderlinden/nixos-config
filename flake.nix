@@ -9,17 +9,25 @@
     flake-utils.url = "github:numtide/flake-utils";
     lanzaboote.url = "github:nix-community/lanzaboote";
     nix-index-database.url = "github:nix-community/nix-index-database";
-    determinate.url = "https://flakehub.com/f/DeterminateSystems/determinate/*";
+    # determinate.url = "https://flakehub.com/f/DeterminateSystems/determinate/*";
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    voxtype = {
+      url = "github:peteonrails/voxtype";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  nixConfig = {
-    extra-substituters = [
-      "https://install.determinate.systems"
-    ];
-    extra-trusted-public-keys = [
-      "cache.flakehub.com-3:hJuILl5sVK4iKm86JzgdXW12Y2Hwd5G07qKtHTOcDCM="
-    ];
-  };
+  # nixConfig = {
+  #   extra-substituters = [
+  #     "https://install.determinate.systems"
+  #   ];
+  #   extra-trusted-public-keys = [
+  #     "cache.flakehub.com-3:hJuILl5sVK4iKm86JzgdXW12Y2Hwd5G07qKtHTOcDCM="
+  #   ];
+  # };
 
   outputs =
     {
@@ -27,6 +35,7 @@
       flake-utils,
       lanzaboote,
       nix-index-database,
+      sops-nix,
       ...
     }@inputs:
     let
@@ -43,8 +52,8 @@
           src = inputs.nixpkgs;
           patches = [
             # (pkgs.fetchurl {
-            #   url = "https://github.com/NixOS/nixpkgs/pull/424956.patch";
-            #   hash = "sha256-Oa6tSxOlzeEBOmyYS3BZCzz451FQ+e4STUugiyI7cIE=";
+            #   url = "https://github.com/NixOS/nixpkgs/pull/474174.patch";
+            #   hash = "sha256-z9760cR8MA+gmYCssPRpIDA8bvteh5cr3gSttHmzA1g=";
             # })
           ];
         };
@@ -82,19 +91,14 @@
         #   };
         # in
         {
-          # Downgrade 1password-gui to 8.10.40, as 8.10.44+ has a problem with showing the unlock prompt on Hyprland.
-          # See: https://github.com/NixOS/nixpkgs/issues/373415
-          _1password-gui =
-            let
-              version = "8.10.40";
-            in
-            prev._1password-gui.overrideAttrs (prevAttrs: {
-              inherit version;
-              src = final.fetchurl {
-                url = "https://downloads.1password.com/linux/tar/stable/x86_64/1password-${version}.x64.tar.gz";
-                hash = "sha256-viY0SOUhrOvmue6Nolau356rIqwDo2nLzMilFFmNb9g=";
-              };
-            });
+          # pasystray = prev.pasystray.overrideAttrs (prevAttrs: {
+          #   patches = (prevAttrs.patches or [ ]) ++ [
+          #     (prev.fetchpatch {
+          #       url = "https://github.com/christophgysin/pasystray/pull/183.patch";
+          #       hash = "sha256-BQ10LddqE3XwUeRklZE3S3+KOjJ9BtfddaFswgUqZ5g=";
+          #     })
+          #   ];
+          # });
         };
 
       nixosModules = import ./system/modules // {
@@ -107,10 +111,14 @@
           suites.single-user.user = username;
         };
         inherit (lanzaboote.nixosModules) lanzaboote;
-        determinite = inputs.determinate.nixosModules.default;
+        inherit (sops-nix.nixosModules) sops;
+        # determinite = inputs.determinate.nixosModules.default;
         # inherit (nix-index-database.nixosModules) nix-index;
         nix-index-database-home-manager = {
           home-manager.sharedModules = [ nix-index-database.homeModules.nix-index ];
+        };
+        voxtype-home-manager = {
+          home-manager.sharedModules = [ inputs.voxtype.homeManagerModules.default ];
         };
       };
 
@@ -123,8 +131,11 @@
         modules = builtins.attrValues self.nixosModules;
       };
 
-      homeConfigurations."${username}@nac44250".config =
-        self.nixosConfigurations.nac44250.config.home-manager.users.${username};
+      homeConfigurations."${username}@nac44250" =
+        self.nixosConfigurations.nac44250.config.home-manager.users.${username}.home
+        // {
+          config = self.nixosConfigurations.nac44250.config.home-manager.users.${username};
+        };
     }
     # Define outputs that allow multiple systems with for all default systems.
     # This is to support OSX and RPI.
@@ -201,8 +212,9 @@
 
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [
-            nixfmt-rfc-style
+            nixfmt
             nixd
+            kubeseal
           ];
         };
       }
