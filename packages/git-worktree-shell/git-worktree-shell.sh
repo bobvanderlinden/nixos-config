@@ -13,7 +13,8 @@ COPY=()
 while [[ $# -gt 0 ]]; do
   case $1 in
     --)
-      ARGS+=("$@")
+      shift
+      ARGS=("$@")
       break
       ;;
     --no-index)
@@ -43,8 +44,9 @@ while [[ $# -gt 0 ]]; do
       fail "Unknown option $1"
       ;;
     *)
-      ARGS+=("$1")
-      shift
+      # First non-option argument starts the command; take all remaining args
+      ARGS=("$@")
+      break
       ;;
   esac
 done

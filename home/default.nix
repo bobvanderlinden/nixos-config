@@ -84,6 +84,7 @@ in
       git-absorb
       git-revise
       git-worktree-shell
+      agent-worktree
       git-xargs
       tig
       mergiraf
@@ -976,6 +977,7 @@ in
 
         rebase.autoSquash = true;
         rebase.autoStash = true;
+        rebase.rebaseMerges = true;
         rebase.updateRefs = true;
 
         # Record and replay conflict resolutions.
