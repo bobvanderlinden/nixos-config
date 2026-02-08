@@ -273,7 +273,7 @@
         command = "${lib.getExe pkgs.cage} ${lib.getExe pkgs.gtkgreet}";
       };
       initial_session = {
-        command = "${lib.getExe config.programs.hyprland.package}";
+        command = "${config.programs.hyprland.package}/bin/start-hyprland";
         user = config.suites.single-user.user;
       };
     };
