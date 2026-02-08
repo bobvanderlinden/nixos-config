@@ -230,17 +230,19 @@ in
           gaps_out = 0;
         };
 
-        windowrulev2 = [
+        windowrule = [
           # IntelliJ IDEs
-          "noinitialfocus,class:(jetbrains-.*),title:^win(.*)"
-          "size 672 700,class:(jetbrains-.*),title:(),floating:1"
+          "no_initial_focus on, match:class (jetbrains-.*), match:title ^win(.*)"
+          "size 672 700, match:class (jetbrains-.*), match:title (), match:float 1"
 
           # Zoom-us
-          "float,class:(Zoom Workplace)"
-          # "move onscreen 50% 100%,class:(Zoom Workplace),title:(as_toolbar)"
+          "float on, match:class (Zoom Workplace), suppress_event maximize, pin on, dim_around off, decorate off"
+
+          # Bitwarden
+          "match:class Bitwarden, no_screen_share on"
+          "match:class 1password, no_screen_share on"
         ];
 
-        #
         env =
           let
             envkv = {
