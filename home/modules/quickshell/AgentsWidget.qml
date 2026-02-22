@@ -12,72 +12,58 @@ import QtQuick.Layouts
 // Expanded (hover): a PopupWindow appears above the bar listing all
 //   sessions with workspace number + title + state badge.
 //   Clicking a row focuses the agent's window via hyprctl.
-//   Auto-closes when the mouse leaves the popup.
-Item {
+//   Auto-closes when the mouse leaves.
+RowLayout {
     id: root
 
-    // Must be set by StatusBar to the enclosing PanelWindow
-    // so the PopupWindow can anchor itself above the bar.
+    spacing: 3
+    visible: AgentState.sessions.length > 0
+
+    // Must be set by StatusBar to the enclosing PanelWindow.
     required property var barWindow
 
-    implicitWidth: sessions.length > 0 ? dotRow.implicitWidth + 8 : 0
-    implicitHeight: 22
-    visible: sessions.length > 0
+    // ── Collapsed: one dot per session ───────────────────────────────────────
 
-    property var sessions: AgentState.sessions
+    Repeater {
+        id: dotRepeater
+        model: AgentState.sessions
 
-    // ── Collapsed: dot row ────────────────────────────────────────────────────
-
-    RowLayout {
-        id: dotRow
-        anchors.centerIn: parent
-        spacing: 4
-
-        Repeater {
-            model: root.sessions
-
-            Rectangle {
-                required property var modelData
-                width: 8
-                height: 8
-                radius: 4
-                color: modelData.state === "active" ? "#50fa7b" : "#6272a4"
-            }
+        Rectangle {
+            required property var modelData
+            width: 8
+            height: 8
+            radius: 4
+            Layout.alignment: Qt.AlignVCenter
+            color: modelData.state === "active" ? "#50fa7b" : "#6272a4"
         }
     }
 
-    // ── Hover detection on the bar item ──────────────────────────────────────
+    // ── Hover detection ───────────────────────────────────────────────────────
 
     HoverHandler {
         id: barHover
     }
 
-    // ── Expanded: popup list ──────────────────────────────────────────────────
+    // ── Expanded: popup above the bar ────────────────────────────────────────
 
     PopupWindow {
         id: popup
-
-        // Show when mouse is over the bar item OR over the popup itself.
         visible: barHover.hovered || popupHover.hovered
 
         anchor.window: root.barWindow
-        // Position above the bar, left-aligned to this widget.
-        // root.x is the widget's x within the bar's content item.
         anchor.rect.x: root.x
-        anchor.rect.y: -popup.height
-        anchor.rect.width: root.width
-        anchor.rect.height: root.height
+        anchor.rect.y: -popup.implicitHeight
+        anchor.rect.width: 1
+        anchor.rect.height: 1
 
         implicitWidth: 320
-        implicitHeight: sessionList.implicitHeight + 12
+        implicitHeight: popupCol.implicitHeight + 12
         color: "#2a2b3d"
 
-        HoverHandler {
-            id: popupHover
-        }
+        HoverHandler { id: popupHover }
 
         ColumnLayout {
-            id: sessionList
+            id: popupCol
             anchors {
                 left: parent.left
                 right: parent.right
@@ -87,7 +73,7 @@ Item {
             spacing: 2
 
             Repeater {
-                model: root.sessions
+                model: AgentState.sessions
 
                 Rectangle {
                     required property var modelData
@@ -103,9 +89,7 @@ Item {
 
                     RowLayout {
                         anchors {
-                            left: parent.left
-                            right: parent.right
-                            verticalCenter: parent.verticalCenter
+                            fill: parent
                             leftMargin: 8
                             rightMargin: 8
                         }
@@ -120,16 +104,18 @@ Item {
                             Layout.alignment: Qt.AlignVCenter
                         }
 
-                        // Label: "Workspace N" or title (fallback to workspace)
+                        // Label: workspace + title
                         Text {
                             Layout.fillWidth: true
                             text: {
-                                const ws = session.workspaceId != null ? "Workspace " + session.workspaceId : "";
-                                const t  = session.title ?? "";
+                                const ws = session.workspaceId != null
+                                    ? "Workspace " + session.workspaceId
+                                    : "";
+                                const t = session.title ?? "";
                                 if (t !== "") return ws !== "" ? ws + " — " + t : t;
                                 return ws !== "" ? ws : "(unknown)";
                             }
-                            color: parent.parent.canFocus ? "#f8f8f2" : "#6272a4"
+                            color: canFocus ? "#f8f8f2" : "#6272a4"
                             font.pixelSize: 12
                             elide: Text.ElideRight
                         }

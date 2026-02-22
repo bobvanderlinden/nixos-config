@@ -39,10 +39,11 @@ Singleton {
         property string buf: ""
 
         stdout: SplitParser {
-            onRead: data => scanner.buf += data
+            onRead: data => scanner.buf += data + "\n"
         }
 
         onExited: {
+
             const lines = scanner.buf.trim().split("\n").filter(l => l !== "");
             scanner.buf = "";
 
@@ -64,6 +65,7 @@ Singleton {
                     }
                 } catch (e) { }
             }
+
 
             root.sessions = newSessions;
             root.activeWorkspaces = newActive;

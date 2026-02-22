@@ -842,6 +842,7 @@ in
           } catch { }
         }
 
+
         return {
           event: async ({ event }) => {
             const sessionId = event.properties?.sessionID ?? "";
