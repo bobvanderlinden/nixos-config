@@ -46,9 +46,42 @@ RowLayout {
 
     // ── Expanded: popup above the bar ────────────────────────────────────────
 
+    // Small delay before hiding so the mouse can travel from bar to popup
+    // without the popup disappearing in the gap.
+    Timer {
+        id: hideTimer
+        interval: 200
+        onTriggered: popup.visible = false
+    }
+
     PopupWindow {
         id: popup
-        visible: barHover.hovered || popupHover.hovered
+        visible: false
+
+        onVisibleChanged: if (visible) hideTimer.stop()
+
+        Connections {
+            target: barHover
+            function onHoveredChanged() {
+                if (barHover.hovered) {
+                    hideTimer.stop();
+                    popup.visible = true;
+                } else if (!popupHover.hovered) {
+                    hideTimer.restart();
+                }
+            }
+        }
+
+        Connections {
+            target: popupHover
+            function onHoveredChanged() {
+                if (popupHover.hovered) {
+                    hideTimer.stop();
+                } else if (!barHover.hovered) {
+                    hideTimer.restart();
+                }
+            }
+        }
 
         anchor.window: root.barWindow
         anchor.rect.x: root.x
@@ -136,6 +169,7 @@ RowLayout {
                         cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
                         onClicked: {
                             Hyprland.dispatch("focuswindow address:" + session.windowAddress);
+                            hideTimer.stop();
                             popup.visible = false;
                         }
                     }
