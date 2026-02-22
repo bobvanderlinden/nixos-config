@@ -40,7 +40,7 @@ Item {
         Text {
             id: label
             anchors.centerIn: parent
-            text: root.voxtypeText
+            text: "🎙 " + root.voxtypeText
             color: "#ffffff"
             font.pixelSize: 11
         }

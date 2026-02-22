@@ -63,7 +63,7 @@ RowLayout {
         Text {
             id: badgeLabel
             anchors.centerIn: parent
-            text: root.containers.length + "  "
+            text: "🐳 " + root.containers.length
             color: "#ffffff"
             font.pixelSize: 11
         }

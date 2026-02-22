@@ -18,7 +18,7 @@ Item {
         const month = months[d.getMonth()];
         const hours = String(d.getHours()).padStart(2, "0");
         const mins = String(d.getMinutes()).padStart(2, "0");
-        return day + ", " + date + ". " + month + "  " + hours + ":" + mins;
+        return "🗓 " + day + ", " + date + ". " + month + "  " + hours + ":" + mins;
     }
 
     Timer {

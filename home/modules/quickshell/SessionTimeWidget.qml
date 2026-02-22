@@ -41,7 +41,7 @@ Item {
         Text {
             id: label
             anchors.centerIn: parent
-            text: root.sessionTime + " 🔒"
+            text: "🕐 " + root.sessionTime + " 🔒"
             color: "#ffffff"
             font.pixelSize: 11
         }

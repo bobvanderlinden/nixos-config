@@ -49,7 +49,7 @@ Item {
         Text {
             id: failedText
             anchors.centerIn: parent
-            text: root.failedCount + " failed"
+            text: "⚠ " + root.failedCount + " failed"
             color: "#ffffff"
             font.pixelSize: 11
         }
