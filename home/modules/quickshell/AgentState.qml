@@ -22,7 +22,9 @@ Singleton {
     // Convenience map: workspaceId -> true for workspaces with an active (non-stale) agent.
     property var activeWorkspaces: ({})
 
-    readonly property int staleThresholdMs: 30000
+    // Active session files are touched on every agent event (tool call etc.).
+    // If no event fires for 5 minutes, treat the file as stale (agent crashed).
+    readonly property int staleThresholdMs: 300000
 
     Process {
         id: watcher
