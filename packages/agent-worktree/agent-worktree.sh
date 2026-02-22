@@ -92,29 +92,37 @@ WORKTREE_ARGS=(
   --copy devenv.lock
   --copy flake.nix
   --copy flake.lock
+  --copy .nix
   --link .claude
-  --link .cursor
+  --link .opencode
+  --link opencode.json
+  --link .vscode
   --link CLAUDE.md
+  --link AGENTS.md
   --revision "$REVISION"
 )
 
-# Determine the command to run (default: claude)
+# Determine the command to run (default: agent)
 if [[ $# -gt 0 ]]; then
   COMMAND=("$@")
 else
-  COMMAND=(claude)
+  COMMAND=(agent)
+  PROMPT_PARTS=()
   if [[ -n "${GITHUB_PR_NUMBER-}" ]]; then
-    COMMAND+=(--append-system-prompt "The pull request you're working on is https://github.com/$GITHUB_OWNER_NAME/$GITHUB_REPO_NAME/pull/$GITHUB_PR_NUMBER")
+    PROMPT_PARTS+=("The pull request you're working on is https://github.com/$GITHUB_OWNER_NAME/$GITHUB_REPO_NAME/pull/$GITHUB_PR_NUMBER")
   fi
   if [[ -n "${GITHUB_ISSUE_NUMBER-}" ]]; then
-    COMMAND+=(--append-system-prompt "The issue you're working on is https://github.com/$GITHUB_OWNER_NAME/$GITHUB_REPO_NAME/issues/$GITHUB_ISSUE_NUMBER")
+    PROMPT_PARTS+=("The issue you're working on is https://github.com/$GITHUB_OWNER_NAME/$GITHUB_REPO_NAME/issues/$GITHUB_ISSUE_NUMBER")
+  fi
+  if [[ ${#PROMPT_PARTS[@]} -gt 0 ]]; then
+    COMMAND+=(--prompt "$(printf '%s\n' "${PROMPT_PARTS[@]}")")
   fi
 fi
 
 if [[ -n "${GITHUB_PR_NUMBER-}" ]]; then
   export GITHUB_PR_NUMBER
 fi
-if [[ -n "${GITHUB_ISSUE_NUMBER}" ]]; then
+if [[ -n "${GITHUB_ISSUE_NUMBER-}" ]]; then
   export GITHUB_ISSUE_NUMBER
 fi
 

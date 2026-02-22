@@ -9,7 +9,7 @@
     flake-utils.url = "github:numtide/flake-utils";
     lanzaboote.url = "github:nix-community/lanzaboote";
     nix-index-database.url = "github:nix-community/nix-index-database";
-    # determinate.url = "https://flakehub.com/f/DeterminateSystems/determinate/*";
+    determinate.url = "https://flakehub.com/f/DeterminateSystems/determinate/*";
     sops-nix = {
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -18,16 +18,31 @@
       url = "github:peteonrails/voxtype";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    pyproject-nix = {
+      url = "github:pyproject-nix/pyproject.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    uv2nix = {
+      url = "github:pyproject-nix/uv2nix";
+      inputs.pyproject-nix.follows = "pyproject-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    pyproject-build-systems = {
+      url = "github:pyproject-nix/build-system-pkgs";
+      inputs.pyproject-nix.follows = "pyproject-nix";
+      inputs.uv2nix.follows = "uv2nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  # nixConfig = {
-  #   extra-substituters = [
-  #     "https://install.determinate.systems"
-  #   ];
-  #   extra-trusted-public-keys = [
-  #     "cache.flakehub.com-3:hJuILl5sVK4iKm86JzgdXW12Y2Hwd5G07qKtHTOcDCM="
-  #   ];
-  # };
+  nixConfig = {
+    extra-substituters = [
+      "https://install.determinate.systems"
+    ];
+    extra-trusted-public-keys = [
+      "cache.flakehub.com-3:hJuILl5sVK4iKm86JzgdXW12Y2Hwd5G07qKtHTOcDCM="
+    ];
+  };
 
   outputs =
     {
@@ -36,6 +51,9 @@
       lanzaboote,
       nix-index-database,
       sops-nix,
+      pyproject-nix,
+      uv2nix,
+      pyproject-build-systems,
       ...
     }@inputs:
     let
@@ -58,9 +76,10 @@
           ];
         };
       username = "bob.vanderlinden";
-      defaultOverlays = with self.overlays; [
-        default
-        workarounds
+      defaultOverlays = [
+        self.overlays.default
+        self.overlays.workarounds
+        self.overlays.pyproject
       ];
       mkPkgs =
         {
@@ -82,6 +101,10 @@
           inherit (final) callPackage;
           directory = ./packages;
         };
+      overlays.pyproject = _final: _prev: {
+        inherit pyproject-nix uv2nix pyproject-build-systems;
+      };
+
       overlays.workarounds =
         final: prev:
         # let
@@ -112,7 +135,7 @@
         };
         inherit (lanzaboote.nixosModules) lanzaboote;
         inherit (sops-nix.nixosModules) sops;
-        # determinite = inputs.determinate.nixosModules.default;
+        determinate = inputs.determinate.nixosModules.default;
         # inherit (nix-index-database.nixosModules) nix-index;
         nix-index-database-home-manager = {
           home-manager.sharedModules = [ nix-index-database.homeModules.nix-index ];

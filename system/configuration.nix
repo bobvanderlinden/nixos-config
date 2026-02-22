@@ -369,7 +369,9 @@
       log-lines = 100;
       warn-dirty = false;
       # Only for Determinate-Nix
-      # lazy-trees = true;
+      lazy-trees = true;
+      eval-cache = true;
+      eval-cores = 0;
     };
   };
 

@@ -3,7 +3,6 @@
   git,
   coreutils,
   git-worktree-shell,
-  claude-code,
   direnv,
 }:
 writeShellApplication {
@@ -13,7 +12,6 @@ writeShellApplication {
     git
     coreutils
     git-worktree-shell
-    claude-code
     direnv
   ];
 }

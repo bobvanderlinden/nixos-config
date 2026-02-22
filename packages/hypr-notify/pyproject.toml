@@ -1,0 +1,15 @@
+[project]
+name = "hypr-notify"
+version = "0.1.0"
+description = "Hyprland-aware desktop notifications with window-focus tracking"
+requires-python = ">=3.11"
+dependencies = [
+  "dbus-fast>=2.0.0",
+]
+
+[project.scripts]
+hypr-notify = "hypr_notify:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
