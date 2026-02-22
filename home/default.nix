@@ -829,7 +829,12 @@ in
           if (workspaceId == null) return;
           try {
             fs.mkdirSync(agentDir, { recursive: true });
-            fs.writeFileSync(path.join(agentDir, String(workspaceId)), "");
+            const file = path.join(agentDir, String(workspaceId));
+            // Write then touch to update mtime — AgentState.qml uses mtime
+            // to detect stale files (agent exited without firing session.idle).
+            fs.writeFileSync(file, "");
+            const now = new Date();
+            fs.utimesSync(file, now, now);
           } catch { }
         }
 
