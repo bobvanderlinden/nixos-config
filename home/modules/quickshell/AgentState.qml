@@ -51,7 +51,7 @@ Singleton {
             scanner.buf = "";
 
             const nowMs = Date.now();
-            const newSessions = [];
+            const parsed = [];
 
             for (const line of lines) {
                 try {
@@ -65,16 +65,25 @@ Singleton {
                         ? "idle"
                         : (obj.state ?? "idle");
 
-                    newSessions.push({
+                    parsed.push({
                         sessionId:     obj.sessionId     ?? "",
                         windowAddress: obj.windowAddress ?? null,
                         state:         effectiveState,
                         title:         obj.title         ?? "",
+                        mtimeMs,
                     });
                 } catch (e) { }
             }
 
-            root.sessions = newSessions;
+            // Sort by most recently active first.
+            parsed.sort((a, b) => b.mtimeMs - a.mtimeMs);
+
+            root.sessions = parsed.map(s => ({
+                sessionId:     s.sessionId,
+                windowAddress: s.windowAddress,
+                state:         s.state,
+                title:         s.title,
+            }));
         }
     }
 
