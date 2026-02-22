@@ -31,6 +31,8 @@ Singleton {
 
         // One Socket instance is created per incoming connection.
         handler: Socket {
+            id: clientSocket
+
             // Track which sessionIds this socket has published
             property var ownedSessionIds: []
 
@@ -38,7 +40,7 @@ Singleton {
                 if (!connected) {
                     // Remove all sessions owned by this socket
                     const map = root.sessionMap;
-                    for (const id of ownedSessionIds) {
+                    for (const id of clientSocket.ownedSessionIds) {
                         delete map[id];
                     }
                     root.sessionMap = map;
@@ -58,12 +60,12 @@ Singleton {
 
                         if (obj.type === "remove") {
                             delete map[obj.sessionId];
-                            const idx = parent.ownedSessionIds.indexOf(obj.sessionId);
-                            if (idx >= 0) parent.ownedSessionIds.splice(idx, 1);
+                            const idx = clientSocket.ownedSessionIds.indexOf(obj.sessionId);
+                            if (idx >= 0) clientSocket.ownedSessionIds.splice(idx, 1);
                         } else {
                             // "update" or any other type — upsert
-                            if (!parent.ownedSessionIds.includes(obj.sessionId))
-                                parent.ownedSessionIds.push(obj.sessionId);
+                            if (!clientSocket.ownedSessionIds.includes(obj.sessionId))
+                                clientSocket.ownedSessionIds.push(obj.sessionId);
 
                             map[obj.sessionId] = {
                                 sessionId:     obj.sessionId,
