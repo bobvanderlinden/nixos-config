@@ -810,10 +810,11 @@ in
         //   /run/user/<uid>/agent-sessions/<sessionId>.json
         // Content: { sessionId, windowAddress, workspaceId, state, title }
         // state is "active" or "idle".
-        // quickshell's AgentState.qml polls this directory every 2 s.
         const uid = process.getuid?.() ?? (await $`id -u`.quiet().text()).trim();
         const agentDir = `/run/user/''${uid}/agent-sessions`;
         const windowAddress = process.env.HYPR_WINDOW_ADDRESS ?? null;
+
+
 
         // Get the Hyprland workspace ID for our own window.
         async function getOwnWorkspaceId() {
@@ -822,7 +823,8 @@ in
             const clients = await $`hyprctl clients -j`.quiet().json();
             const win = clients.find(c => c.address === windowAddress);
             return win?.workspace?.id ?? null;
-          } catch {
+          } catch (e) {
+            console.error("[notify] getOwnWorkspaceId failed:", e);
             return null;
           }
         }
@@ -839,13 +841,24 @@ in
             // Touch to update mtime — AgentState.qml uses mtime to detect stale files.
             const now = new Date();
             fs.utimesSync(file, now, now);
-          } catch { }
+          } catch (e) {
+            console.error("[notify] writeSessionState failed:", e);
+          }
         }
-
 
         return {
           event: async ({ event }) => {
-            const sessionId = event.properties?.sessionID ?? "";
+            const sessionId = event.properties?.sessionID ?? event.properties?.info?.id ?? "";
+
+            // Session deleted — remove the file entirely.
+            if (event.type === "session.deleted") {
+              try {
+                fs.unlinkSync(path.join(agentDir, `''${sessionId}.json`));
+              } catch (e) {
+                console.error("[notify] session.deleted unlink failed:", e);
+              }
+              return;
+            }
 
             if (event.type !== "session.idle") {
               // Any non-idle event: agent is working.

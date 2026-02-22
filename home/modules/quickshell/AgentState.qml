@@ -14,6 +14,9 @@ import QtQuick
 // Two processes:
 //   scanner  — reads all JSON files on demand (triggered by watcher or on start)
 //   watcher  — long-running inotifywait; fires scanner on any file change
+//
+// Staleness: active files not touched for 5 minutes are treated as idle
+// (handles OpenCode exiting without firing session.idle).
 Singleton {
     id: root
 
@@ -23,18 +26,22 @@ Singleton {
     // Convenience map: workspaceId -> true for active sessions.
     property var activeWorkspaces: ({})
 
-    readonly property string agentDir: "/run/user/" + Qt.platform.os + "/agent-sessions"
+    // Active files not updated within this window are treated as stale/idle.
+    readonly property int staleMs: 5 * 60 * 1000
 
     // ── Scanner: reads all JSON files and updates state ───────────────────────
 
     Process {
         id: scanner
+        // Output one line per file: "<mtime_epoch_seconds> <json>"
         command: ["sh", "-c",
             "dir=/run/user/$(id -u)/agent-sessions; " +
             "mkdir -p \"$dir\"; " +
             "find \"$dir\" -maxdepth 1 -name '*.json' | " +
-            "  while read -r f; do cat \"$f\"; echo; done"]
-        running: true  // run once on startup
+            "  while read -r f; do " +
+            "    printf '%s ' \"$(stat -c '%Y' \"$f\")\"; cat \"$f\"; echo; " +
+            "  done"]
+        running: true
 
         property string buf: ""
 
@@ -43,29 +50,37 @@ Singleton {
         }
 
         onExited: {
-
             const lines = scanner.buf.trim().split("\n").filter(l => l !== "");
             scanner.buf = "";
 
+            const nowMs = Date.now();
             const newSessions = [];
             const newActive = {};
 
             for (const line of lines) {
                 try {
-                    const obj = JSON.parse(line);
+                    const spaceIdx = line.indexOf(" ");
+                    if (spaceIdx < 0) continue;
+                    const mtimeMs = parseInt(line.substring(0, spaceIdx)) * 1000;
+                    const obj = JSON.parse(line.substring(spaceIdx + 1));
+
+                    // Treat active files not touched in 5 min as idle
+                    const effectiveState = (obj.state === "active" && nowMs - mtimeMs > root.staleMs)
+                        ? "idle"
+                        : (obj.state ?? "idle");
+
                     newSessions.push({
                         sessionId:     obj.sessionId     ?? "",
                         windowAddress: obj.windowAddress ?? null,
                         workspaceId:   obj.workspaceId   ?? null,
-                        state:         obj.state         ?? "idle",
+                        state:         effectiveState,
                         title:         obj.title         ?? "",
                     });
-                    if (obj.state === "active" && obj.workspaceId != null) {
+                    if (effectiveState === "active" && obj.workspaceId != null) {
                         newActive[obj.workspaceId] = true;
                     }
                 } catch (e) { }
             }
-
 
             root.sessions = newSessions;
             root.activeWorkspaces = newActive;
@@ -76,8 +91,6 @@ Singleton {
 
     Process {
         id: watcher
-        // -m = monitor forever, -e = events to watch, --format = output format
-        // We create the dir first so inotifywait doesn't fail if it doesn't exist yet.
         command: ["sh", "-c",
             "mkdir -p /run/user/$(id -u)/agent-sessions && " +
             "exec inotifywait -m -e close_write -e moved_to -e delete " +
@@ -86,10 +99,16 @@ Singleton {
         running: true
 
         stdout: SplitParser {
-            onRead: _ => {
-                // Any change → re-scan immediately
-                scanner.running = true;
-            }
+            onRead: _ => scanner.running = true
         }
+    }
+
+    // ── Fallback poll: re-scan every minute to catch staleness transitions ────
+
+    Timer {
+        interval: 60000
+        running: true
+        repeat: true
+        onTriggered: scanner.running = true
     }
 }
