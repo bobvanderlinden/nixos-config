@@ -1,29 +1,47 @@
+import Quickshell
 import Quickshell.Io
 import QtQuick
-import QtQuick.Controls
+import QtQuick.Layouts
 
-// Running Docker container count. Polls every 10 s.
-Item {
+// Docker widget.
+//
+// Collapsed (bar): container count badge.
+// Expanded (hover): popup listing container name + image + status,
+//   with an X button to kill each container.
+//   Hidden entirely when no containers are running.
+RowLayout {
     id: root
-    implicitWidth: 60
-    implicitHeight: 22
 
-    property int containerCount: 0
+    spacing: 0
+    visible: containers.length > 0
+
+    // Must be set by StatusBar to the enclosing PanelWindow.
+    required property var barWindow
+
+    property var containers: []  // [{ id, name, image, status }, ...]
+
+    // ── Container list poller ─────────────────────────────────────────────────
 
     Process {
-        id: dockerProc
-        command: ["docker-count"]
+        id: listProc
+        command: ["docker", "ps",
+            "--format", '{"id":"{{.ID}}","name":"{{.Names}}","image":"{{.Image}}","status":"{{.Status}}"}']
         running: true
 
         property string buf: ""
 
         stdout: SplitParser {
-            onRead: data => dockerProc.buf += data
+            onRead: data => listProc.buf += data + "\n"
         }
 
         onExited: {
-            root.containerCount = parseInt(dockerProc.buf.trim()) || 0;
-            dockerProc.buf = "";
+            const lines = listProc.buf.trim().split("\n").filter(l => l !== "");
+            listProc.buf = "";
+            const parsed = [];
+            for (const line of lines) {
+                try { parsed.push(JSON.parse(line)); } catch (e) { }
+            }
+            root.containers = parsed;
         }
     }
 
@@ -31,30 +49,155 @@ Item {
         interval: 10000
         running: true
         repeat: true
-        onTriggered: dockerProc.running = true
+        onTriggered: listProc.running = true
     }
 
+    // ── Collapsed: count badge ────────────────────────────────────────────────
+
     Rectangle {
-        anchors.fill: parent
+        implicitWidth: badgeLabel.implicitWidth + 12
+        implicitHeight: 22
         color: "#1D63ED"
         radius: 4
 
         Text {
-            id: label
+            id: badgeLabel
             anchors.centerIn: parent
-            text: root.containerCount + "  "
+            text: root.containers.length + "  "
             color: "#ffffff"
             font.pixelSize: 11
         }
+    }
 
-        ToolTip.visible: hoverArea.containsMouse
-        ToolTip.text: root.containerCount + " containers running"
-        ToolTip.delay: 500
+    // ── Hover detection ───────────────────────────────────────────────────────
 
-        MouseArea {
-            id: hoverArea
-            anchors.fill: parent
-            hoverEnabled: true
+    HoverHandler { id: barHover }
+
+    Timer {
+        id: hideTimer
+        interval: 200
+        onTriggered: popup.visible = false
+    }
+
+    // ── Expanded: popup ───────────────────────────────────────────────────────
+
+    PopupWindow {
+        id: popup
+        visible: false
+
+        anchor.window: root.barWindow
+        anchor.rect.x: root.x
+        anchor.rect.y: -popup.implicitHeight
+        anchor.rect.width: 1
+        anchor.rect.height: 1
+
+        implicitWidth: 360
+        implicitHeight: popupCol.implicitHeight + 12
+        color: "#2a2b3d"
+
+        HoverHandler {
+            id: popupHover
+            onHoveredChanged: {
+                if (popupHover.hovered) hideTimer.stop();
+                else if (!barHover.hovered) hideTimer.restart();
+            }
         }
+
+        Connections {
+            target: barHover
+            function onHoveredChanged() {
+                if (barHover.hovered) { hideTimer.stop(); popup.visible = true; }
+                else if (!popupHover.hovered) hideTimer.restart();
+            }
+        }
+
+        ColumnLayout {
+            id: popupCol
+            anchors {
+                left: parent.left
+                right: parent.right
+                top: parent.top
+                margins: 6
+            }
+            spacing: 2
+
+            Repeater {
+                model: root.containers
+
+                Rectangle {
+                    required property var modelData
+                    property var container: modelData
+
+                    Layout.fillWidth: true
+                    implicitHeight: 28
+                    radius: 4
+                    color: rowHover.hovered ? "#383a59" : "transparent"
+
+                    HoverHandler { id: rowHover }
+
+                    RowLayout {
+                        anchors {
+                            fill: parent
+                            leftMargin: 8
+                            rightMargin: 6
+                        }
+                        spacing: 8
+
+                        // Container name
+                        Text {
+                            Layout.fillWidth: true
+                            text: container.name
+                            color: "#f8f8f2"
+                            font.pixelSize: 12
+                            elide: Text.ElideRight
+                        }
+
+                        // Image (dimmed)
+                        Text {
+                            text: container.image
+                            color: "#6272a4"
+                            font.pixelSize: 11
+                            elide: Text.ElideRight
+                            Layout.maximumWidth: 120
+                        }
+
+                        // Kill button
+                        Rectangle {
+                            implicitWidth: 20
+                            implicitHeight: 20
+                            radius: 3
+                            color: killHover.hovered ? "#ff5555" : "#44475a"
+
+                            HoverHandler { id: killHover }
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "✕"
+                                color: "#f8f8f2"
+                                font.pixelSize: 11
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                onClicked: {
+                                    killProc.containerId = container.id;
+                                    killProc.running = true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // ── Kill process ──────────────────────────────────────────────────────────
+
+    Process {
+        id: killProc
+        property string containerId: ""
+        command: ["docker", "stop", containerId]
+        running: false
+        onExited: listProc.running = true  // refresh list after kill
     }
 }

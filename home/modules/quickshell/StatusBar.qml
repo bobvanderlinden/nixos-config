@@ -25,16 +25,12 @@ PanelWindow {
 
     RowLayout {
         anchors.fill: parent
-        anchors.leftMargin: 4
-        anchors.rightMargin: 4
-        spacing: 0
+        anchors.leftMargin: 6
+        anchors.rightMargin: 6
+        spacing: 6
 
-        // ── Left: Workspaces + Agents ────────────────────────────────────────
+        // ── Left: Workspaces ─────────────────────────────────────────────────
         WorkspacesWidget { }
-
-        AgentsWidget {
-            barWindow: bar
-        }
 
         // ── Center: stretch ───────────────────────────────────────────────────
         Item { Layout.fillWidth: true }
@@ -43,7 +39,13 @@ PanelWindow {
 
         SystemdFailedUnits { }
 
-        DockerWidget { }
+        AgentsWidget {
+            barWindow: bar
+        }
+
+        DockerWidget {
+            barWindow: bar
+        }
 
         SessionTimeWidget { }
 

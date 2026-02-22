@@ -10,18 +10,6 @@ let
   # enabling QuickShell hot-reload on file edits without switch-home.
   srcDir = "/home/bob.vanderlinden/projects/nixos-config/home/modules/quickshell";
 
-  # docker-count script — added to home.packages so it's on PATH.
-  docker-count = pkgs.writeShellApplication {
-    name = "docker-count";
-    text = ''
-      docker ps --format json | jq --slurp 'length'
-    '';
-    runtimeInputs = [
-      pkgs.docker
-      pkgs.jq
-    ];
-  };
-
   # Helper to symlink a file from the source tree directly.
   src = filename: config.lib.file.mkOutOfStoreSymlink "${srcDir}/${filename}";
 in
@@ -32,7 +20,6 @@ in
     pkgs.session-time
     pkgs.inotify-tools
     config.programs.voxtype.package
-    docker-count
   ];
 
   # Deploy all QML sources as symlinks to the live repo working tree.

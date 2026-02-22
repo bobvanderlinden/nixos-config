@@ -22,7 +22,13 @@ RowLayout {
     // Must be set by StatusBar to the enclosing PanelWindow.
     required property var barWindow
 
-    // ── Collapsed: one dot per session ───────────────────────────────────────
+    // ── Collapsed: robot emoji prefix + one dot per session ─────────────────
+
+    Text {
+        text: "🤖"
+        font.pixelSize: 12
+        Layout.alignment: Qt.AlignVCenter
+    }
 
     Repeater {
         id: dotRepeater
