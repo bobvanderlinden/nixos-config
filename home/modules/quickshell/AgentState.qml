@@ -4,116 +4,82 @@ import Quickshell
 import Quickshell.Io
 import QtQuick
 
-// Singleton that tracks OpenCode agent sessions in real-time.
+// Singleton that tracks live OpenCode agent sessions via a Unix socket.
 //
-// The OpenCode session-status plugin writes JSON files to:
-//   /run/user/<uid>/agent-sessions/<sessionId>.json
-// Content: { sessionId, windowAddress, state, title }
-// state mirrors SessionStatus.type: "idle", "busy", or "retry".
+// The OpenCode session-status plugin connects to a SocketServer at:
+//   /run/user/<uid>/opencode-sessions.sock
 //
-// Two processes:
-//   scanner  — reads all JSON files on demand (triggered by watcher or on start)
-//   watcher  — long-running inotifywait; fires scanner on any file change
+// Each connected client represents one live OpenCode instance.
+// The client sends newline-delimited JSON messages:
+//   { type, sessionId, windowAddress, state, title }
+// type is "update" or "remove".
 //
-// Staleness: non-idle files not touched for 5 minutes are treated as idle
-// (handles OpenCode exiting without firing a final session.status).
+// When a client disconnects, all its sessions are removed immediately.
 Singleton {
     id: root
 
     // List of session objects: [{ sessionId, windowAddress, state, title }, ...]
     property var sessions: []
 
-    // Non-idle files not updated within this window are treated as stale/idle.
-    readonly property int staleMs: 5 * 60 * 1000
+    // Internal map: sessionId → session object
+    property var sessionMap: ({})
 
-    // ── Scanner: reads all JSON files and updates state ───────────────────────
+    SocketServer {
+        id: server
+        active: true
+        path: "/run/user/" + (Quickshell.env("UID") || "1000") + "/opencode-sessions.sock"
 
-    Process {
-        id: scanner
-        // Output one line per file: "<mtime_epoch_seconds> <json>"
-        command: ["sh", "-c",
-            "dir=/run/user/$(id -u)/agent-sessions; " +
-            "mkdir -p \"$dir\"; " +
-            "find \"$dir\" -maxdepth 1 -name '*.json' | " +
-            "  while read -r f; do " +
-            "    json=$(cat \"$f\"); " +
-            "    pid=$(printf '%s' \"$json\" | sed -n 's/.*\"pid\":[[:space:]]*\\([0-9]*\\).*/\\1/p'); " +
-            "    if [ -n \"$pid\" ] && ! kill -0 \"$pid\" 2>/dev/null; then " +
-            "      rm -f \"$f\"; continue; " +
-            "    fi; " +
-            "    printf '%s ' \"$(stat -c '%Y' \"$f\")\"; printf '%s' \"$json\"; echo; " +
-            "  done"]
-        running: true
+        // One Socket instance is created per incoming connection.
+        handler: Socket {
+            // Track which sessionIds this socket has published
+            property var ownedSessionIds: []
 
-        property string buf: ""
-
-        stdout: SplitParser {
-            onRead: data => scanner.buf += data + "\n"
-        }
-
-        onExited: {
-            const lines = scanner.buf.trim().split("\n").filter(l => l !== "");
-            scanner.buf = "";
-
-            const nowMs = Date.now();
-            const parsed = [];
-
-            for (const line of lines) {
-                try {
-                    const spaceIdx = line.indexOf(" ");
-                    if (spaceIdx < 0) continue;
-                    const mtimeMs = parseInt(line.substring(0, spaceIdx)) * 1000;
-                    const obj = JSON.parse(line.substring(spaceIdx + 1));
-
-                    // Treat non-idle files not touched in 5 min as idle.
-                    const effectiveState = (obj.state !== "idle" && nowMs - mtimeMs > root.staleMs)
-                        ? "idle"
-                        : (obj.state ?? "idle");
-
-                    parsed.push({
-                        sessionId:     obj.sessionId     ?? "",
-                        windowAddress: obj.windowAddress ?? null,
-                        state:         effectiveState,
-                        title:         obj.title         ?? "",
-                        mtimeMs,
-                    });
-                } catch (e) { }
+            onConnectedChanged: {
+                if (!connected) {
+                    // Remove all sessions owned by this socket
+                    const map = root.sessionMap;
+                    for (const id of ownedSessionIds) {
+                        delete map[id];
+                    }
+                    root.sessionMap = map;
+                    root.sessions = Object.values(map);
+                }
             }
 
-            // Sort by most recently active first.
-            parsed.sort((a, b) => b.mtimeMs - a.mtimeMs);
+            parser: SplitParser {
+                onRead: line => {
+                    const trimmed = line.trim();
+                    if (trimmed === "") return;
+                    try {
+                        const obj = JSON.parse(trimmed);
+                        if (!obj.sessionId) return;
 
-            root.sessions = parsed.map(s => ({
-                sessionId:     s.sessionId,
-                windowAddress: s.windowAddress,
-                state:         s.state,
-                title:         s.title,
-            }));
+                        const map = root.sessionMap;
+
+                        if (obj.type === "remove") {
+                            delete map[obj.sessionId];
+                            const idx = parent.ownedSessionIds.indexOf(obj.sessionId);
+                            if (idx >= 0) parent.ownedSessionIds.splice(idx, 1);
+                        } else {
+                            // "update" or any other type — upsert
+                            if (!parent.ownedSessionIds.includes(obj.sessionId))
+                                parent.ownedSessionIds.push(obj.sessionId);
+
+                            map[obj.sessionId] = {
+                                sessionId:     obj.sessionId,
+                                windowAddress: obj.windowAddress ?? null,
+                                state:         obj.state ?? "idle",
+                                title:         obj.title ?? "",
+                            };
+                        }
+
+                        root.sessionMap = map;
+                        root.sessions = Object.values(map);
+                    } catch (error) {
+                        // Ignore malformed JSON lines
+                    }
+                }
+            }
         }
-    }
-
-    // ── Watcher: inotifywait fires scanner on any change ─────────────────────
-
-    Process {
-        id: watcher
-        command: ["sh", "-c",
-            "mkdir -p /run/user/$(id -u)/agent-sessions && " +
-            "exec inotifywait -m -e close_write -e moved_to -e delete " +
-            "  --format '%e' " +
-            "  /run/user/$(id -u)/agent-sessions"]
-        running: true
-
-        stdout: SplitParser {
-            onRead: _ => scanner.running = true
-        }
-    }
-
-    // ── Fallback poll: re-scan every minute to catch staleness transitions ────
-
-    Timer {
-        interval: 60000
-        running: true
-        repeat: true
-        onTriggered: scanner.running = true
     }
 }

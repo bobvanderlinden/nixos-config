@@ -1,6 +1,5 @@
 import Quickshell.Networking
 import QtQuick
-import QtQuick.Controls
 
 // Network status. Reactive via Quickshell.Networking (no polling).
 // Format: <icon>  <label>
@@ -13,6 +12,8 @@ import QtQuick.Controls
 // without relying on JS for-loops (which don't establish QML bindings).
 BarPill {
     id: root
+
+    required property var barWindow
 
     function wifiIcon(strength) {
         // strength is 0.0–1.0
@@ -99,20 +100,22 @@ BarPill {
 
     property bool disconnected: netText === "󰤭"
 
+    BarTooltip {
+        barWindow: root.barWindow
+        widget: root
+        text: root.netTooltip
+        shown: hoverHandler.hovered
+    }
+
     Text {
         id: label
         text: root.netText
         color: root.disconnected ? "#6272a4" : "#f8f8f2"
         font.pixelSize: 12
+        font.family: "SauceCodePro Nerd Font"
+    }
 
-        ToolTip.visible: hoverArea.containsMouse
-        ToolTip.text: root.netTooltip
-        ToolTip.delay: 500
-
-        MouseArea {
-            id: hoverArea
-            anchors.fill: parent
-            hoverEnabled: true
-        }
+    HoverHandler {
+        id: hoverHandler
     }
 }

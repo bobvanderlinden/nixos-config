@@ -18,6 +18,9 @@ Item {
     // The enclosing PanelWindow — required for PopupWindow anchoring.
     required property var barWindow
 
+    // The widget to center the tooltip above. Defaults to the parent item.
+    property Item widget: parent
+
     property string text: ""
     property bool shown: false
 
@@ -26,13 +29,16 @@ Item {
         visible: root.shown && root.text !== ""
 
         anchor.window: root.barWindow
-        anchor.rect: Qt.rect(
-            root.mapToItem(root.barWindow.contentItem, 0, 0).x
-                + root.width / 2 - implicitWidth / 2,
-            -implicitHeight - 4,
-            implicitWidth,
-            1
-        )
+        anchor.rect: {
+            if (!root.widget || !root.barWindow) return Qt.rect(0, 0, 0, 0);
+            const mapped = root.widget.mapToItem(root.barWindow.contentItem, 0, 0);
+            return Qt.rect(
+                mapped.x + root.widget.width / 2 - implicitWidth / 2,
+                -implicitHeight - 4,
+                implicitWidth,
+                1
+            );
+        }
 
         implicitWidth: tipText.implicitWidth + 16
         implicitHeight: tipText.implicitHeight + 10

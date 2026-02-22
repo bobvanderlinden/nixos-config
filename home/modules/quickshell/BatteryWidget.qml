@@ -1,12 +1,13 @@
 import Quickshell.Services.UPower
 import QtQuick
-import QtQuick.Controls
 
 // Battery status using UPower displayDevice.
 // Format: <icon> <pct>%   (or just <icon> when fully charged)
 // Icons are Nerd Font battery glyphs; charging uses the bolt variant.
 BarPill {
     id: root
+
+    required property var barWindow
 
     property var dev: UPower.displayDevice
 
@@ -44,20 +45,22 @@ BarPill {
         && dev.state !== UPowerDeviceState.FullyCharged
         && dev.percentage < 0.2
 
+    BarTooltip {
+        barWindow: root.barWindow
+        widget: root
+        text: root.batteryTooltip
+        shown: hoverHandler.hovered
+    }
+
     Text {
         id: label
         text: root.batteryText
         color: root.lowBattery ? "#ff5555" : "#f8f8f2"
         font.pixelSize: 12
+        font.family: "SauceCodePro Nerd Font"
+    }
 
-        ToolTip.visible: hoverArea.containsMouse
-        ToolTip.text: root.batteryTooltip
-        ToolTip.delay: 500
-
-        MouseArea {
-            id: hoverArea
-            anchors.fill: parent
-            hoverEnabled: true
-        }
+    HoverHandler {
+        id: hoverHandler
     }
 }

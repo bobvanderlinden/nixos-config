@@ -1,6 +1,5 @@
 import Quickshell
 import QtQuick
-import QtQuick.Controls
 
 // Clock - format: "Mon, 22. Feb  14:35"
 // Uses SystemClock for reactive minute-aligned updates.
@@ -8,8 +7,7 @@ import QtQuick.Controls
 BarPill {
     id: root
 
-    // Pass the bar PanelWindow so CalendarPopup can anchor to it
-    property var barWindow
+    required property var barWindow
 
     SystemClock {
         id: clock
@@ -23,21 +21,26 @@ BarPill {
         visible: false
     }
 
+    BarTooltip {
+        barWindow: root.barWindow
+        widget: root
+        text: Qt.formatDateTime(clock.date, "dddd, dd MMMM yyyy")
+        shown: hoverHandler.hovered && !cal.visible
+    }
+
     Text {
         id: label
         text: Qt.formatDateTime(clock.date, "ddd, dd. MMM  hh:mm")
         color: "#f8f8f2"
         font.pixelSize: 12
+        font.family: "SauceCodePro Nerd Font"
+    }
 
-        ToolTip.visible: hoverArea.containsMouse && !cal.visible
-        ToolTip.text: Qt.formatDateTime(clock.date, "dddd, dd MMMM yyyy")
-        ToolTip.delay: 500
+    HoverHandler {
+        id: hoverHandler
+    }
 
-        MouseArea {
-            id: hoverArea
-            anchors.fill: parent
-            hoverEnabled: true
-            onClicked: cal.visible = !cal.visible
-        }
+    TapHandler {
+        onTapped: cal.visible = !cal.visible
     }
 }

@@ -49,13 +49,17 @@ PanelWindow {
 
         SessionTimeWidget { }
 
-        VoxtypeWidget { }
+        NetworkWidget {
+            barWindow: bar
+        }
 
-        NetworkWidget { }
+        BatteryWidget {
+            barWindow: bar
+        }
 
-        BatteryWidget { }
-
-        VolumeWidget { }
+        VolumeWidget {
+            barWindow: bar
+        }
 
         ClockWidget {
             barWindow: bar

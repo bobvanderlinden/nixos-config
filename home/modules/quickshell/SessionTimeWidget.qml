@@ -2,10 +2,9 @@ import Quickshell.Io
 import QtQuick
 
 // Session time (HH:MM 🔒). Polls every 60 s.
-Item {
+BarPill {
     id: root
-    implicitWidth: label.implicitWidth + 12
-    implicitHeight: 22
+    color: "#1a2e28"
 
     property string sessionTime: "--:--"
 
@@ -33,17 +32,10 @@ Item {
         onTriggered: sessionProc.running = true
     }
 
-    Rectangle {
-        anchors.fill: parent
-        color: "#008261"
-        radius: 4
-
-        Text {
-            id: label
-            anchors.centerIn: parent
-            text: "🔓 " + root.sessionTime
-            color: "#ffffff"
-            font.pixelSize: 12
-        }
+    Text {
+        id: label
+        text: "🔓 " + root.sessionTime
+        color: "#50fa7b"
+        font.pixelSize: 12
     }
 }
