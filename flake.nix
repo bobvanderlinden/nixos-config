@@ -18,6 +18,10 @@
       url = "github:peteonrails/voxtype";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    quickshell = {
+      url = "git+https://git.outfoxxed.me/outfoxxed/quickshell";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     pyproject-nix = {
       url = "github:pyproject-nix/pyproject.nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -54,6 +58,7 @@
       pyproject-nix,
       uv2nix,
       pyproject-build-systems,
+      quickshell,
       ...
     }@inputs:
     let
@@ -80,6 +85,7 @@
         self.overlays.default
         self.overlays.workarounds
         self.overlays.pyproject
+        self.overlays.quickshell
       ];
       mkPkgs =
         {
@@ -103,6 +109,9 @@
         };
       overlays.pyproject = _final: _prev: {
         inherit pyproject-nix uv2nix pyproject-build-systems;
+      };
+      overlays.quickshell = _final: _prev: {
+        quickshell = quickshell.packages.${system}.default;
       };
 
       overlays.workarounds =

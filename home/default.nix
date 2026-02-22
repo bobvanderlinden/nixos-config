@@ -61,6 +61,7 @@ in
     ./modules/swaybg.nix
     ./modules/xdg-desktop-portal.nix
     ./modules/xdg-desktop-portal-hyprland.nix
+    ./modules/quickshell
   ];
   config = {
     home.packages = with pkgs; [
@@ -501,14 +502,8 @@ in
       };
     };
     services.swayosd.enable = true;
-    services.swaync = {
-      enable = true;
-      settings = {
-        positionX = "right";
-        positionY = "bottom";
-        layer = "overlay";
-      };
-    };
+    # swaync replaced by quickshell notification center
+    services.swaync.enable = false;
 
     programs.swaybg = {
       enable = true;
@@ -519,144 +514,8 @@ in
       };
     };
 
-    systemd.user.services.waybar.Unit.Requisite = config.programs.waybar.systemd.target;
-    programs.waybar = {
-      enable = true;
-      systemd.enable = true;
-      style = ''
-        @import "${config.programs.waybar.package}/etc/xdg/waybar/style.css";
-
-        #workspaces button.active {
-          background-color: #64727D;
-          box-shadow: inset 0 -3px #ffffff;
-        }
-
-        #workspaces button.urgent {
-          background-color: #eb4d4b;
-          animation: none;
-        }
-
-        #privacy-item.screenshare {
-            background-color: #cf5700;
-        }
-
-        #privacy-item.audio-in {
-            background-color: #cf5700;
-        }
-
-        #privacy-item.audio-out {
-            background-color: #cf5700;
-        }
-
-        #custom-voxtype {
-          background-color: #999999;
-        }
-
-        #custom-docker {
-          padding: 0 10px;
-          background-color: #1D63ED;
-        }
-
-        #custom-session_time {
-          padding: 0 10px;
-          background-color:#008261;
-        }
-      '';
-      settings = {
-        mainBar = {
-          position = "bottom";
-          modules-left = [
-            "hyprland/workspaces"
-          ];
-          modules-center = [ ];
-          modules-right = [
-            "systemd_failed_units"
-            "privacy"
-            "custom/docker"
-            "custom/session_time"
-            "custom/voxtype"
-            "network"
-            "battery"
-            "wireplumber"
-            # "cpu"
-            "clock"
-            "tray"
-          ];
-          "hyprland/workspaces" = {
-            format = "{icon}";
-            on-scroll-up = "hyprctl dispatch workspace e+1";
-            on-scroll-down = "hyprctl dispatch workspace e-1";
-          };
-          "hyprland/window" = {
-            separate-outputs = true;
-          };
-          systemd_failed_units = { };
-          privacy = {
-            icon-size = 12;
-          };
-          "custom/docker" = {
-            format = "{}  ";
-            interval = 10;
-            tooltip-format = "{} containers running";
-            exec =
-              let
-                docker-count = pkgs.writeShellApplication {
-                  name = "docker-count";
-                  text = ''
-                    docker ps --format json | jq --slurp 'length'
-                  '';
-                  runtimeInputs = [
-                    pkgs.docker
-                    pkgs.jq
-                  ];
-                };
-              in
-              "${docker-count}/bin/docker-count";
-          };
-          "custom/session_time" = {
-            format = "{} 🔒";
-            interval = 60;
-            exec = "${lib.getExe pkgs.session-time}";
-          };
-          "custom/voxtype" = {
-            exec = "${config.programs.voxtype.package}/bin/voxtype status --follow --format json";
-            return-type = "json";
-            format = "{}";
-            tooltip = true;
-          };
-          network = {
-            format = "";
-            format-wired = "";
-            format-linked = "";
-            format-wifi = "{essid}  ";
-            format-disconnected = "";
-            tooltip-format = "{ifname}\n{ipaddr}\n{essid} ({signalStrength}%)";
-          };
-          cpu = {
-            interval = 10;
-            format = "{}% ";
-            max-length = 10;
-          };
-          battery = {
-            format = "{capacity}% {icon}";
-            format-icons = [
-              ""
-              ""
-              ""
-              ""
-              ""
-            ];
-            format-charging = "<span font='Font Awesome 5 Free'></span>  {capacity}% - {time} <span font='Font Awesome 5 Free 11'>{icon}</span>";
-            format-full = "<span font='Font Awesome 5 Free'></span>  Charged <span font='Font Awesome 5 Free 11'>{icon}</span>";
-          };
-          wireplumber = {
-          };
-          clock = {
-            format = "{:%a, %d. %b  %H:%M}";
-          };
-        };
-      };
-    };
+    # Waybar replaced by quickshell bar (see home/modules/quickshell/)
+    programs.waybar.enable = false;
 
     services.xdg-desktop-portal = {
       enable = true;
@@ -943,15 +802,61 @@ in
 
     xdg.enable = true;
     xdg.configFile."opencode/plugins/notify.js".text = ''
+      import * as fs from "fs";
+      import * as path from "path";
+      import * as os from "os";
+
       export const NotifyPlugin = async ({ $, client }) => {
+        // Directory where we write per-workspace agent state files.
+        // quickshell's AgentState.qml polls this directory every 2 s.
+        const uid = process.getuid?.() ?? (await $`id -u`.quiet().text()).trim();
+        const agentDir = `/run/user/''${uid}/agent-workspaces`;
+
+        // Get the Hyprland workspace ID for the window running this agent.
+        async function getOwnWorkspaceId() {
+          const ownAddress = process.env.HYPR_WINDOW_ADDRESS;
+          if (!ownAddress) return null;
+          try {
+            const clients = await $`hyprctl clients -j`.quiet().json();
+            const win = clients.find(c => c.address === ownAddress);
+            return win?.workspace?.id ?? null;
+          } catch {
+            return null;
+          }
+        }
+
+        async function markAgentActive(workspaceId) {
+          if (workspaceId == null) return;
+          try {
+            fs.mkdirSync(agentDir, { recursive: true });
+            fs.writeFileSync(path.join(agentDir, String(workspaceId)), "");
+          } catch { }
+        }
+
+        async function markAgentIdle(workspaceId) {
+          if (workspaceId == null) return;
+          try {
+            fs.unlinkSync(path.join(agentDir, String(workspaceId)));
+          } catch { }
+        }
+
         return {
           event: async ({ event }) => {
-             if (event.type !== "session.idle") return;
+            const workspaceId = await getOwnWorkspaceId();
 
-             // Skip notification if OpenCode's window is currently focused.
-             const activeAddress = (await $`hyprctl activewindow -j`.quiet().json()).address;
-             const ownAddress = process.env.HYPR_WINDOW_ADDRESS;
-             if (ownAddress && activeAddress === ownAddress) return;
+            if (event.type !== "session.idle") {
+              // Any non-idle event means the agent is working.
+              await markAgentActive(workspaceId);
+              return;
+            }
+
+            // Agent is now idle — clear the workspace state file.
+            await markAgentIdle(workspaceId);
+
+            // Skip notification if OpenCode's window is currently focused.
+            const activeAddress = (await $`hyprctl activewindow -j`.quiet().json()).address;
+            const ownAddress = process.env.HYPR_WINDOW_ADDRESS;
+            if (ownAddress && activeAddress === ownAddress) return;
 
             const sessionId = event.properties?.sessionID ?? "";
             const sessionInfo = sessionId ? (await client.session.get({ path: { id: sessionId } })).data : null;
@@ -959,18 +864,18 @@ in
             // Derive a stable numeric ID from the session ID so that repeated
             // session.idle events replace the previous notification instead of
             // accumulating new notify-send --wait processes.
-             let notifyId = 0;
-             for (let i = 0; i < sessionId.length; i++) {
-               notifyId = (notifyId * 31 + sessionId.charCodeAt(i)) >>> 0;
-             }
-             // Fallback to a fixed ID so notifications still replace each other
-             // even if session ID is unavailable.
-             if (notifyId === 0) notifyId = 42424242;
-             await $`${pkgs.coin}/bin/coin`.quiet();
-             await $`${pkgs.hypr-notify}/bin/hypr-notify --app-name OpenCode --bell --replace-id ''${String(notifyId)} 'OpenCode finished' ''${title}`.quiet();
-           },
-         };
-       };
+            let notifyId = 0;
+            for (let i = 0; i < sessionId.length; i++) {
+              notifyId = (notifyId * 31 + sessionId.charCodeAt(i)) >>> 0;
+            }
+            // Fallback to a fixed ID so notifications still replace each other
+            // even if session ID is unavailable.
+            if (notifyId === 0) notifyId = 42424242;
+            await $`${pkgs.coin}/bin/coin`.quiet();
+            await $`${pkgs.hypr-notify}/bin/hypr-notify --app-name OpenCode --bell --replace-id ''${String(notifyId)} 'OpenCode finished' ''${title}`.quiet();
+          },
+        };
+      };
     '';
     # news.display = "silent";
 
