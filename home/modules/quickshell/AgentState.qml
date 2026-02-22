@@ -4,27 +4,39 @@ import Quickshell
 import Quickshell.Io
 import QtQuick
 
-// Singleton that tracks which Hyprland workspace IDs have an active agent.
-// The OpenCode plugin writes files to /run/user/<uid>/agent-workspaces/<id>
-// when the session is active, and removes them when the session is idle.
+// Singleton that tracks OpenCode agent sessions via JSON files in
+// /run/user/<uid>/agent-sessions/<sessionId>.json
 //
-// Staleness: files older than 30 s without an update are treated as stale
-// (handles cases where OpenCode exited without firing session.idle).
+// Each file contains:
+//   { sessionId, windowAddress, workspaceId, state, title }
+// where state is "active" or "idle".
+//
+// Files with state="active" older than 30 s are treated as stale
+// (handles OpenCode exiting without firing session.idle).
 Singleton {
     id: root
 
-    // Set of workspace IDs with an active agent: { <id>: true, ... }
+    // List of session objects: [{ sessionId, windowAddress, workspaceId, state, title }, ...]
+    property var sessions: []
+
+    // Convenience map: workspaceId -> true for workspaces with an active (non-stale) agent.
     property var activeWorkspaces: ({})
 
     readonly property int staleThresholdMs: 30000
 
     Process {
         id: watcher
-        // List files with their modification time in seconds since epoch.
+        // Output one line per file: "<mtime_epoch_float> <json_content>"
+        // Using awk to join mtime and content on a single line.
         command: ["sh", "-c",
-            "mkdir -p /run/user/$(id -u)/agent-workspaces && " +
-            "find /run/user/$(id -u)/agent-workspaces -maxdepth 1 -type f " +
-            "  -printf '%f %T@\\n' 2>/dev/null || true"]
+            "dir=/run/user/$(id -u)/agent-sessions; " +
+            "mkdir -p \"$dir\"; " +
+            "find \"$dir\" -maxdepth 1 -name '*.json' | " +
+            "  while read -r f; do " +
+            "    mtime=$(stat -c '%Y' \"$f\"); " +
+            "    content=$(cat \"$f\"); " +
+            "    echo \"$mtime $content\"; " +
+            "  done"]
         running: true
 
         property string buf: ""
@@ -35,21 +47,40 @@ Singleton {
 
         onExited: {
             const lines = watcher.buf.trim().split("\n").filter(l => l !== "");
-            const nowMs = Date.now();
-            const ids = {};
-            for (const l of lines) {
-                const parts = l.trim().split(" ");
-                if (parts.length < 2) continue;
-                const n = parseInt(parts[0]);
-                const mtimeMs = parseFloat(parts[1]) * 1000;
-                if (isNaN(n)) continue;
-                // Only mark active if the file was touched recently.
-                if (nowMs - mtimeMs < root.staleThresholdMs) {
-                    ids[n] = true;
-                }
-            }
-            root.activeWorkspaces = ids;
             watcher.buf = "";
+
+            const nowMs = Date.now();
+            const newSessions = [];
+            const newActive = {};
+
+            for (const line of lines) {
+                const spaceIdx = line.indexOf(" ");
+                if (spaceIdx < 0) continue;
+                const mtimeMs = parseInt(line.substring(0, spaceIdx)) * 1000;
+                const jsonStr = line.substring(spaceIdx + 1).trim();
+                if (!jsonStr) continue;
+
+                try {
+                    const obj = JSON.parse(jsonStr);
+                    const isStale = (obj.state === "active") && (nowMs - mtimeMs > root.staleThresholdMs);
+                    if (isStale) continue;
+
+                    newSessions.push({
+                        sessionId:     obj.sessionId     ?? "",
+                        windowAddress: obj.windowAddress ?? null,
+                        workspaceId:   obj.workspaceId   ?? null,
+                        state:         obj.state         ?? "idle",
+                        title:         obj.title         ?? "",
+                    });
+
+                    if (obj.state === "active" && obj.workspaceId != null) {
+                        newActive[obj.workspaceId] = true;
+                    }
+                } catch (e) { }
+            }
+
+            root.sessions = newSessions;
+            root.activeWorkspaces = newActive;
         }
     }
 

@@ -804,77 +804,71 @@ in
     xdg.configFile."opencode/plugins/notify.js".text = ''
       import * as fs from "fs";
       import * as path from "path";
-      import * as os from "os";
 
       export const NotifyPlugin = async ({ $, client }) => {
-        // Directory where we write per-workspace agent state files.
+        // Each running OpenCode instance writes a JSON file here:
+        //   /run/user/<uid>/agent-sessions/<sessionId>.json
+        // Content: { sessionId, windowAddress, workspaceId, state, title }
+        // state is "active" or "idle".
         // quickshell's AgentState.qml polls this directory every 2 s.
         const uid = process.getuid?.() ?? (await $`id -u`.quiet().text()).trim();
-        const agentDir = `/run/user/''${uid}/agent-workspaces`;
+        const agentDir = `/run/user/''${uid}/agent-sessions`;
+        const windowAddress = process.env.HYPR_WINDOW_ADDRESS ?? null;
 
-        // Get the Hyprland workspace ID for the window running this agent.
+        // Get the Hyprland workspace ID for our own window.
         async function getOwnWorkspaceId() {
-          const ownAddress = process.env.HYPR_WINDOW_ADDRESS;
-          if (!ownAddress) return null;
+          if (!windowAddress) return null;
           try {
             const clients = await $`hyprctl clients -j`.quiet().json();
-            const win = clients.find(c => c.address === ownAddress);
+            const win = clients.find(c => c.address === windowAddress);
             return win?.workspace?.id ?? null;
           } catch {
             return null;
           }
         }
 
-        async function markAgentActive(workspaceId) {
-          if (workspaceId == null) return;
+        // Write (or update) the session state file.
+        async function writeSessionState(sessionId, state, title = "") {
+          if (!sessionId) return;
           try {
             fs.mkdirSync(agentDir, { recursive: true });
-            const file = path.join(agentDir, String(workspaceId));
-            // Write then touch to update mtime — AgentState.qml uses mtime
-            // to detect stale files (agent exited without firing session.idle).
-            fs.writeFileSync(file, "");
+            const workspaceId = await getOwnWorkspaceId();
+            const data = JSON.stringify({ sessionId, windowAddress, workspaceId, state, title });
+            const file = path.join(agentDir, `''${sessionId}.json`);
+            fs.writeFileSync(file, data);
+            // Touch to update mtime — AgentState.qml uses mtime to detect stale files.
             const now = new Date();
             fs.utimesSync(file, now, now);
           } catch { }
         }
 
-        async function markAgentIdle(workspaceId) {
-          if (workspaceId == null) return;
-          try {
-            fs.unlinkSync(path.join(agentDir, String(workspaceId)));
-          } catch { }
-        }
-
         return {
           event: async ({ event }) => {
-            const workspaceId = await getOwnWorkspaceId();
+            const sessionId = event.properties?.sessionID ?? "";
 
             if (event.type !== "session.idle") {
-              // Any non-idle event means the agent is working.
-              await markAgentActive(workspaceId);
+              // Any non-idle event: agent is working.
+              await writeSessionState(sessionId, "active");
               return;
             }
 
-            // Agent is now idle — clear the workspace state file.
-            await markAgentIdle(workspaceId);
-
-            // Skip notification if OpenCode's window is currently focused.
-            const activeAddress = (await $`hyprctl activewindow -j`.quiet().json()).address;
-            const ownAddress = process.env.HYPR_WINDOW_ADDRESS;
-            if (ownAddress && activeAddress === ownAddress) return;
-
-            const sessionId = event.properties?.sessionID ?? "";
-            const sessionInfo = sessionId ? (await client.session.get({ path: { id: sessionId } })).data : null;
+            // Agent is now idle — fetch title and mark idle.
+            const sessionInfo = sessionId
+              ? (await client.session.get({ path: { id: sessionId } })).data
+              : null;
             const title = sessionInfo?.title ?? "";
-            // Derive a stable numeric ID from the session ID so that repeated
-            // session.idle events replace the previous notification instead of
-            // accumulating new notify-send --wait processes.
+            await writeSessionState(sessionId, "idle", title);
+
+            // Send desktop notification, unless our window is currently focused.
+            const activeAddress = (await $`hyprctl activewindow -j`.quiet().json()).address;
+            if (windowAddress && activeAddress === windowAddress) return;
+
+            // Derive a stable numeric ID from the session ID so repeated
+            // session.idle events replace the previous notification.
             let notifyId = 0;
             for (let i = 0; i < sessionId.length; i++) {
               notifyId = (notifyId * 31 + sessionId.charCodeAt(i)) >>> 0;
             }
-            // Fallback to a fixed ID so notifications still replace each other
-            // even if session ID is unavailable.
             if (notifyId === 0) notifyId = 42424242;
             await $`${pkgs.coin}/bin/coin`.quiet();
             await $`${pkgs.hypr-notify}/bin/hypr-notify --app-name OpenCode --bell --replace-id ''${String(notifyId)} 'OpenCode finished' ''${title}`.quiet();
