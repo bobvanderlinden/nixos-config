@@ -14,9 +14,16 @@ let
   src = filename: config.lib.file.mkOutOfStoreSymlink "${srcDir}/${filename}";
 in
 {
-  # Install quickshell and the binaries that the QML widgets call by name.
+  # Quickshell program + systemd service via home-manager module.
+  programs.quickshell = {
+    enable = true;
+    package = pkgs.quickshell;
+    systemd.enable = true;
+    # target defaults to config.wayland.systemd.target (hyprland-session.target)
+  };
+
+  # Additional binaries that the QML widgets call by name.
   home.packages = [
-    pkgs.quickshell
     pkgs.session-time
     pkgs.inotify-tools
     config.programs.voxtype.package
@@ -42,21 +49,4 @@ in
   xdg.configFile."quickshell/VolumeOsd.qml".source = src "VolumeOsd.qml";
   xdg.configFile."quickshell/CalendarPopup.qml".source = src "CalendarPopup.qml";
 
-  # Systemd user service for quickshell.
-  systemd.user.services.quickshell = {
-    Unit = {
-      Description = "Quickshell desktop shell";
-      PartOf = [ "graphical-session.target" ];
-      After = [ "graphical-session.target" ];
-      ConditionEnvironment = "WAYLAND_DISPLAY";
-    };
-    Service = {
-      ExecStart = "${pkgs.quickshell}/bin/quickshell";
-      Restart = "on-failure";
-      RestartSec = "2s";
-    };
-    Install = {
-      WantedBy = [ "graphical-session.target" ];
-    };
-  };
 }
