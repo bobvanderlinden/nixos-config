@@ -1,42 +1,46 @@
-//@ pragma UseQApplication
 import Quickshell
 import Quickshell.Services.Notifications
 import QtQuick
 
-// Shell root — manages the bar, OSDs, and notification daemon.
+// Shell root - manages the bar, notification daemon, and OSD overlays.
 // Binary paths are substituted by Nix via sed on @placeholder@ tokens.
 ShellRoot {
-    // ── Notification daemon (replaces swaync) ─────────────────────────────────
+    id: shellRoot
+
+    // ── Notification daemon ───────────────────────────────────────────────────
     NotificationServer {
         id: notifServer
         actionsSupported: true
+        actionIconsSupported: true
         bodyMarkupSupported: true
         bodyHyperlinksSupported: true
+        bodyImagesSupported: true
         imageSupported: true
         persistenceSupported: true
         keepOnReload: true
 
-        onNotification: notification => {
-            notification.tracked = true;
+        onNotification: function(n) {
+            n.tracked = true;
+            // Spread into ScriptModel so ListView picks up the change reactively.
+            notifModel.values = [...notifServer.trackedNotifications.values];
         }
     }
 
-    // ── Notification popups (stacked, newest on top) ───────────────────────────
-    // trackedNotifications is an ObjectModel — use .values for Variants.
-    // Each popup looks up its own stacking index reactively.
+    // ScriptModel wrapper — avoids the "Non list data QVariant(QObject*) assigned
+    // to Variants.model" silent-fail when passing ObjectModel directly.
+    ScriptModel {
+        id: notifModel
+        values: [...notifServer.trackedNotifications.values]
+    }
+
+    // ── Notification toast stack (one per screen, top-right) ─────────────────
     Variants {
-        model: notifServer.trackedNotifications.values
+        model: Quickshell.screens
 
         delegate: NotificationPopup {
             required property var modelData
-            notification: modelData
-            popupIndex: {
-                const list = notifServer.trackedNotifications.values;
-                for (let i = 0; i < list.length; i++) {
-                    if (list[i] === modelData) return i;
-                }
-                return 0;
-            }
+            screen: modelData
+            // notifModel is accessible by id from anywhere in the same ShellRoot
         }
     }
 
@@ -55,16 +59,6 @@ ShellRoot {
         model: Quickshell.screens
 
         delegate: VolumeOsd {
-            required property var modelData
-            screen: modelData
-        }
-    }
-
-    // ── Brightness OSD (one instance per screen) ──────────────────────────────
-    Variants {
-        model: Quickshell.screens
-
-        delegate: BrightnessOsd {
             required property var modelData
             screen: modelData
         }

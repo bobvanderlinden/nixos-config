@@ -54,17 +54,13 @@ RowLayout {
 
     // ── Collapsed: count badge ────────────────────────────────────────────────
 
-    Rectangle {
-        implicitWidth: badgeLabel.implicitWidth + 12
-        implicitHeight: 22
-        color: "#1D63ED"
-        radius: 4
+    BarPill {
+        color: "#1e2a40"
 
         Text {
             id: badgeLabel
-            anchors.centerIn: parent
             text: "🐳 " + root.containers.length
-            color: "#ffffff"
+            color: "#89b4fa"
             font.pixelSize: 11
         }
     }

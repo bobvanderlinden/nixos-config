@@ -5,7 +5,7 @@ import QtQuick.Layouts
 
 // Agent sessions widget.
 //
-// Collapsed (bar): a row of coloured dots — one per session.
+// Collapsed (bar): pill containing robot emoji + one dot per session.
 //   orange (#fab283, OpenCode brand) = busy/retry, grey (#6272a4) = idle.
 //   Hidden entirely when there are no sessions.
 //
@@ -13,34 +13,38 @@ import QtQuick.Layouts
 //   sessions with title + state badge.
 //   Clicking a row focuses the agent's window via hyprctl.
 //   Auto-closes when the mouse leaves.
-RowLayout {
+BarPill {
     id: root
 
-    spacing: 3
     visible: AgentState.sessions.length > 0
 
     // Must be set by StatusBar to the enclosing PanelWindow.
     required property var barWindow
 
-    // ── Collapsed: robot emoji prefix + one dot per session ─────────────────
+    // ── Collapsed: pill contents ──────────────────────────────────────────────
 
-    Text {
-        text: "🤖"
-        font.pixelSize: 12
-        Layout.alignment: Qt.AlignVCenter
-    }
+    RowLayout {
+        id: pillRow
+        spacing: 4
 
-    Repeater {
-        id: dotRepeater
-        model: AgentState.sessions
-
-        Rectangle {
-            required property var modelData
-            width: 8
-            height: 8
-            radius: 4
+        Text {
+            text: "🤖"
+            font.pixelSize: 12
             Layout.alignment: Qt.AlignVCenter
-            color: modelData.state !== "idle" ? "#fab283" : "#6272a4"
+        }
+
+        Repeater {
+            id: dotRepeater
+            model: AgentState.sessions
+
+            Rectangle {
+                required property var modelData
+                width: 8
+                height: 8
+                radius: 4
+                Layout.alignment: Qt.AlignVCenter
+                color: modelData.state !== "idle" ? "#fab283" : "#6272a4"
+            }
         }
     }
 

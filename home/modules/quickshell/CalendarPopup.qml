@@ -1,30 +1,32 @@
 import Quickshell
-import Quickshell.Wayland
 import QtQuick
 import QtQuick.Layouts
 
 // A minimal calendar popup anchored above the clock widget.
 // Shows the current month with day-of-week headers and today highlighted.
+//
+// Usage: set anchorWindow (the bar PanelWindow) and anchorItem (the clock Item).
+// PopupWindow.anchor is a grouped property — not an instantiable child type.
 PopupWindow {
     id: root
 
-    // The Item to anchor to (the clock label)
+    // The bar PanelWindow this popup belongs to
+    property var anchorWindow
+    // The Item in the bar to position above (the clock widget)
     property Item anchorItem
 
-    // Use `shown` to control visibility instead of `visible` to avoid
-    // overriding the FINAL visible property managed by PopupWindow.
-    property bool shown: false
-    visible: shown
+    anchor.window: root.anchorWindow
+    anchor.rect: {
+        if (!root.anchorItem || !root.anchorWindow) return Qt.rect(0, 0, 0, 0);
+        const mapped = root.anchorItem.mapToItem(null, 0, 0);
+        return Qt.rect(mapped.x, 0, root.anchorItem.width, 0);
+    }
+    anchor.adjustment: PopupAdjustment.Flip
+    anchor.edges: Edges.Top
 
     color: "transparent"
     implicitWidth: calBox.implicitWidth + 24
     implicitHeight: calBox.implicitHeight + 24
-
-    // Position above the anchor item — opens upward
-    anchor.item: root.anchorItem
-    anchor.edges: Edges.Top
-    anchor.gravity: Edges.Top
-    anchor.adjustment: PopupAdjustment.Flip
 
     SystemClock {
         id: clock
@@ -35,7 +37,7 @@ PopupWindow {
         id: calBox
         anchors.centerIn: parent
         implicitWidth: grid.implicitWidth + 24
-        implicitHeight: header.implicitHeight + grid.implicitHeight + monthRow.implicitHeight + 28
+        implicitHeight: monthRow.implicitHeight + header.implicitHeight + grid.implicitHeight + 28
         color: "#2a2b3d"
         radius: 10
         border.color: "#44475a"
@@ -58,7 +60,6 @@ PopupWindow {
                     text: "‹"
                     color: "#6272a4"
                     font.pixelSize: 16
-                    font.family: "SauceCodePro Nerd Font"
                     MouseArea {
                         anchors.fill: parent
                         onClicked: root.shiftMonth(-1)
@@ -71,7 +72,6 @@ PopupWindow {
                     text: Qt.formatDate(root.viewDate, "MMMM yyyy")
                     color: "#f8f8f2"
                     font.pixelSize: 13
-                    font.family: "SauceCodePro Nerd Font"
                     font.bold: true
                 }
 
@@ -79,7 +79,6 @@ PopupWindow {
                     text: "›"
                     color: "#6272a4"
                     font.pixelSize: 16
-                    font.family: "SauceCodePro Nerd Font"
                     MouseArea {
                         anchors.fill: parent
                         onClicked: root.shiftMonth(1)
@@ -100,7 +99,6 @@ PopupWindow {
                         text: modelData
                         color: "#6272a4"
                         font.pixelSize: 11
-                        font.family: "SauceCodePro Nerd Font"
                     }
                 }
             }
@@ -108,7 +106,6 @@ PopupWindow {
             // Day grid — 6 rows × 7 cols
             Grid {
                 id: grid
-                Layout.fillWidth: true
                 columns: 7
                 spacing: 2
 
@@ -125,11 +122,10 @@ PopupWindow {
                         Text {
                             anchors.centerIn: parent
                             text: modelData.day
-                            color: modelData.isToday
-                                ? "#1e1e2e"
-                                : modelData.inMonth ? "#f8f8f2" : "#44475a"
+                            color: modelData.isToday ? "#1e1e2e"
+                                 : modelData.inMonth  ? "#f8f8f2"
+                                                      : "#44475a"
                             font.pixelSize: 12
-                            font.family: "SauceCodePro Nerd Font"
                             font.bold: modelData.isToday
                         }
                     }
@@ -140,7 +136,6 @@ PopupWindow {
 
     // ── Calendar logic ────────────────────────────────────────────────────────
 
-    // The month currently in view (always day=1 for simplicity)
     property var viewDate: new Date(clock.date.getFullYear(), clock.date.getMonth(), 1)
 
     function shiftMonth(delta) {
@@ -148,9 +143,8 @@ PopupWindow {
         root.viewDate = new Date(d.getFullYear(), d.getMonth() + delta, 1);
     }
 
-    // Resets to current month when reopened
-    onShownChanged: {
-        if (shown)
+    onVisibleChanged: {
+        if (visible)
             root.viewDate = new Date(clock.date.getFullYear(), clock.date.getMonth(), 1);
     }
 
@@ -159,11 +153,9 @@ PopupWindow {
         const today = clock.date;
         const year = root.viewDate.getFullYear();
         const month = root.viewDate.getMonth();
-
         const firstDow = (new Date(year, month, 1).getDay() + 6) % 7;
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         const daysInPrev = new Date(year, month, 0).getDate();
-
         const cells = [];
         for (let i = 0; i < 42; i++) {
             const offset = i - firstDow;
