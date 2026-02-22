@@ -17,8 +17,8 @@ RowLayout {
             required property var modelData
             property var item: modelData
 
-            implicitWidth: 20
-            implicitHeight: 20
+            implicitWidth: 22
+            implicitHeight: 22
 
             Image {
                 anchors.fill: parent

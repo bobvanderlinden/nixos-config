@@ -42,7 +42,7 @@ Item {
             anchors.centerIn: parent
             text: "🎙 " + root.voxtypeText
             color: "#ffffff"
-            font.pixelSize: 11
+            font.pixelSize: 12
         }
     }
 }

@@ -4,8 +4,21 @@ import QtQuick
 import QtQuick.Layouts
 
 // Plain workspace switcher. Click to activate, scroll to navigate.
-RowLayout {
-    spacing: 2
+// Wrapped in a subtle pill background matching the other bar widgets.
+Item {
+    implicitWidth: row.implicitWidth + 8
+    implicitHeight: 22
+
+    Rectangle {
+        anchors.fill: parent
+        color: "#252535"
+        radius: 4
+    }
+
+    RowLayout {
+        id: row
+        anchors.centerIn: parent
+        spacing: 2
 
     Repeater {
         model: Hyprland.workspaces
@@ -57,4 +70,5 @@ RowLayout {
             }
         }
     }
+  }
 }

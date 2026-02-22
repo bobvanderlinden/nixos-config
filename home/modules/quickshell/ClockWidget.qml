@@ -1,39 +1,48 @@
 import Quickshell
 import QtQuick
+import QtQuick.Controls
 
 // Clock - format: "Mon, 22. Feb  14:35"
+// Uses SystemClock (Quickshell built-in) for reactive, precision-aligned updates.
+// Click to open/close the CalendarPopup.
 Item {
     id: root
     implicitWidth: label.implicitWidth + 12
     implicitHeight: 22
 
-    property string timeText: formatDate(new Date())
-
-    function formatDate(d) {
-        const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        const day = days[d.getDay()];
-        const date = String(d.getDate()).padStart(2, "0");
-        const month = months[d.getMonth()];
-        const hours = String(d.getHours()).padStart(2, "0");
-        const mins = String(d.getMinutes()).padStart(2, "0");
-        return "🔓 " + day + ", " + date + ". " + month + "  " + hours + ":" + mins;
+    SystemClock {
+        id: clock
+        precision: SystemClock.Minutes
     }
 
-    Timer {
-        interval: 60000
-        running: true
-        repeat: true
-        triggeredOnStart: true
-        onTriggered: root.timeText = root.formatDate(new Date())
+    CalendarPopup {
+        id: cal
+        anchor: label
+        visible: false
     }
 
-    Text {
-        id: label
-        anchors.centerIn: parent
-        text: root.timeText
-        color: "#f8f8f2"
-        font.pixelSize: 12
+    Rectangle {
+        anchors.fill: parent
+        color: "#252535"
+        radius: 4
+
+        Text {
+            id: label
+            anchors.centerIn: parent
+            text: Qt.formatDateTime(clock.date, "ddd, dd. MMM  hh:mm")
+            color: "#f8f8f2"
+            font.pixelSize: 12
+
+            ToolTip.visible: hoverArea.containsMouse && !cal.visible
+            ToolTip.text: Qt.formatDateTime(clock.date, "dddd, dd MMMM yyyy")
+            ToolTip.delay: 500
+
+            MouseArea {
+                id: hoverArea
+                anchors.fill: parent
+                hoverEnabled: true
+                onClicked: cal.visible = !cal.visible
+            }
+        }
     }
 }

@@ -39,6 +39,8 @@ in
   xdg.configFile."quickshell/VolumeWidget.qml".source = src "VolumeWidget.qml";
   xdg.configFile."quickshell/ClockWidget.qml".source = src "ClockWidget.qml";
   xdg.configFile."quickshell/TrayWidget.qml".source = src "TrayWidget.qml";
+  xdg.configFile."quickshell/VolumeOsd.qml".source = src "VolumeOsd.qml";
+  xdg.configFile."quickshell/CalendarPopup.qml".source = src "CalendarPopup.qml";
 
   # Systemd user service for quickshell.
   systemd.user.services.quickshell = {

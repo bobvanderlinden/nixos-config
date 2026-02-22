@@ -174,7 +174,7 @@ RowLayout {
                                 anchors.centerIn: parent
                                 text: "✕"
                                 color: "#f8f8f2"
-                                font.pixelSize: 11
+            font.pixelSize: 12
                             }
 
                             MouseArea {

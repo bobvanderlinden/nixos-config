@@ -3,6 +3,8 @@ import QtQuick
 import QtQuick.Controls
 
 // Battery status using UPower displayDevice.
+// Format: <icon> <pct>%   (or just <icon> when fully charged)
+// Icons are Nerd Font battery glyphs; charging uses the bolt variant.
 Item {
     id: root
     implicitWidth: label.implicitWidth + 12
@@ -10,8 +12,14 @@ Item {
 
     property var dev: UPower.displayDevice
 
-    // Battery icons (Nerd Font)
-    function batteryIcon(pct) {
+    function batteryIcon(pct, charging) {
+        if (charging) {
+            if (pct >= 90) return "";
+            if (pct >= 70) return "";
+            if (pct >= 50) return "";
+            if (pct >= 25) return "";
+            return "";
+        }
         if (pct >= 90) return "";
         if (pct >= 70) return "";
         if (pct >= 50) return "";
@@ -22,11 +30,11 @@ Item {
     property string batteryText: {
         if (!dev || !dev.ready) return "";
         const pct = Math.round(dev.percentage * 100);
-        if (dev.state === UPowerDeviceState.FullyCharged)
-            return "Charged " + batteryIcon(pct);
-        if (dev.state === UPowerDeviceState.Charging)
-            return "⚡ " + pct + "% " + batteryIcon(pct);
-        return pct + "% " + batteryIcon(pct);
+        const charging = dev.state === UPowerDeviceState.Charging;
+        const full = dev.state === UPowerDeviceState.FullyCharged;
+        const icon = batteryIcon(pct, charging);
+        if (full) return icon;
+        return icon + " " + pct + "%";
     }
 
     property string batteryTooltip: {
@@ -35,21 +43,32 @@ Item {
         return pct + "% (" + UPowerDeviceState.toString(dev.state) + ")";
     }
 
-    Text {
-        id: label
-        anchors.centerIn: parent
-        text: root.batteryText
-        color: "#f8f8f2"
-        font.pixelSize: 12
+    property bool lowBattery: dev && dev.ready
+        && dev.state !== UPowerDeviceState.Charging
+        && dev.state !== UPowerDeviceState.FullyCharged
+        && dev.percentage < 0.2
 
-        ToolTip.visible: hoverArea.containsMouse
-        ToolTip.text: root.batteryTooltip
-        ToolTip.delay: 500
+    Rectangle {
+        anchors.fill: parent
+        color: "#252535"
+        radius: 4
 
-        MouseArea {
-            id: hoverArea
-            anchors.fill: parent
-            hoverEnabled: true
+        Text {
+            id: label
+            anchors.centerIn: parent
+            text: root.batteryText
+            color: root.lowBattery ? "#ff5555" : "#f8f8f2"
+            font.pixelSize: 12
+
+            ToolTip.visible: hoverArea.containsMouse
+            ToolTip.text: root.batteryTooltip
+            ToolTip.delay: 500
+
+            MouseArea {
+                id: hoverArea
+                anchors.fill: parent
+                hoverEnabled: true
+            }
         }
     }
 }

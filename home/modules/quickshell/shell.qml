@@ -34,9 +34,19 @@ ShellRoot {
 
     // ── Status bar (one instance per screen) ──────────────────────────────────
     Variants {
-        model: Quickshell.screens
+        model: Quickshell.screens.values
 
         delegate: StatusBar {
+            required property var modelData
+            screen: modelData
+        }
+    }
+
+    // ── Volume OSD (one instance per screen) ──────────────────────────────────
+    Variants {
+        model: Quickshell.screens.values
+
+        delegate: VolumeOsd {
             required property var modelData
             screen: modelData
         }

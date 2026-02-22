@@ -51,7 +51,7 @@ Item {
             anchors.centerIn: parent
             text: "⚠ " + root.failedCount + " failed"
             color: "#ffffff"
-            font.pixelSize: 11
+            font.pixelSize: 12
         }
     }
 }

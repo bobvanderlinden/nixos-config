@@ -4,7 +4,7 @@ import QtQuick
 // Session time (HH:MM 🔒). Polls every 60 s.
 Item {
     id: root
-    implicitWidth: label.implicitWidth + 20
+    implicitWidth: label.implicitWidth + 12
     implicitHeight: 22
 
     property string sessionTime: "--:--"
@@ -41,9 +41,9 @@ Item {
         Text {
             id: label
             anchors.centerIn: parent
-            text: root.sessionTime
+            text: "🔓 " + root.sessionTime
             color: "#ffffff"
-            font.pixelSize: 11
+            font.pixelSize: 12
         }
     }
 }
