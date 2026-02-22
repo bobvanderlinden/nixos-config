@@ -1,24 +1,34 @@
 import Quickshell
 import QtQuick
-import QtQuick.Controls
 
-// Clock - format: "Mon, 22. Feb  14:35"
+// Clock — format: "Mon, 22. Feb  14:35"
 // Uses SystemClock (Quickshell built-in) for reactive, precision-aligned updates.
-// Click to open/close the CalendarPopup.
+// Click to open/close the CalendarPopup. Hover shows full date tooltip.
 Item {
     id: root
     implicitWidth: label.implicitWidth + 12
     implicitHeight: 22
+
+    required property var barWindow
 
     SystemClock {
         id: clock
         precision: SystemClock.Minutes
     }
 
+    property bool calendarShown: false
+
     CalendarPopup {
         id: cal
-        anchor: label
-        visible: false
+        anchorItem: label
+        shown: root.calendarShown
+    }
+
+    BarTooltip {
+        id: tooltip
+        barWindow: root.barWindow
+        text: Qt.formatDateTime(clock.date, "dddd, dd MMMM yyyy")
+        shown: hoverHandler.hovered && !root.calendarShown
     }
 
     Rectangle {
@@ -32,17 +42,15 @@ Item {
             text: Qt.formatDateTime(clock.date, "ddd, dd. MMM  hh:mm")
             color: "#f8f8f2"
             font.pixelSize: 12
+            font.family: "SauceCodePro Nerd Font"
+        }
 
-            ToolTip.visible: hoverArea.containsMouse && !cal.visible
-            ToolTip.text: Qt.formatDateTime(clock.date, "dddd, dd MMMM yyyy")
-            ToolTip.delay: 500
+        HoverHandler {
+            id: hoverHandler
+        }
 
-            MouseArea {
-                id: hoverArea
-                anchors.fill: parent
-                hoverEnabled: true
-                onClicked: cal.visible = !cal.visible
-            }
+        TapHandler {
+            onTapped: root.calendarShown = !root.calendarShown
         }
     }
 }

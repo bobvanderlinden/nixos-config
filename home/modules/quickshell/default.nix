@@ -4,15 +4,6 @@
   lib,
   ...
 }:
-let
-  # Absolute path to the quickshell source directory in the repo.
-  # Using a literal path so mkOutOfStoreSymlink points to the live working copy,
-  # enabling QuickShell hot-reload on file edits without switch-home.
-  srcDir = "/home/bob.vanderlinden/projects/nixos-config/home/modules/quickshell";
-
-  # Helper to symlink a file from the source tree directly.
-  src = filename: config.lib.file.mkOutOfStoreSymlink "${srcDir}/${filename}";
-in
 {
   # Quickshell program + systemd service via home-manager module.
   programs.quickshell = {
@@ -25,28 +16,11 @@ in
   # Additional binaries that the QML widgets call by name.
   home.packages = [
     pkgs.session-time
-    pkgs.inotify-tools
-    config.programs.voxtype.package
   ];
 
-  # Deploy all QML sources as symlinks to the live repo working tree.
-  # Any edit to a .qml file is picked up by QuickShell's hot-reload immediately.
-  xdg.configFile."quickshell/shell.qml".source = src "shell.qml";
-  xdg.configFile."quickshell/AgentState.qml".source = src "AgentState.qml";
-  xdg.configFile."quickshell/StatusBar.qml".source = src "StatusBar.qml";
-  xdg.configFile."quickshell/NotificationPopup.qml".source = src "NotificationPopup.qml";
-  xdg.configFile."quickshell/WorkspacesWidget.qml".source = src "WorkspacesWidget.qml";
-  xdg.configFile."quickshell/AgentsWidget.qml".source = src "AgentsWidget.qml";
-  xdg.configFile."quickshell/SystemdFailedUnits.qml".source = src "SystemdFailedUnits.qml";
-  xdg.configFile."quickshell/DockerWidget.qml".source = src "DockerWidget.qml";
-  xdg.configFile."quickshell/SessionTimeWidget.qml".source = src "SessionTimeWidget.qml";
-  xdg.configFile."quickshell/VoxtypeWidget.qml".source = src "VoxtypeWidget.qml";
-  xdg.configFile."quickshell/NetworkWidget.qml".source = src "NetworkWidget.qml";
-  xdg.configFile."quickshell/BatteryWidget.qml".source = src "BatteryWidget.qml";
-  xdg.configFile."quickshell/VolumeWidget.qml".source = src "VolumeWidget.qml";
-  xdg.configFile."quickshell/ClockWidget.qml".source = src "ClockWidget.qml";
-  xdg.configFile."quickshell/TrayWidget.qml".source = src "TrayWidget.qml";
-  xdg.configFile."quickshell/VolumeOsd.qml".source = src "VolumeOsd.qml";
-  xdg.configFile."quickshell/CalendarPopup.qml".source = src "CalendarPopup.qml";
-
+  # Symlink the entire quickshell source directory directly into XDG config.
+  # Any edit to a .qml file is picked up by QuickShell's hot-reload immediately
+  # without needing switch-home.
+  xdg.configFile."quickshell".source =
+    config.lib.file.mkOutOfStoreSymlink "/home/bob.vanderlinden/projects/nixos-config/home/modules/quickshell";
 }

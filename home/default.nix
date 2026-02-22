@@ -330,102 +330,98 @@ in
             in
             mapAttrsToList (k: v: "${k},${v}") envkv;
 
-          bind =
-            let
-              swayosd_client = "${config.services.swayosd.package}/bin/swayosd-client";
-            in
-            [
-              "$mod, T, exec, ghostty --working-directory=$HOME"
-              "$mod, W, exec, chromium"
-              "$mod, E, exec, thunar"
-              "$mod, Q, exec, ${config.programs.rofi.finalPackage}/bin/rofi -show combi -modes combi -combi-modes run,emoji -combi-hide-mode-prefix"
-              "$mod, Delete, exec, loginctl lock-session"
-              "$mod, Print, exec, flameshot gui"
-              "$mod SHIFT, Print, exec, wl-screenrecord"
-              "$mod, C, killactive"
+          bind = [
+            "$mod, T, exec, ghostty --working-directory=$HOME"
+            "$mod, W, exec, chromium"
+            "$mod, E, exec, thunar"
+            "$mod, Q, exec, ${config.programs.rofi.finalPackage}/bin/rofi -show combi -modes combi -combi-modes run,emoji -combi-hide-mode-prefix"
+            "$mod, Delete, exec, loginctl lock-session"
+            "$mod, Print, exec, flameshot gui"
+            "$mod SHIFT, Print, exec, wl-screenrecord"
+            "$mod, C, killactive"
 
-              # Focus movement
-              "$mod, H, movefocus, l"
-              "$mod, J, movefocus, u"
-              "$mod, K, movefocus, d"
-              "$mod, L, movefocus, r"
-              "$mod, Left, movefocus, l"
-              "$mod, Up, movefocus, u"
-              "$mod, Down, movefocus, d"
-              "$mod, Right, movefocus, r"
-              "$mod, Tab, changegroupactive, f"
-              "$mod SHIFT, Tab, changegroupactive, b"
+            # Focus movement
+            "$mod, H, movefocus, l"
+            "$mod, J, movefocus, u"
+            "$mod, K, movefocus, d"
+            "$mod, L, movefocus, r"
+            "$mod, Left, movefocus, l"
+            "$mod, Up, movefocus, u"
+            "$mod, Down, movefocus, d"
+            "$mod, Right, movefocus, r"
+            "$mod, Tab, changegroupactive, f"
+            "$mod SHIFT, Tab, changegroupactive, b"
 
-              # Move window
-              "$mod SHIFT, H, movewindow, l"
-              "$mod SHIFT, K, movewindow, u"
-              "$mod SHIFT, J, movewindow, d"
-              "$mod SHIFT, L, movewindow, r"
-              "$mod SHIFT, Left, movewindow, l"
-              "$mod SHIFT, Up, movewindow, u"
-              "$mod SHIFT, Down, movewindow, d"
-              "$mod SHIFT, Right, movewindow, r"
+            # Move window
+            "$mod SHIFT, H, movewindow, l"
+            "$mod SHIFT, K, movewindow, u"
+            "$mod SHIFT, J, movewindow, d"
+            "$mod SHIFT, L, movewindow, r"
+            "$mod SHIFT, Left, movewindow, l"
+            "$mod SHIFT, Up, movewindow, u"
+            "$mod SHIFT, Down, movewindow, d"
+            "$mod SHIFT, Right, movewindow, r"
 
-              # Resize window
-              "$mod CTRL, Left, resizeactive, -20 0"
-              "$mod CTRL, Down, resizeactive, 0 20"
-              "$mod CTRL, Up, resizeactive, 0 -20"
-              "$mod CTRL, Right, resizeactive, 20 0"
+            # Resize window
+            "$mod CTRL, Left, resizeactive, -20 0"
+            "$mod CTRL, Down, resizeactive, 0 20"
+            "$mod CTRL, Up, resizeactive, 0 -20"
+            "$mod CTRL, Right, resizeactive, 20 0"
 
-              # Split/Fullscreen/Layout
-              "$mod, G, togglegroup"
-              "$mod, F, fullscreen, 1"
-              "$mod SHIFT, F, togglefloating"
+            # Split/Fullscreen/Layout
+            "$mod, G, togglegroup"
+            "$mod, F, fullscreen, 1"
+            "$mod SHIFT, F, togglefloating"
 
-              # Workspaces
-              "$mod, 1, workspace, 1"
-              "$mod, 2, workspace, 2"
-              "$mod, 3, workspace, 3"
-              "$mod, 4, workspace, 4"
-              "$mod, 5, workspace, 5"
-              "$mod, 6, workspace, 6"
-              "$mod, 7, workspace, 7"
-              "$mod, 8, workspace, 8"
-              "$mod, 9, workspace, 9"
-              "$mod, 0, workspace, 10"
-              "$mod SHIFT, 1, movetoworkspace, 1"
-              "$mod SHIFT, 2, movetoworkspace, 2"
-              "$mod SHIFT, 3, movetoworkspace, 3"
-              "$mod SHIFT, 4, movetoworkspace, 4"
-              "$mod SHIFT, 5, movetoworkspace, 5"
-              "$mod SHIFT, 6, movetoworkspace, 6"
-              "$mod SHIFT, 7, movetoworkspace, 7"
-              "$mod SHIFT, 8, movetoworkspace, 8"
-              "$mod SHIFT, 9, movetoworkspace, 9"
-              "$mod SHIFT, 0, movetoworkspace, 10"
+            # Workspaces
+            "$mod, 1, workspace, 1"
+            "$mod, 2, workspace, 2"
+            "$mod, 3, workspace, 3"
+            "$mod, 4, workspace, 4"
+            "$mod, 5, workspace, 5"
+            "$mod, 6, workspace, 6"
+            "$mod, 7, workspace, 7"
+            "$mod, 8, workspace, 8"
+            "$mod, 9, workspace, 9"
+            "$mod, 0, workspace, 10"
+            "$mod SHIFT, 1, movetoworkspace, 1"
+            "$mod SHIFT, 2, movetoworkspace, 2"
+            "$mod SHIFT, 3, movetoworkspace, 3"
+            "$mod SHIFT, 4, movetoworkspace, 4"
+            "$mod SHIFT, 5, movetoworkspace, 5"
+            "$mod SHIFT, 6, movetoworkspace, 6"
+            "$mod SHIFT, 7, movetoworkspace, 7"
+            "$mod SHIFT, 8, movetoworkspace, 8"
+            "$mod SHIFT, 9, movetoworkspace, 9"
+            "$mod SHIFT, 0, movetoworkspace, 10"
 
-              # Special workspace (scratchpad)
-              "$mod, grave, togglespecialworkspace, scratchpad"
-              "$mod SHIFT, grave, movetoworkspace, special:scratchpad"
+            # Special workspace (scratchpad)
+            "$mod, grave, togglespecialworkspace, scratchpad"
+            "$mod SHIFT, grave, movetoworkspace, special:scratchpad"
 
-              # Move workspace to monitor
-              "CTRL ALT $mod SHIFT, Left, movecurrentworkspacetomonitor, l"
-              "CTRL ALT $mod SHIFT, Right, movecurrentworkspacetomonitor, r"
+            # Move workspace to monitor
+            "CTRL ALT $mod SHIFT, Left, movecurrentworkspacetomonitor, l"
+            "CTRL ALT $mod SHIFT, Right, movecurrentworkspacetomonitor, r"
 
-              # Restart Hyprland
-              "$mod SHIFT, R, exec, hyprctl reload"
+            # Restart Hyprland
+            "$mod SHIFT, R, exec, hyprctl reload"
 
-              # Media keys
-              " , XF86AudioRaiseVolume, exec, ${swayosd_client} --output-volume raise"
-              " , XF86AudioLowerVolume, exec, ${swayosd_client} --output-volume lower"
-              " , XF86AudioMute, exec, ${swayosd_client} --output-volume mute-toggle"
-              " , XF86AudioPlay, exec, ${pkgs.playerctl}/bin/playerctl play"
-              " , XF86AudioPause, exec, ${pkgs.playerctl}/bin/playerctl pause"
-              " , XF86AudioNext, exec, ${pkgs.playerctl}/bin/playerctl next"
-              " , XF86AudioPrev, exec, ${pkgs.playerctl}/bin/playerctl previous"
+            # Media keys
+            " , XF86AudioRaiseVolume, exec, ${pkgs.wireplumber}/bin/wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+"
+            " , XF86AudioLowerVolume, exec, ${pkgs.wireplumber}/bin/wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"
+            " , XF86AudioMute, exec, ${pkgs.wireplumber}/bin/wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
+            " , XF86AudioPlay, exec, ${pkgs.playerctl}/bin/playerctl play"
+            " , XF86AudioPause, exec, ${pkgs.playerctl}/bin/playerctl pause"
+            " , XF86AudioNext, exec, ${pkgs.playerctl}/bin/playerctl next"
+            " , XF86AudioPrev, exec, ${pkgs.playerctl}/bin/playerctl previous"
 
-              # Brightness
-              " , XF86MonBrightnessUp, exec, ${swayosd_client} --brightness raise"
-              " , XF86MonBrightnessDown, exec, ${swayosd_client} --brightness lower"
+            # Brightness
+            " , XF86MonBrightnessUp, exec, ${pkgs.brightnessctl}/bin/brightnessctl set 5%+"
+            " , XF86MonBrightnessDown, exec, ${pkgs.brightnessctl}/bin/brightnessctl set 5%-"
 
-              # Voxtype voice-to-text (push-to-talk: press to record)
-              "$mod, V, exec, ${config.programs.voxtype.package}/bin/voxtype record start"
-            ];
+            # Voxtype voice-to-text (push-to-talk: press to record)
+            "$mod, V, exec, ${config.programs.voxtype.package}/bin/voxtype record start"
+          ];
 
           bindr = [
             # Voxtype voice-to-text (push-to-talk: release to stop and transcribe)
@@ -501,7 +497,6 @@ in
         };
       };
     };
-    services.swayosd.enable = true;
     # swaync replaced by quickshell notification center
     services.swaync.enable = false;
 
@@ -994,6 +989,7 @@ in
         - If you are not able to find a Nix package for a command, use `nix-locate --minimal --at-root /bin/{command}`
 
         - Prefer long-form arguments over short-hands (--argument vs -a)
+        - Avoid uncommon abbreviations in code and text; prefer full words (for example: "notification" over "notif", "ServiceDaemon" over "sd"). Single-letter names are never acceptable.
       '';
       settings = {
         permission = {

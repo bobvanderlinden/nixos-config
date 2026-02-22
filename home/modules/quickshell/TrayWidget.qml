@@ -3,12 +3,12 @@ import Quickshell
 import QtQuick
 import QtQuick.Layouts
 
-// System tray using Quickshell.Services.SystemTray
+// System tray using Quickshell.Services.SystemTray.
+// parentWindow must be set to the enclosing PanelWindow for QsMenuAnchor.
 RowLayout {
     spacing: 4
 
-    // Must be set by parent to the enclosing PanelWindow for menu anchoring.
-    property var parentWindow: null
+    required property var parentWindow
 
     Repeater {
         model: SystemTray.items
@@ -43,7 +43,12 @@ RowLayout {
             QsMenuAnchor {
                 id: menuAnchor
                 anchor.window: parentWindow
-                // SystemTrayItem.menu is already a QsMenuHandle
+                anchor.rect: Qt.rect(
+                    parent.mapToItem(parentWindow.contentItem, 0, 0).x,
+                    parent.mapToItem(parentWindow.contentItem, 0, 0).y,
+                    parent.width,
+                    1
+                )
                 menu: item.menu
             }
         }

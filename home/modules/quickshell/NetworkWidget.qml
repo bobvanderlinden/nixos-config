@@ -1,6 +1,5 @@
 import Quickshell.Networking
 import QtQuick
-import QtQuick.Controls
 
 // Network status. Reactive via Quickshell.Networking (no polling).
 // Format: <icon>  <label>
@@ -16,8 +15,9 @@ Item {
     implicitWidth: label.implicitWidth + 12
     implicitHeight: 22
 
+    required property var barWindow
+
     function wifiIcon(strength) {
-        // strength is 0.0–1.0
         const pct = strength * 100;
         if (pct >= 80) return "󰤨";
         if (pct >= 60) return "󰤥";
@@ -27,24 +27,21 @@ Item {
     }
 
     // Each DeviceBinding tracks one NetworkDevice reactively.
-    // When its device is connected, it exposes text/tooltip for the label.
     Instantiator {
         id: deviceInstantiator
         model: Networking.devices
 
         delegate: QtObject {
-            required property var modelData  // the NetworkDevice
+            required property var modelData
 
-            // For wifi devices, instantiate per-network bindings
             property var networkInst: Instantiator {
                 model: modelData.type === DeviceType.Wifi ? modelData.networks : null
 
                 delegate: QtObject {
-                    required property var modelData  // the Network (actually WifiNetwork)
+                    required property var modelData
                 }
             }
 
-            // Find the connected wifi network reactively
             property var connectedNet: {
                 if (modelData.type !== DeviceType.Wifi) return null;
                 for (let i = 0; i < networkInst.count; i++) {
@@ -82,7 +79,6 @@ Item {
         }
     }
 
-    // Pick the first device binding that has a non-empty displayText
     property string netText: {
         for (let i = 0; i < deviceInstantiator.count; i++) {
             const obj = deviceInstantiator.objectAt(i);
@@ -101,6 +97,13 @@ Item {
 
     property bool disconnected: netText === "󰤭"
 
+    BarTooltip {
+        id: tooltip
+        barWindow: root.barWindow
+        text: root.netTooltip
+        shown: hoverHandler.hovered
+    }
+
     Rectangle {
         anchors.fill: parent
         color: "#252535"
@@ -112,16 +115,11 @@ Item {
             text: root.netText
             color: root.disconnected ? "#6272a4" : "#f8f8f2"
             font.pixelSize: 12
+            font.family: "SauceCodePro Nerd Font"
+        }
 
-            ToolTip.visible: hoverArea.containsMouse
-            ToolTip.text: root.netTooltip
-            ToolTip.delay: 500
-
-            MouseArea {
-                id: hoverArea
-                anchors.fill: parent
-                hoverEnabled: true
-            }
+        HoverHandler {
+            id: hoverHandler
         }
     }
 }

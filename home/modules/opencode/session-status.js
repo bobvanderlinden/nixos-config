@@ -1,52 +1,65 @@
-import * as fs from "fs";
-import * as path from "path";
+import * as net from "net";
 
 export const SessionStatusPlugin = async ({ $ }) => {
-  // Each running OpenCode instance writes a JSON file here:
-  //   /run/user/<uid>/agent-sessions/<sessionId>.json
-  // Content: { sessionId, windowAddress, state, title }
-  // state mirrors SessionStatus.type: "idle", "busy", or "retry".
   const uid = process.getuid?.() ?? (await $`id -u`.quiet().text()).trim();
-  const agentDir = `/run/user/${uid}/agent-sessions`;
+  const socketPath = `/run/user/${uid}/opencode-sessions.sock`;
   const windowAddress = process.env.HYPR_WINDOW_ADDRESS ?? null;
 
-  // In-memory session state: sessionId -> { info: Session, status: SessionStatus }
+  // In-memory session state: sessionId -> { info, status }
   const sessions = new Map();
 
-  // Track files written by this instance for cleanup on exit.
-  const ownFiles = new Set();
+  let socket = null;
 
-  // Synchronous cleanup — must be sync to run in exit handlers.
-  function deleteOwnFiles() {
-    for (const file of ownFiles) {
-      try { fs.unlinkSync(file); } catch { }
+  function send(msg) {
+    if (socket?.writable) {
+      socket.write(JSON.stringify(msg) + "\n");
     }
   }
 
-  process.on("exit",    deleteOwnFiles);
-  process.on("SIGINT",  () => { deleteOwnFiles(); process.exit(0); });
-  process.on("SIGTERM", () => { deleteOwnFiles(); process.exit(0); });
+  function connect() {
+    const s = net.createConnection(socketPath);
+
+    s.on("connect", () => {
+      socket = s;
+      // Re-publish all known sessions on (re)connect.
+      for (const [sessionId, session] of sessions) {
+        s.write(JSON.stringify({
+          type: "update",
+          sessionId,
+          windowAddress,
+          state: session.status?.type ?? "idle",
+          title: session.info?.title ?? "",
+        }) + "\n");
+      }
+    });
+
+    s.on("close", () => {
+      socket = null;
+      // Retry connection after a short delay.
+      setTimeout(connect, 2000);
+    });
+
+    s.on("error", () => {
+      // error always precedes close, so just let close handle retry.
+    });
+  }
+
+  connect();
+
+  process.on("exit", () => { socket?.destroy(); });
+  process.on("SIGINT",  () => { socket?.destroy(); process.exit(0); });
+  process.on("SIGTERM", () => { socket?.destroy(); process.exit(0); });
 
   async function updateSession(sessionId, updates) {
     sessions.set(sessionId, { ...sessions.get(sessionId), ...updates });
     const session = sessions.get(sessionId);
-    try {
-      fs.mkdirSync(agentDir, { recursive: true });
-      const data = JSON.stringify({
-        sessionId,
-        windowAddress,
-        state: session.status?.type ?? "idle",
-        title: session.info?.title ?? "",
-      });
-      const file = path.join(agentDir, `${sessionId}.json`);
-      fs.writeFileSync(file, data);
-      ownFiles.add(file);
-      // Touch to update mtime — AgentState.qml uses mtime to detect stale files.
-      const now = new Date();
-      fs.utimesSync(file, now, now);
-    } catch (e) {
-      console.error("[session-status] updateSession failed:", e);
-    }
+    send({
+      type: "update",
+      sessionId,
+      windowAddress,
+      state: session.status?.type ?? "idle",
+      title: session.info?.title ?? "",
+    });
   }
 
   return {
@@ -64,13 +77,7 @@ export const SessionStatusPlugin = async ({ $ }) => {
         case "session.deleted": {
           const id = event.properties.info.id;
           sessions.delete(id);
-          const file = path.join(agentDir, `${id}.json`);
-          ownFiles.delete(file);
-          try {
-            fs.unlinkSync(file);
-          } catch (e) {
-            console.error("[session-status] session.deleted unlink failed:", e);
-          }
+          send({ type: "remove", sessionId: id });
           break;
         }
       }

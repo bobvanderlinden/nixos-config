@@ -1,7 +1,6 @@
 import Quickshell
 import Quickshell.Wayland
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
 
 // A minimal calendar popup anchored above the clock widget.
@@ -9,22 +8,23 @@ import QtQuick.Layouts
 PopupWindow {
     id: root
 
-    // Anchor to whatever Item the caller provides (the clock label)
-    property Item anchor
+    // The Item to anchor to (the clock label)
+    property Item anchorItem
+
+    // Use `shown` to control visibility instead of `visible` to avoid
+    // overriding the FINAL visible property managed by PopupWindow.
+    property bool shown: false
+    visible: shown
 
     color: "transparent"
     implicitWidth: calBox.implicitWidth + 24
     implicitHeight: calBox.implicitHeight + 24
 
-    // Position above the anchor item
-    PopupAnchor {
-        window: root
-        item: root.anchor
-        edges: Edges.Top
-        popupEdges: Edges.Bottom
-        adjustment: PopupAdjustment.Flip
-        offset.y: -4
-    }
+    // Position above the anchor item — opens upward
+    anchor.item: root.anchorItem
+    anchor.edges: Edges.Top
+    anchor.gravity: Edges.Top
+    anchor.adjustment: PopupAdjustment.Flip
 
     SystemClock {
         id: clock
@@ -58,6 +58,7 @@ PopupWindow {
                     text: "‹"
                     color: "#6272a4"
                     font.pixelSize: 16
+                    font.family: "SauceCodePro Nerd Font"
                     MouseArea {
                         anchors.fill: parent
                         onClicked: root.shiftMonth(-1)
@@ -70,6 +71,7 @@ PopupWindow {
                     text: Qt.formatDate(root.viewDate, "MMMM yyyy")
                     color: "#f8f8f2"
                     font.pixelSize: 13
+                    font.family: "SauceCodePro Nerd Font"
                     font.bold: true
                 }
 
@@ -77,6 +79,7 @@ PopupWindow {
                     text: "›"
                     color: "#6272a4"
                     font.pixelSize: 16
+                    font.family: "SauceCodePro Nerd Font"
                     MouseArea {
                         anchors.fill: parent
                         onClicked: root.shiftMonth(1)
@@ -97,6 +100,7 @@ PopupWindow {
                         text: modelData
                         color: "#6272a4"
                         font.pixelSize: 11
+                        font.family: "SauceCodePro Nerd Font"
                     }
                 }
             }
@@ -116,9 +120,7 @@ PopupWindow {
                         implicitWidth: 28
                         implicitHeight: 24
                         radius: 4
-                        color: modelData.isToday
-                            ? "#bd93f9"
-                            : modelData.inMonth ? "transparent" : "transparent"
+                        color: modelData.isToday ? "#bd93f9" : "transparent"
 
                         Text {
                             anchors.centerIn: parent
@@ -127,6 +129,7 @@ PopupWindow {
                                 ? "#1e1e2e"
                                 : modelData.inMonth ? "#f8f8f2" : "#44475a"
                             font.pixelSize: 12
+                            font.family: "SauceCodePro Nerd Font"
                             font.bold: modelData.isToday
                         }
                     }
@@ -146,8 +149,8 @@ PopupWindow {
     }
 
     // Resets to current month when reopened
-    onVisibleChanged: {
-        if (visible)
+    onShownChanged: {
+        if (shown)
             root.viewDate = new Date(clock.date.getFullYear(), clock.date.getMonth(), 1);
     }
 
@@ -157,7 +160,6 @@ PopupWindow {
         const year = root.viewDate.getFullYear();
         const month = root.viewDate.getMonth();
 
-        // Day of week of the 1st, shifted to Mon=0
         const firstDow = (new Date(year, month, 1).getDay() + 6) % 7;
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         const daysInPrev = new Date(year, month, 0).getDate();

@@ -1,8 +1,9 @@
+//@ pragma UseQApplication
 import Quickshell
 import Quickshell.Services.Notifications
 import QtQuick
 
-// Shell root - manages the bar and notification daemon.
+// Shell root — manages the bar, OSDs, and notification daemon.
 // Binary paths are substituted by Nix via sed on @placeholder@ tokens.
 ShellRoot {
     // ── Notification daemon (replaces swaync) ─────────────────────────────────
@@ -20,21 +21,28 @@ ShellRoot {
         }
     }
 
-    // ── Notification popups (stacked bottom-right, newest on top) ─────────────
+    // ── Notification popups (stacked, newest on top) ───────────────────────────
+    // trackedNotifications is an ObjectModel — use .values for Variants.
+    // Each popup looks up its own stacking index reactively.
     Variants {
-        model: notifServer.trackedNotifications
+        model: notifServer.trackedNotifications.values
 
         delegate: NotificationPopup {
             required property var modelData
-            required property int index
             notification: modelData
-            popupIndex: index
+            popupIndex: {
+                const list = notifServer.trackedNotifications.values;
+                for (let i = 0; i < list.length; i++) {
+                    if (list[i] === modelData) return i;
+                }
+                return 0;
+            }
         }
     }
 
     // ── Status bar (one instance per screen) ──────────────────────────────────
     Variants {
-        model: Quickshell.screens.values
+        model: Quickshell.screens
 
         delegate: StatusBar {
             required property var modelData
@@ -44,9 +52,19 @@ ShellRoot {
 
     // ── Volume OSD (one instance per screen) ──────────────────────────────────
     Variants {
-        model: Quickshell.screens.values
+        model: Quickshell.screens
 
         delegate: VolumeOsd {
+            required property var modelData
+            screen: modelData
+        }
+    }
+
+    // ── Brightness OSD (one instance per screen) ──────────────────────────────
+    Variants {
+        model: Quickshell.screens
+
+        delegate: BrightnessOsd {
             required property var modelData
             screen: modelData
         }
