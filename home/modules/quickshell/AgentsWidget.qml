@@ -6,11 +6,11 @@ import QtQuick.Layouts
 // Agent sessions widget.
 //
 // Collapsed (bar): a row of coloured dots — one per session.
-//   green (#50fa7b) = active, grey (#6272a4) = idle.
+//   green (#50fa7b) = busy/retry, grey (#6272a4) = idle.
 //   Hidden entirely when there are no sessions.
 //
 // Expanded (hover): a PopupWindow appears above the bar listing all
-//   sessions with workspace number + title + state badge.
+//   sessions with title + state badge.
 //   Clicking a row focuses the agent's window via hyprctl.
 //   Auto-closes when the mouse leaves.
 RowLayout {
@@ -34,7 +34,7 @@ RowLayout {
             height: 8
             radius: 4
             Layout.alignment: Qt.AlignVCenter
-            color: modelData.state === "active" ? "#50fa7b" : "#6272a4"
+            color: modelData.state !== "idle" ? "#50fa7b" : "#6272a4"
         }
     }
 
@@ -100,21 +100,14 @@ RowLayout {
                             width: 8
                             height: 8
                             radius: 4
-                            color: session.state === "active" ? "#50fa7b" : "#6272a4"
+                            color: session.state !== "idle" ? "#50fa7b" : "#6272a4"
                             Layout.alignment: Qt.AlignVCenter
                         }
 
-                        // Label: workspace + title
+                        // Title
                         Text {
                             Layout.fillWidth: true
-                            text: {
-                                const ws = session.workspaceId != null
-                                    ? "Workspace " + session.workspaceId
-                                    : "";
-                                const t = session.title ?? "";
-                                if (t !== "") return ws !== "" ? ws + " — " + t : t;
-                                return ws !== "" ? ws : "(unknown)";
-                            }
+                            text: session.title !== "" ? session.title : "(unknown)"
                             color: canFocus ? "#f8f8f2" : "#6272a4"
                             font.pixelSize: 12
                             elide: Text.ElideRight
@@ -125,13 +118,13 @@ RowLayout {
                             implicitWidth: stateLabel.implicitWidth + 8
                             implicitHeight: 16
                             radius: 3
-                            color: session.state === "active" ? "#1a3d2b" : "#2d2d3f"
+                            color: session.state !== "idle" ? "#1a3d2b" : "#2d2d3f"
 
                             Text {
                                 id: stateLabel
                                 anchors.centerIn: parent
-                                text: session.state === "active" ? "active" : "idle"
-                                color: session.state === "active" ? "#50fa7b" : "#6272a4"
+                                text: session.state
+                                color: session.state !== "idle" ? "#50fa7b" : "#6272a4"
                                 font.pixelSize: 10
                             }
                         }

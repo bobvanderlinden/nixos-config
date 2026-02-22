@@ -6,27 +6,24 @@ import QtQuick
 
 // Singleton that tracks OpenCode agent sessions in real-time.
 //
-// The OpenCode notify plugin writes JSON files to:
+// The OpenCode session-status plugin writes JSON files to:
 //   /run/user/<uid>/agent-sessions/<sessionId>.json
-// Content: { sessionId, windowAddress, workspaceId, state, title }
-// state is "active" or "idle".
+// Content: { sessionId, windowAddress, state, title }
+// state mirrors SessionStatus.type: "idle", "busy", or "retry".
 //
 // Two processes:
 //   scanner  — reads all JSON files on demand (triggered by watcher or on start)
 //   watcher  — long-running inotifywait; fires scanner on any file change
 //
-// Staleness: active files not touched for 5 minutes are treated as idle
-// (handles OpenCode exiting without firing session.idle).
+// Staleness: non-idle files not touched for 5 minutes are treated as idle
+// (handles OpenCode exiting without firing a final session.status).
 Singleton {
     id: root
 
-    // List of session objects: [{ sessionId, windowAddress, workspaceId, state, title }, ...]
+    // List of session objects: [{ sessionId, windowAddress, state, title }, ...]
     property var sessions: []
 
-    // Convenience map: workspaceId -> true for active sessions.
-    property var activeWorkspaces: ({})
-
-    // Active files not updated within this window are treated as stale/idle.
+    // Non-idle files not updated within this window are treated as stale/idle.
     readonly property int staleMs: 5 * 60 * 1000
 
     // ── Scanner: reads all JSON files and updates state ───────────────────────
@@ -55,7 +52,6 @@ Singleton {
 
             const nowMs = Date.now();
             const newSessions = [];
-            const newActive = {};
 
             for (const line of lines) {
                 try {
@@ -64,26 +60,21 @@ Singleton {
                     const mtimeMs = parseInt(line.substring(0, spaceIdx)) * 1000;
                     const obj = JSON.parse(line.substring(spaceIdx + 1));
 
-                    // Treat active files not touched in 5 min as idle
-                    const effectiveState = (obj.state === "active" && nowMs - mtimeMs > root.staleMs)
+                    // Treat non-idle files not touched in 5 min as idle.
+                    const effectiveState = (obj.state !== "idle" && nowMs - mtimeMs > root.staleMs)
                         ? "idle"
                         : (obj.state ?? "idle");
 
                     newSessions.push({
                         sessionId:     obj.sessionId     ?? "",
                         windowAddress: obj.windowAddress ?? null,
-                        workspaceId:   obj.workspaceId   ?? null,
                         state:         effectiveState,
                         title:         obj.title         ?? "",
                     });
-                    if (effectiveState === "active" && obj.workspaceId != null) {
-                        newActive[obj.workspaceId] = true;
-                    }
                 } catch (e) { }
             }
 
             root.sessions = newSessions;
-            root.activeWorkspaces = newActive;
         }
     }
 

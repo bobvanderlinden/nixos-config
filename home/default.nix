@@ -801,95 +801,11 @@ in
     };
 
     xdg.enable = true;
-    xdg.configFile."opencode/plugins/notify.js".text = ''
-      import * as fs from "fs";
-      import * as path from "path";
+    xdg.configFile."opencode/plugins/session-status.js".source =
+      config.lib.file.mkOutOfStoreSymlink "/home/bob.vanderlinden/projects/nixos-config/home/modules/opencode/session-status.js";
 
-      export const NotifyPlugin = async ({ $, client }) => {
-        // Each running OpenCode instance writes a JSON file here:
-        //   /run/user/<uid>/agent-sessions/<sessionId>.json
-        // Content: { sessionId, windowAddress, workspaceId, state, title }
-        // state is "active" or "idle".
-        const uid = process.getuid?.() ?? (await $`id -u`.quiet().text()).trim();
-        const agentDir = `/run/user/''${uid}/agent-sessions`;
-        const windowAddress = process.env.HYPR_WINDOW_ADDRESS ?? null;
-
-
-
-        // Get the Hyprland workspace ID for our own window.
-        async function getOwnWorkspaceId() {
-          if (!windowAddress) return null;
-          try {
-            const clients = await $`hyprctl clients -j`.quiet().json();
-            const win = clients.find(c => c.address === windowAddress);
-            return win?.workspace?.id ?? null;
-          } catch (e) {
-            console.error("[notify] getOwnWorkspaceId failed:", e);
-            return null;
-          }
-        }
-
-        // Write (or update) the session state file.
-        async function writeSessionState(sessionId, state, title = "") {
-          if (!sessionId) return;
-          try {
-            fs.mkdirSync(agentDir, { recursive: true });
-            const workspaceId = await getOwnWorkspaceId();
-            const data = JSON.stringify({ sessionId, windowAddress, workspaceId, state, title });
-            const file = path.join(agentDir, `''${sessionId}.json`);
-            fs.writeFileSync(file, data);
-            // Touch to update mtime — AgentState.qml uses mtime to detect stale files.
-            const now = new Date();
-            fs.utimesSync(file, now, now);
-          } catch (e) {
-            console.error("[notify] writeSessionState failed:", e);
-          }
-        }
-
-        return {
-          event: async ({ event }) => {
-            const sessionId = event.properties?.sessionID ?? event.properties?.info?.id ?? "";
-
-            // Session deleted — remove the file entirely.
-            if (event.type === "session.deleted") {
-              try {
-                fs.unlinkSync(path.join(agentDir, `''${sessionId}.json`));
-              } catch (e) {
-                console.error("[notify] session.deleted unlink failed:", e);
-              }
-              return;
-            }
-
-            if (event.type !== "session.idle") {
-              // Any non-idle event: agent is working.
-              await writeSessionState(sessionId, "active");
-              return;
-            }
-
-            // Agent is now idle — fetch title and mark idle.
-            const sessionInfo = sessionId
-              ? (await client.session.get({ path: { id: sessionId } })).data
-              : null;
-            const title = sessionInfo?.title ?? "";
-            await writeSessionState(sessionId, "idle", title);
-
-            // Send desktop notification, unless our window is currently focused.
-            const activeAddress = (await $`hyprctl activewindow -j`.quiet().json()).address;
-            if (windowAddress && activeAddress === windowAddress) return;
-
-            // Derive a stable numeric ID from the session ID so repeated
-            // session.idle events replace the previous notification.
-            let notifyId = 0;
-            for (let i = 0; i < sessionId.length; i++) {
-              notifyId = (notifyId * 31 + sessionId.charCodeAt(i)) >>> 0;
-            }
-            if (notifyId === 0) notifyId = 42424242;
-            await $`${pkgs.coin}/bin/coin`.quiet();
-            await $`${pkgs.hypr-notify}/bin/hypr-notify --app-name OpenCode --bell --replace-id ''${String(notifyId)} 'OpenCode finished' ''${title}`.quiet();
-          },
-        };
-      };
-    '';
+    xdg.configFile."opencode/plugins/notify.js".source =
+      config.lib.file.mkOutOfStoreSymlink "/home/bob.vanderlinden/projects/nixos-config/home/modules/opencode/notify.js";
     # news.display = "silent";
 
     home.pointerCursor = {
