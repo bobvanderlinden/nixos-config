@@ -41,6 +41,7 @@ in
   xdg.configFile."quickshell/StatusBar.qml".source = src "StatusBar.qml";
   xdg.configFile."quickshell/NotificationPopup.qml".source = src "NotificationPopup.qml";
   xdg.configFile."quickshell/WorkspacesWidget.qml".source = src "WorkspacesWidget.qml";
+  xdg.configFile."quickshell/AgentsWidget.qml".source = src "AgentsWidget.qml";
   xdg.configFile."quickshell/SystemdFailedUnits.qml".source = src "SystemdFailedUnits.qml";
   xdg.configFile."quickshell/DockerWidget.qml".source = src "DockerWidget.qml";
   xdg.configFile."quickshell/SessionTimeWidget.qml".source = src "SessionTimeWidget.qml";

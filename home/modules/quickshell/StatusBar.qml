@@ -29,8 +29,12 @@ PanelWindow {
         anchors.rightMargin: 4
         spacing: 0
 
-        // ── Left: Workspaces ─────────────────────────────────────────────────
+        // ── Left: Workspaces + Agents ────────────────────────────────────────
         WorkspacesWidget { }
+
+        AgentsWidget {
+            barWindow: bar
+        }
 
         // ── Center: stretch ───────────────────────────────────────────────────
         Item { Layout.fillWidth: true }
