@@ -4,69 +4,54 @@ import Quickshell
 import Quickshell.Io
 import QtQuick
 
-// Singleton that tracks OpenCode agent sessions via JSON files in
-// /run/user/<uid>/agent-sessions/<sessionId>.json
+// Singleton that tracks OpenCode agent sessions in real-time.
 //
-// Each file contains:
-//   { sessionId, windowAddress, workspaceId, state, title }
-// where state is "active" or "idle".
+// The OpenCode notify plugin writes JSON files to:
+//   /run/user/<uid>/agent-sessions/<sessionId>.json
+// Content: { sessionId, windowAddress, workspaceId, state, title }
+// state is "active" or "idle".
 //
-// Files with state="active" older than 30 s are treated as stale
-// (handles OpenCode exiting without firing session.idle).
+// Two processes:
+//   scanner  — reads all JSON files on demand (triggered by watcher or on start)
+//   watcher  — long-running inotifywait; fires scanner on any file change
 Singleton {
     id: root
 
     // List of session objects: [{ sessionId, windowAddress, workspaceId, state, title }, ...]
     property var sessions: []
 
-    // Convenience map: workspaceId -> true for workspaces with an active (non-stale) agent.
+    // Convenience map: workspaceId -> true for active sessions.
     property var activeWorkspaces: ({})
 
-    // Active session files are touched on every agent event (tool call etc.).
-    // If no event fires for 5 minutes, treat the file as stale (agent crashed).
-    readonly property int staleThresholdMs: 300000
+    readonly property string agentDir: "/run/user/" + Qt.platform.os + "/agent-sessions"
+
+    // ── Scanner: reads all JSON files and updates state ───────────────────────
 
     Process {
-        id: watcher
-        // Output one line per file: "<mtime_epoch_float> <json_content>"
-        // Using awk to join mtime and content on a single line.
+        id: scanner
         command: ["sh", "-c",
             "dir=/run/user/$(id -u)/agent-sessions; " +
             "mkdir -p \"$dir\"; " +
             "find \"$dir\" -maxdepth 1 -name '*.json' | " +
-            "  while read -r f; do " +
-            "    mtime=$(stat -c '%Y' \"$f\"); " +
-            "    content=$(cat \"$f\"); " +
-            "    echo \"$mtime $content\"; " +
-            "  done"]
-        running: true
+            "  while read -r f; do cat \"$f\"; echo; done"]
+        running: true  // run once on startup
 
         property string buf: ""
 
         stdout: SplitParser {
-            onRead: data => watcher.buf += data
+            onRead: data => scanner.buf += data
         }
 
         onExited: {
-            const lines = watcher.buf.trim().split("\n").filter(l => l !== "");
-            watcher.buf = "";
+            const lines = scanner.buf.trim().split("\n").filter(l => l !== "");
+            scanner.buf = "";
 
-            const nowMs = Date.now();
             const newSessions = [];
             const newActive = {};
 
             for (const line of lines) {
-                const spaceIdx = line.indexOf(" ");
-                if (spaceIdx < 0) continue;
-                const mtimeMs = parseInt(line.substring(0, spaceIdx)) * 1000;
-                const jsonStr = line.substring(spaceIdx + 1).trim();
-                if (!jsonStr) continue;
-
                 try {
-                    const obj = JSON.parse(jsonStr);
-                    const isStale = (obj.state === "active") && (nowMs - mtimeMs > root.staleThresholdMs);
-                    if (isStale) continue;
-
+                    const obj = JSON.parse(line);
                     newSessions.push({
                         sessionId:     obj.sessionId     ?? "",
                         windowAddress: obj.windowAddress ?? null,
@@ -74,7 +59,6 @@ Singleton {
                         state:         obj.state         ?? "idle",
                         title:         obj.title         ?? "",
                     });
-
                     if (obj.state === "active" && obj.workspaceId != null) {
                         newActive[obj.workspaceId] = true;
                     }
@@ -86,10 +70,24 @@ Singleton {
         }
     }
 
-    Timer {
-        interval: 2000
+    // ── Watcher: inotifywait fires scanner on any change ─────────────────────
+
+    Process {
+        id: watcher
+        // -m = monitor forever, -e = events to watch, --format = output format
+        // We create the dir first so inotifywait doesn't fail if it doesn't exist yet.
+        command: ["sh", "-c",
+            "mkdir -p /run/user/$(id -u)/agent-sessions && " +
+            "exec inotifywait -m -e close_write -e moved_to -e delete " +
+            "  --format '%e' " +
+            "  /run/user/$(id -u)/agent-sessions"]
         running: true
-        repeat: true
-        onTriggered: watcher.running = true
+
+        stdout: SplitParser {
+            onRead: _ => {
+                // Any change → re-scan immediately
+                scanner.running = true;
+            }
+        }
     }
 }

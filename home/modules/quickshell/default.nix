@@ -30,6 +30,7 @@ in
   home.packages = [
     pkgs.quickshell
     pkgs.session-time
+    pkgs.inotify-tools
     config.programs.voxtype.package
     docker-count
   ];
