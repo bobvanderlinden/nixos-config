@@ -54,7 +54,9 @@ done
 [ -d .git ] || fail "Not a git directory"
 
 REPO_NAME="$(basename "$PWD")"
-WORKTREE_DIR="$(mktemp --directory --suffix "$REPO_NAME-worktree")"
+WORKTREE_BASE="/tmp/worktrees/$UID/$REPO_NAME"
+mkdir --parents "$WORKTREE_BASE"
+WORKTREE_DIR="$(mktemp --directory "$WORKTREE_BASE/XXXXXX")"
 git worktree add "$WORKTREE_DIR" "$REVISION"
 
 cleanup() {
