@@ -102,21 +102,30 @@ WORKTREE_ARGS=(
   --revision "$REVISION"
 )
 
+# Build context instructions for the agent session
+CONTEXT_PARTS=()
+if [[ -n "${GITHUB_PR_NUMBER-}" ]]; then
+  CONTEXT_PARTS+=("The pull request you're working on is https://github.com/$GITHUB_OWNER_NAME/$GITHUB_REPO_NAME/pull/$GITHUB_PR_NUMBER")
+fi
+if [[ -n "${GITHUB_ISSUE_NUMBER-}" ]]; then
+  CONTEXT_PARTS+=("The issue you're working on is https://github.com/$GITHUB_OWNER_NAME/$GITHUB_REPO_NAME/issues/$GITHUB_ISSUE_NUMBER")
+fi
+
+if [[ ${#CONTEXT_PARTS[@]} -gt 0 ]]; then
+  CONTEXT_FILE="$(mktemp --suffix=.md)"
+  printf '%s\n' "${CONTEXT_PARTS[@]}" > "$CONTEXT_FILE"
+  # The temp file is left in /tmp for the OS to clean up; exec replaces this
+  # process so a trap on EXIT would fire too early (before opencode reads it).
+  EXISTING_CONFIG_CONTENT="${OPENCODE_CONFIG_CONTENT:-{}}"
+  export OPENCODE_CONFIG_CONTENT
+  OPENCODE_CONFIG_CONTENT="$(printf '%s' "$EXISTING_CONFIG_CONTENT" | jq --arg path "$CONTEXT_FILE" '.instructions += [$path]')"
+fi
+
 # Determine the command to run (default: agent)
 if [[ $# -gt 0 ]]; then
   COMMAND=("$@")
 else
   COMMAND=(agent)
-  PROMPT_PARTS=()
-  if [[ -n "${GITHUB_PR_NUMBER-}" ]]; then
-    PROMPT_PARTS+=("The pull request you're working on is https://github.com/$GITHUB_OWNER_NAME/$GITHUB_REPO_NAME/pull/$GITHUB_PR_NUMBER")
-  fi
-  if [[ -n "${GITHUB_ISSUE_NUMBER-}" ]]; then
-    PROMPT_PARTS+=("The issue you're working on is https://github.com/$GITHUB_OWNER_NAME/$GITHUB_REPO_NAME/issues/$GITHUB_ISSUE_NUMBER")
-  fi
-  if [[ ${#PROMPT_PARTS[@]} -gt 0 ]]; then
-    COMMAND+=(--prompt "$(printf '%s\n' "${PROMPT_PARTS[@]}")")
-  fi
 fi
 
 if [[ -n "${GITHUB_PR_NUMBER-}" ]]; then
