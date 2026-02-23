@@ -57,6 +57,12 @@ REPO_NAME="$(basename "$PWD")"
 WORKTREE_DIR="$(mktemp --directory --suffix "$REPO_NAME-worktree")"
 git worktree add "$WORKTREE_DIR" "$REVISION"
 
+cleanup() {
+  git worktree remove --force "$WORKTREE_DIR" || true
+  rm -rf "$WORKTREE_DIR" || true
+}
+trap cleanup EXIT
+
 if [ "$OPTION_INDEX" = 1 ]
 then
   # Apply the index of the original worktree to the new one.
@@ -75,13 +81,10 @@ if [ -f "$WORKTREE_DIR/.envrc" ] && command -v direnv > /dev/null; then
   direnv allow "$WORKTREE_DIR"
 fi
 
-(cd "$WORKTREE_DIR" || fail "Failed to cd to worktree directory"
-  if [ "${#ARGS[@]}" -gt 0 ]
-  then
-    "${ARGS[@]}"
-  else
-    $SHELL || true
-  fi
-  git worktree remove --force "$WORKTREE_DIR" || true
-  rm -rf "$WORKTREE_DIR" || true
-)
+cd "$WORKTREE_DIR" || fail "Failed to cd to worktree directory"
+if [ "${#ARGS[@]}" -gt 0 ]
+then
+  "${ARGS[@]}" || true
+else
+  $SHELL || true
+fi
