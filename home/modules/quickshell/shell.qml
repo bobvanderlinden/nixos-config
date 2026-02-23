@@ -1,3 +1,4 @@
+//@ pragma UseQApplication
 import Quickshell
 import Quickshell.Services.Notifications
 import QtQuick
@@ -59,6 +60,16 @@ ShellRoot {
         model: Quickshell.screens
 
         delegate: VolumeOsd {
+            required property var modelData
+            screen: modelData
+        }
+    }
+
+    // ── Brightness OSD (one instance per screen) ──────────────────────────────
+    Variants {
+        model: Quickshell.screens
+
+        delegate: BrightnessOsd {
             required property var modelData
             screen: modelData
         }

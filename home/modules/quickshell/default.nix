@@ -16,6 +16,7 @@
   # Additional binaries that the QML widgets call by name.
   home.packages = [
     pkgs.session-time
+    pkgs.inotify-tools
   ];
 
   # Symlink the entire quickshell source directory directly into XDG config.

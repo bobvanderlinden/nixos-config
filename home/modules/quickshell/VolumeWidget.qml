@@ -1,4 +1,5 @@
 import Quickshell
+import Quickshell.Hyprland
 import Quickshell.Services.Pipewire
 import Quickshell.Wayland
 import QtQuick
@@ -18,9 +19,22 @@ BarPill {
     property var source: Pipewire.preferredDefaultAudioSource
     property bool muted: sink?.audio?.muted ?? false
     property real volume: sink?.audio?.volume ?? 0.0
+    property bool micMuted: source?.audio?.muted ?? false
+    property real micVolume: source?.audio?.volume ?? 0.0
 
     PwObjectTracker {
         objects: [root.sink, root.source].filter(o => o != null)
+    }
+
+    // Reactive filtered node lists — ScriptModel re-evaluates when Pipewire.nodes changes.
+    ScriptModel {
+        id: sinkNodes
+        values: Pipewire.nodes.values.filter(n => n.isSink && !n.isStream && n.audio)
+    }
+
+    ScriptModel {
+        id: sourceNodes
+        values: Pipewire.nodes.values.filter(n => !n.isSink && !n.isStream && n.audio)
     }
 
     function volumeIcon(pct, muted) {
@@ -37,6 +51,13 @@ BarPill {
     }
 
     property bool popupShown: false
+
+    HyprlandFocusGrab {
+        id: focusGrab
+        active: root.popupShown
+        windows: [root.barWindow, popup]
+        onCleared: root.popupShown = false
+    }
 
     // ── Popup ─────────────────────────────────────────────────────────────────
     PopupWindow {
@@ -65,12 +86,6 @@ BarPill {
             radius: 8
             border.color: "#44475a"
             border.width: 1
-
-            // Click outside (on the background) to close
-            MouseArea {
-                anchors.fill: parent
-                onClicked: root.popupShown = false
-            }
 
             ColumnLayout {
                 id: popupColumn
@@ -168,6 +183,91 @@ BarPill {
                     }
                 }
 
+                // ── Microphone slider ─────────────────────────────────────────
+                RowLayout {
+                    spacing: 8
+                    Layout.fillWidth: true
+
+                    // Mute toggle icon
+                    Text {
+                        text: root.micMuted ? "󰍭" : "󰍬"
+                        color: root.micMuted ? "#ff5555" : "#cdd6f4"
+                        font.pixelSize: 14
+                        font.family: "SauceCodePro Nerd Font"
+
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: {
+                                if (root.source?.audio)
+                                    root.source.audio.muted = !root.micMuted;
+                            }
+                        }
+                    }
+
+                    // Slider track
+                    Item {
+                        Layout.fillWidth: true
+                        implicitHeight: 16
+
+                        Rectangle {
+                            id: micTrack
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            height: 4
+                            radius: 2
+                            color: "#44475a"
+
+                            // Fill
+                            Rectangle {
+                                width: Math.min(1.0, root.micVolume) * parent.width
+                                height: parent.height
+                                radius: parent.radius
+                                color: root.micMuted ? "#ff5555" : "#bd93f9"
+
+                                Behavior on width {
+                                    NumberAnimation { duration: 80; easing.type: Easing.OutQuad }
+                                }
+                            }
+
+                            // Handle
+                            Rectangle {
+                                x: Math.min(1.0, root.micVolume) * (micTrack.width - width)
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: 12
+                                height: 12
+                                radius: 6
+                                color: "#cdd6f4"
+
+                                Behavior on x {
+                                    NumberAnimation { duration: 80; easing.type: Easing.OutQuad }
+                                }
+                            }
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: mouse => {
+                                if (!root.source?.audio) return;
+                                root.source.audio.volume = Math.max(0.0, Math.min(1.0, mouse.x / width));
+                            }
+                            onMouseXChanged: {
+                                if (!pressed || !root.source?.audio) return;
+                                root.source.audio.volume = Math.max(0.0, Math.min(1.0, mouseX / width));
+                            }
+                        }
+                    }
+
+                    Text {
+                        text: Math.round(root.micVolume * 100) + "%"
+                        color: "#f8f8f2"
+                        font.pixelSize: 11
+                        font.family: "SauceCodePro Nerd Font"
+                        width: 32
+                        horizontalAlignment: Text.AlignRight
+                    }
+                }
+
                 // ── Output devices ────────────────────────────────────────────
                 Text {
                     text: "Output"
@@ -178,7 +278,7 @@ BarPill {
                 }
 
                 Repeater {
-                    model: Pipewire.nodes.values.filter(n => n.isSink && !n.isStream && n.audio)
+                    model: sinkNodes.values
 
                     DeviceRow {
                         required property var modelData
@@ -200,7 +300,7 @@ BarPill {
                 }
 
                 Repeater {
-                    model: Pipewire.nodes.values.filter(n => !n.isSink && !n.isStream && n.audio)
+                    model: sourceNodes.values
 
                     DeviceRow {
                         required property var modelData

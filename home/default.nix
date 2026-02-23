@@ -772,7 +772,6 @@ in
     services.polkit-gnome.enable = true;
     services.hyprpolkitagent.enable = false;
 
-    services.pasystray.enable = true;
     programs.voxtype = {
       enable = true;
       package = inputs.voxtype.packages.${pkgs.system}.default;

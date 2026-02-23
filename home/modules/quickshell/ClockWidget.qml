@@ -1,4 +1,5 @@
 import Quickshell
+import Quickshell.Hyprland
 import QtQuick
 
 // Clock - format: "Mon, 22. Feb  14:35"
@@ -19,6 +20,12 @@ BarPill {
         anchorWindow: root.barWindow
         anchorItem: root
         visible: false
+    }
+
+    HyprlandFocusGrab {
+        active: cal.visible
+        windows: [root.barWindow, cal]
+        onCleared: cal.visible = false
     }
 
     BarTooltip {

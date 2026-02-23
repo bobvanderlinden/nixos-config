@@ -259,7 +259,7 @@ PanelWindow {
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: {
                                         action.invoke();
-                                        if (notification) notification.dismiss();
+                                        if (toastItem.notification) toastItem.notification.dismiss();
                                     }
                                 }
 
