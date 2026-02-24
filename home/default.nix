@@ -394,6 +394,18 @@ in
             "$mod SHIFT, 9, movetoworkspace, 9"
             "$mod SHIFT, 0, movetoworkspace, 10"
 
+            # Reassign current workspace to a number
+            "$mod SHIFT CTRL, 1, exec, hyprctl dispatch renameworkspace $(hyprctl activeworkspace -j | jq --raw-output '.id') 1"
+            "$mod SHIFT CTRL, 2, exec, hyprctl dispatch renameworkspace $(hyprctl activeworkspace -j | jq --raw-output '.id') 2"
+            "$mod SHIFT CTRL, 3, exec, hyprctl dispatch renameworkspace $(hyprctl activeworkspace -j | jq --raw-output '.id') 3"
+            "$mod SHIFT CTRL, 4, exec, hyprctl dispatch renameworkspace $(hyprctl activeworkspace -j | jq --raw-output '.id') 4"
+            "$mod SHIFT CTRL, 5, exec, hyprctl dispatch renameworkspace $(hyprctl activeworkspace -j | jq --raw-output '.id') 5"
+            "$mod SHIFT CTRL, 6, exec, hyprctl dispatch renameworkspace $(hyprctl activeworkspace -j | jq --raw-output '.id') 6"
+            "$mod SHIFT CTRL, 7, exec, hyprctl dispatch renameworkspace $(hyprctl activeworkspace -j | jq --raw-output '.id') 7"
+            "$mod SHIFT CTRL, 8, exec, hyprctl dispatch renameworkspace $(hyprctl activeworkspace -j | jq --raw-output '.id') 8"
+            "$mod SHIFT CTRL, 9, exec, hyprctl dispatch renameworkspace $(hyprctl activeworkspace -j | jq --raw-output '.id') 9"
+            "$mod SHIFT CTRL, 0, exec, hyprctl dispatch renameworkspace $(hyprctl activeworkspace -j | jq --raw-output '.id') 10"
+
             # Special workspace (scratchpad)
             "$mod, grave, togglespecialworkspace, scratchpad"
             "$mod SHIFT, grave, movetoworkspace, special:scratchpad"
