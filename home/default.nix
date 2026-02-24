@@ -171,8 +171,7 @@ in
 
       # Text Editors & IDEs
       helix
-      vscode
-      # (lib.hiPrio vscode-wrapper)
+      (lib.hiPrio vscode-wrapper)
       editor
       terminal
       (lib.hiPrio chromium-wrapper)
