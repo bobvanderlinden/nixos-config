@@ -49,7 +49,7 @@ async def send_notification(
                 "",  # app_icon
                 summary,
                 body,
-                ["default", "Open"],  # actions: [key, label, ...]
+                ["default", ""],  # actions: [key, label, ...] — empty label = no visible button
                 {},  # hints
                 0,  # expire_timeout: 0 = never expire
             ],
