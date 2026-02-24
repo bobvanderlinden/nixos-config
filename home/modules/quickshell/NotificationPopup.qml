@@ -84,15 +84,21 @@ PanelWindow {
                 onTriggered: if (notification) notification.dismiss()
             }
 
+            HoverHandler {
+                id: cardHover
+            }
+
             Rectangle {
                 id: toastCard
                 anchors.left: parent.left
                 anchors.right: parent.right
                 implicitHeight: toastContent.implicitHeight + 24
                 radius: 12
-                color: "#1e1e2e"
+                color: cardHover.hovered ? "#1e1e2e" : "#991e1e2e"
                 border.color: notification && notification.urgency === 2 ? "#ff5555" : "#44475a"
                 border.width: 1
+
+                Behavior on color { ColorAnimation { duration: 150 } }
 
                 // Progress bar draining from right → left (hidden when no timeout)
                 Rectangle {
@@ -223,11 +229,12 @@ PanelWindow {
                         visible: notification && (notification.body ?? "") !== ""
                     }
 
-                    // Action buttons
+                        // Action buttons — only shown for actions with a non-empty label.
                     Flow {
                         Layout.fillWidth: true
                         spacing: 6
-                        visible: notification && notification.actions && notification.actions.length > 0
+                        visible: notification && notification.actions
+                            && notification.actions.some(a => (a.text ?? "").trim() !== "")
 
                         Repeater {
                             model: notification ? notification.actions : []
@@ -236,8 +243,10 @@ PanelWindow {
                                 required property var modelData
                                 readonly property var action: modelData
 
-                                implicitWidth: actionLabel.implicitWidth + 20
-                                implicitHeight: 26
+                                // Hide actions with empty labels (e.g. the bare "default" click action).
+                                visible: (action.text ?? "").trim() !== ""
+                                implicitWidth: visible ? actionLabel.implicitWidth + 20 : 0
+                                implicitHeight: visible ? 26 : 0
                                 radius: 6
                                 color: actionArea.containsMouse ? "#44475a" : "#313244"
                                 border.color: "#6272a4"
@@ -246,7 +255,7 @@ PanelWindow {
                                 Text {
                                     id: actionLabel
                                     anchors.centerIn: parent
-                                    text: action.text ?? action.id ?? ""
+                                    text: action.text ?? ""
                                     color: "#f8f8f2"
                                     font.pixelSize: 11
                                     font.bold: true
@@ -269,11 +278,25 @@ PanelWindow {
                     }
                 }
 
-                // Dismiss on click anywhere on the card (child mouse areas take priority)
+                // Click the card: invoke the default action if present, otherwise dismiss.
                 MouseArea {
+                    id: cardArea
                     anchors.fill: parent
                     z: -1
-                    onClicked: if (notification) notification.dismiss()
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        if (!notification) return;
+                        const defaultAction = notification.actions
+                            ? notification.actions.find(a => a.identifier === "default")
+                            : null;
+                        if (defaultAction) {
+                            defaultAction.invoke();
+                            notification.dismiss();
+                        } else {
+                            notification.dismiss();
+                        }
+                    }
                 }
             }
         }
