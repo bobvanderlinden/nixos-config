@@ -84,11 +84,15 @@ export const SessionStatusPlugin = async ({ $ }) => {
       switch (event.type) {
         case "session.created":
         case "session.updated": {
-          await updateSession(event.properties.info.id, { info: event.properties.info });
+          const { info } = event.properties;
+          // Subagents have a parentID — only track top-level sessions.
+          if (info.parentID) break;
+          await updateSession(info.id, { info });
           break;
         }
         case "session.status": {
           const { sessionID, status } = event.properties;
+          if (!sessions.has(sessionID)) break;
           // A new status event means the session is responsive again — clear any error.
           // Also clear question on busy/retry as a safety net (the question tool's
           // completed state should handle this, but guard against missed events).
@@ -100,14 +104,15 @@ export const SessionStatusPlugin = async ({ $ }) => {
           break;
         }
         case "session.error": {
-          const sessionId = event.properties.sessionID;
-          if (!sessionId) break;
-          await updateSession(sessionId, { hasError: true });
+          const { sessionID } = event.properties;
+          if (!sessionID || !sessions.has(sessionID)) break;
+          await updateSession(sessionID, { hasError: true });
           break;
         }
         case "permission.updated": {
           const { sessionID, id } = event.properties;
-          const session = sessions.get(sessionID) ?? {};
+          if (!sessions.has(sessionID)) break;
+          const session = sessions.get(sessionID);
           const permissions = new Set(session.pendingPermissions);
           permissions.add(id);
           await updateSession(sessionID, { pendingPermissions: permissions });
@@ -115,7 +120,8 @@ export const SessionStatusPlugin = async ({ $ }) => {
         }
         case "permission.replied": {
           const { sessionID, permissionID } = event.properties;
-          const session = sessions.get(sessionID) ?? {};
+          if (!sessions.has(sessionID)) break;
+          const session = sessions.get(sessionID);
           const permissions = new Set(session.pendingPermissions);
           permissions.delete(permissionID);
           await updateSession(sessionID, { pendingPermissions: permissions });
@@ -126,6 +132,7 @@ export const SessionStatusPlugin = async ({ $ }) => {
           // Track its ToolPart status: pending/running = waiting for answer, completed/error = done.
           const { part } = event.properties;
           if (part.type === "tool" && part.tool === "question") {
+            if (!sessions.has(part.sessionID)) break;
             const isPending = part.state.status === "pending" || part.state.status === "running";
             await updateSession(part.sessionID, { question: isPending ? "pending" : null });
           }
@@ -133,6 +140,7 @@ export const SessionStatusPlugin = async ({ $ }) => {
         }
         case "todo.updated": {
           const { sessionID, todos } = event.properties;
+          if (!sessions.has(sessionID)) break;
           await updateSession(sessionID, { todos });
           break;
         }
