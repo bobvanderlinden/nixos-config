@@ -669,7 +669,7 @@ in
 
         # Capture Hyprland window address for notifications (only in Ghostty)
         if test "$TERM_PROGRAM" = ghostty
-          set -gx HYPR_WINDOW_ADDRESS (hyprctl activewindow -j | ${pkgs.jq}/bin/jq -r '.address')
+          set -gx HYPR_WINDOW_ADDRESS (hyprctl activewindow -j | ${pkgs.jq}/bin/jq -r '.address | ltrimstr("0x")')
         end
       '';
     };

@@ -3,7 +3,7 @@ import * as net from "net";
 export const SessionStatusPlugin = async ({ $ }) => {
   const uid = process.getuid?.() ?? (await $`id -u`.quiet().text()).trim();
   const socketPath = `/run/user/${uid}/statebus-pub.sock`;
-  const windowAddress = process.env.HYPR_WINDOW_ADDRESS?.replace(/^0x/, "") ?? null;
+  const windowAddress = process.env.HYPR_WINDOW_ADDRESS ?? null;
 
   // In-memory session state: sessionId -> { info, status, hasError, pendingPermissions, question, todos }
   // pendingPermissions is a Set of permission IDs waiting for a reply.
