@@ -51,10 +51,11 @@ export const SessionStatusPlugin = async ({ $ }) => {
   process.on("SIGINT",  () => { socket?.destroy(); process.exit(0); });
   process.on("SIGTERM", () => { socket?.destroy(); process.exit(0); });
 
-  // State priority: error > permission > retry > busy > idle
+  // State priority: error > permission > question > retry > busy > idle
   function deriveState(session) {
     if (session.hasError)                          return "error";
     if (session.pendingPermissions?.size > 0)      return "permission";
+    if (session.hasQuestion)                       return "question";
     return session.status?.type ?? "idle";
   }
 
@@ -81,7 +82,12 @@ export const SessionStatusPlugin = async ({ $ }) => {
         case "session.status": {
           const { sessionID, status } = event.properties;
           // A new status event means the session is responsive again — clear any error.
-          await updateSession(sessionID, { status, hasError: false });
+          // Also clear hasQuestion when busy/retry (agent is processing again).
+          const updates = { status, hasError: false };
+          if (status.type === "busy" || status.type === "retry") {
+            updates.hasQuestion = false;
+          }
+          await updateSession(sessionID, updates);
           break;
         }
         case "session.error": {
@@ -104,6 +110,23 @@ export const SessionStatusPlugin = async ({ $ }) => {
           const permissions = new Set(session.pendingPermissions);
           permissions.delete(permissionID);
           await updateSession(sessionID, { pendingPermissions: permissions });
+          break;
+        }
+        case "message.updated": {
+          // When the user sends a message, the agent is no longer waiting for a reply.
+          const { info } = event.properties;
+          if (info.role === "user") {
+            await updateSession(info.sessionID, { hasQuestion: false });
+          }
+          break;
+        }
+        case "message.part.updated": {
+          // A step-finish with reason "stop" means the model finished without calling
+          // any more tools — it asked a question and is waiting for user input.
+          const { part } = event.properties;
+          if (part.type === "step-finish" && part.reason === "stop") {
+            await updateSession(part.sessionID, { hasQuestion: true });
+          }
           break;
         }
         case "session.deleted": {

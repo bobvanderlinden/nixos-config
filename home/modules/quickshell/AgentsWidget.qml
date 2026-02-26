@@ -9,6 +9,7 @@ import QtQuick.Layouts
 //   Dot colour reflects the most urgent state of each session:
 //     red    (#ff5555) = error
 //     yellow (#f1fa8c) = permission (waiting for user approval)
+//     blue   (#8be9fd) = question (waiting for user reply)
 //     orange (#fab283) = busy / retry
 //     grey   (#6272a4) = idle
 //   Hidden entirely when there are no sessions.
@@ -24,6 +25,7 @@ BarPill {
         switch (state) {
             case "error":      return "#ff5555";
             case "permission": return "#f1fa8c";
+            case "question":   return "#8be9fd";
             case "busy":
             case "retry":      return "#fab283";
             default:           return "#6272a4";  // idle
@@ -34,6 +36,7 @@ BarPill {
         switch (state) {
             case "error":      return "#3d1a1a";
             case "permission": return "#3d3a1a";
+            case "question":   return "#1a2d3a";
             case "busy":
             case "retry":      return "#3d2a1a";
             default:           return "#2d2d3f";  // idle
