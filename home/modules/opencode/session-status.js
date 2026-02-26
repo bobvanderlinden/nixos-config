@@ -5,9 +5,9 @@ export const SessionStatusPlugin = async ({ $ }) => {
   const socketPath = `/run/user/${uid}/statebus-pub.sock`;
   const windowAddress = process.env.HYPR_WINDOW_ADDRESS ?? null;
 
-  // In-memory session state: sessionId -> { info, status, hasError, pendingPermissions, hasQuestion }
+  // In-memory session state: sessionId -> { info, status, hasError, pendingPermissions, question }
   // pendingPermissions is a Set of permission IDs waiting for a reply.
-  // hasQuestion is true while the AI's "question" tool call is pending/running.
+  // question is "pending" while the AI's "question" tool call is pending/running, otherwise null.
   const sessions = new Map();
 
   let socket = null;
@@ -56,7 +56,7 @@ export const SessionStatusPlugin = async ({ $ }) => {
   function deriveState(session) {
     if (session.hasError)                          return "error";
     if (session.pendingPermissions?.size > 0)      return "permission";
-    if (session.hasQuestion)                       return "question";
+    if (session.question === "pending")            return "question";
     return session.status?.type ?? "idle";
   }
 
@@ -83,11 +83,11 @@ export const SessionStatusPlugin = async ({ $ }) => {
         case "session.status": {
           const { sessionID, status } = event.properties;
           // A new status event means the session is responsive again — clear any error.
-          // Also clear hasQuestion on busy/retry as a safety net (the question tool's
+          // Also clear question on busy/retry as a safety net (the question tool's
           // completed state should handle this, but guard against missed events).
           const updates = { status, hasError: false };
           if (status.type === "busy" || status.type === "retry") {
-            updates.hasQuestion = false;
+            updates.question = null;
           }
           await updateSession(sessionID, updates);
           break;
@@ -119,8 +119,8 @@ export const SessionStatusPlugin = async ({ $ }) => {
           // Track its ToolPart status: pending/running = waiting for answer, completed/error = done.
           const { part } = event.properties;
           if (part.type === "tool" && part.tool === "question") {
-            const waiting = part.state.status === "pending" || part.state.status === "running";
-            await updateSession(part.sessionID, { hasQuestion: waiting });
+            const isPending = part.state.status === "pending" || part.state.status === "running";
+            await updateSession(part.sessionID, { question: isPending ? "pending" : null });
           }
           break;
         }
