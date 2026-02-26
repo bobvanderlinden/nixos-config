@@ -15,7 +15,7 @@ import QtQuick.Layouts
 //   Hidden entirely when there are no sessions.
 //
 // Expanded (hover): a PopupWindow appears above the bar listing all
-//   sessions with title + state badge.
+//   sessions with title + todo progress (X/Y, green when all done) + state badge.
 //   Clicking a row focuses the agent's window via hyprctl.
 //   Auto-closes when the mouse leaves.
 BarPill {
@@ -181,6 +181,17 @@ BarPill {
                             color: canFocus ? "#f8f8f2" : "#6272a4"
                             font.pixelSize: 12
                             elide: Text.ElideRight
+                        }
+
+                        // Todo progress (X/Y), hidden when no todos
+                        Text {
+                            property var activeTodos: (session.todos ?? []).filter(t => t.status !== "cancelled")
+                            property int completedCount: activeTodos.filter(t => t.status === "completed").length
+                            visible: activeTodos.length > 0
+                            text: completedCount + "/" + activeTodos.length
+                            color: completedCount === activeTodos.length ? "#50fa7b" : "#6272a4"
+                            font.pixelSize: 10
+                            Layout.alignment: Qt.AlignVCenter
                         }
 
                         // State badge

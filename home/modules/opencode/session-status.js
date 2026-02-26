@@ -5,9 +5,10 @@ export const SessionStatusPlugin = async ({ $ }) => {
   const socketPath = `/run/user/${uid}/statebus-pub.sock`;
   const windowAddress = process.env.HYPR_WINDOW_ADDRESS ?? null;
 
-  // In-memory session state: sessionId -> { info, status, hasError, pendingPermissions, question }
+  // In-memory session state: sessionId -> { info, status, hasError, pendingPermissions, question, todos }
   // pendingPermissions is a Set of permission IDs waiting for a reply.
   // question is "pending" while the AI's "question" tool call is pending/running, otherwise null.
+  // todos is the latest array of Todo objects from todo.updated events.
   const sessions = new Map();
 
   let socket = null;
@@ -31,6 +32,7 @@ export const SessionStatusPlugin = async ({ $ }) => {
           windowAddress,
           state: deriveState(session),
           title: session.info?.title ?? "",
+          todos: session.todos ?? [],
         }) + "\n");
       }
     });
@@ -73,6 +75,7 @@ export const SessionStatusPlugin = async ({ $ }) => {
       windowAddress,
       state: deriveState(session),
       title: session.info?.title ?? "",
+      todos: session.todos ?? [],
     });
   }
 
@@ -126,6 +129,11 @@ export const SessionStatusPlugin = async ({ $ }) => {
             const isPending = part.state.status === "pending" || part.state.status === "running";
             await updateSession(part.sessionID, { question: isPending ? "pending" : null });
           }
+          break;
+        }
+        case "todo.updated": {
+          const { sessionID, todos } = event.properties;
+          await updateSession(sessionID, { todos });
           break;
         }
         case "session.deleted": {

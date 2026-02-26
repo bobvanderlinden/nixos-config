@@ -11,7 +11,7 @@ import QtQuick
 //   statebus-sub.sock  — subscribers receive a full state replay on connect, then live updates
 //
 // Each message is a newline-delimited JSON object:
-//   { type: "update", key, windowAddress, state, title }
+//   { type: "update", key, windowAddress, state, title, todos }
 //   { type: "remove", key }
 //
 // One entry per key is exposed in `sessions`.
@@ -20,10 +20,10 @@ Singleton {
     id: root
 
     // One entry per published key:
-    // [{ windowAddress, state, title }, ...]
+    // [{ windowAddress, state, title, todos }, ...]
     property var sessions: []
 
-    // Internal: key → { windowAddress, state, title }
+    // Internal: key → { windowAddress, state, title, todos }
     property var sessionMap: ({})
 
     Socket {
@@ -53,6 +53,7 @@ Singleton {
                             windowAddress: obj.windowAddress ?? null,
                             state:         obj.state ?? "idle",
                             title:         obj.title ?? "",
+                            todos:         obj.todos ?? [],
                         };
                     }
 
