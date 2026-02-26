@@ -150,16 +150,28 @@ BarPill {
                     property var session: modelData
                     property bool canFocus: session.windowAddress !== null
 
+                    property var hyprToplevel: {
+                        if (!session.windowAddress) return null;
+                        const addr = session.windowAddress.replace(/^0x/, "");
+                        return Hyprland.toplevels.values.find(t => t.address === addr) ?? null;
+                    }
+                    property string workspaceId: (hyprToplevel?.workspace?.id ?? 0) > 0
+                        ? hyprToplevel.workspace.id.toString()
+                        : ""
+
                     Layout.fillWidth: true
-                    implicitHeight: 28
+                    implicitHeight: rowLayout.implicitHeight + 8
                     radius: 4
                     color: rowHover.hovered && canFocus ? "#383a59" : "transparent"
 
                     HoverHandler { id: rowHover }
 
                     RowLayout {
+                        id: rowLayout
                         anchors {
-                            fill: parent
+                            left: parent.left
+                            right: parent.right
+                            verticalCenter: parent.verticalCenter
                             leftMargin: 8
                             rightMargin: 8
                         }
@@ -174,13 +186,25 @@ BarPill {
                             Layout.alignment: Qt.AlignVCenter
                         }
 
-                        // Title
-                        Text {
+                        // Title + workspace
+                        ColumnLayout {
                             Layout.fillWidth: true
-                            text: session.title !== "" ? session.title : "(unknown)"
-                            color: canFocus ? "#f8f8f2" : "#6272a4"
-                            font.pixelSize: 12
-                            elide: Text.ElideRight
+                            spacing: 1
+
+                            Text {
+                                Layout.fillWidth: true
+                                text: session.title !== "" ? session.title : "(unknown)"
+                                color: canFocus ? "#f8f8f2" : "#6272a4"
+                                font.pixelSize: 12
+                                elide: Text.ElideRight
+                            }
+
+                            Text {
+                                visible: workspaceId !== ""
+                                text: "workspace " + workspaceId
+                                color: "#44475a"
+                                font.pixelSize: 10
+                            }
                         }
 
                         // Todo progress (X/Y), hidden when no todos
