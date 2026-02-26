@@ -1,0 +1,13 @@
+[project]
+name = "statebus"
+version = "0.1.0"
+description = "ndjson state pub/sub daemon over Unix sockets"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.scripts]
+statebus = "statebus:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

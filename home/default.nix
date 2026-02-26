@@ -56,6 +56,7 @@ in
 {
   imports = [
     ./modules/blueberry.nix
+    ./modules/statebus.nix
     ./modules/xssproxy.nix
     ./modules/nushell.nix
     ./modules/swaybg.nix
@@ -708,6 +709,7 @@ in
 
     services.network-manager-applet.enable = true;
     services.blueberry.enable = true;
+    services.statebus.enable = true;
     services.mpris-proxy.enable = true;
     services.flameshot = {
       enable = true;

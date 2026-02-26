@@ -2,7 +2,7 @@ import * as net from "net";
 
 export const SessionStatusPlugin = async ({ $ }) => {
   const uid = process.getuid?.() ?? (await $`id -u`.quiet().text()).trim();
-  const socketPath = `/run/user/${uid}/opencode-sessions.sock`;
+  const socketPath = `/run/user/${uid}/statebus-pub.sock`;
   const windowAddress = process.env.HYPR_WINDOW_ADDRESS ?? null;
 
   // In-memory session state: sessionId -> { info, status }
@@ -25,7 +25,7 @@ export const SessionStatusPlugin = async ({ $ }) => {
       for (const [sessionId, session] of sessions) {
         s.write(JSON.stringify({
           type: "update",
-          sessionId,
+          key: sessionId,
           windowAddress,
           state: session.status?.type ?? "idle",
           title: session.info?.title ?? "",
@@ -55,7 +55,7 @@ export const SessionStatusPlugin = async ({ $ }) => {
     const session = sessions.get(sessionId);
     send({
       type: "update",
-      sessionId,
+      key: sessionId,
       windowAddress,
       state: session.status?.type ?? "idle",
       title: session.info?.title ?? "",
@@ -77,7 +77,7 @@ export const SessionStatusPlugin = async ({ $ }) => {
         case "session.deleted": {
           const id = event.properties.info.id;
           sessions.delete(id);
-          send({ type: "remove", sessionId: id });
+          send({ type: "remove", key: id });
           break;
         }
       }
