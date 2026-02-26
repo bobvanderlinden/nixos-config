@@ -152,8 +152,7 @@ BarPill {
 
                     property var hyprToplevel: {
                         if (!session.windowAddress) return null;
-                        const addr = session.windowAddress.replace(/^0x/, "");
-                        return Hyprland.toplevels.values.find(t => t.address === addr) ?? null;
+                        return Hyprland.toplevels.values.find(t => t.address === session.windowAddress) ?? null;
                     }
                     property string workspaceId: (hyprToplevel?.workspace?.id ?? 0) > 0
                         ? hyprToplevel.workspace.id.toString()
@@ -240,7 +239,7 @@ BarPill {
                         enabled: parent.canFocus
                         cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
                         onClicked: {
-                            Hyprland.dispatch("focuswindow address:" + session.windowAddress);
+                            Hyprland.dispatch("focuswindow address:0x" + session.windowAddress);
                             hideTimer.stop();
                             popup.visible = false;
                         }
