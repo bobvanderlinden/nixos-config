@@ -6,7 +6,11 @@ import QtQuick.Layouts
 // Agent sessions widget.
 //
 // Collapsed (bar): pill containing robot emoji + one dot per session.
-//   orange (#fab283, OpenCode brand) = busy/retry, grey (#6272a4) = idle.
+//   Dot colour reflects the most urgent state of each session:
+//     red    (#ff5555) = error
+//     yellow (#f1fa8c) = permission (waiting for user approval)
+//     orange (#fab283) = busy / retry
+//     grey   (#6272a4) = idle
 //   Hidden entirely when there are no sessions.
 //
 // Expanded (hover): a PopupWindow appears above the bar listing all
@@ -15,6 +19,26 @@ import QtQuick.Layouts
 //   Auto-closes when the mouse leaves.
 BarPill {
     id: root
+
+    function stateColor(state) {
+        switch (state) {
+            case "error":      return "#ff5555";
+            case "permission": return "#f1fa8c";
+            case "busy":
+            case "retry":      return "#fab283";
+            default:           return "#6272a4";  // idle
+        }
+    }
+
+    function stateBgColor(state) {
+        switch (state) {
+            case "error":      return "#3d1a1a";
+            case "permission": return "#3d3a1a";
+            case "busy":
+            case "retry":      return "#3d2a1a";
+            default:           return "#2d2d3f";  // idle
+        }
+    }
 
     visible: AgentState.sessions.length > 0
 
@@ -43,7 +67,7 @@ BarPill {
                 height: 8
                 radius: 4
                 Layout.alignment: Qt.AlignVCenter
-                color: modelData.state !== "idle" ? "#fab283" : "#6272a4"
+                color: root.stateColor(modelData.state)
             }
         }
     }
@@ -143,7 +167,7 @@ BarPill {
                             width: 8
                             height: 8
                             radius: 4
-                            color: session.state !== "idle" ? "#fab283" : "#6272a4"
+                            color: root.stateColor(session.state)
                             Layout.alignment: Qt.AlignVCenter
                         }
 
@@ -161,13 +185,13 @@ BarPill {
                             implicitWidth: stateLabel.implicitWidth + 8
                             implicitHeight: 16
                             radius: 3
-                            color: session.state !== "idle" ? "#3d2a1a" : "#2d2d3f"
+                            color: root.stateBgColor(session.state)
 
                             Text {
                                 id: stateLabel
                                 anchors.centerIn: parent
                                 text: session.state
-                                color: session.state !== "idle" ? "#fab283" : "#6272a4"
+                                color: root.stateColor(session.state)
                                 font.pixelSize: 10
                             }
                         }

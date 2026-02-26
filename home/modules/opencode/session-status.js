@@ -5,7 +5,8 @@ export const SessionStatusPlugin = async ({ $ }) => {
   const socketPath = `/run/user/${uid}/statebus-pub.sock`;
   const windowAddress = process.env.HYPR_WINDOW_ADDRESS ?? null;
 
-  // In-memory session state: sessionId -> { info, status }
+  // In-memory session state: sessionId -> { info, status, hasError, pendingPermissions }
+  // pendingPermissions is a Set of permission IDs waiting for a reply.
   const sessions = new Map();
 
   let socket = null;
@@ -27,7 +28,7 @@ export const SessionStatusPlugin = async ({ $ }) => {
           type: "update",
           key: sessionId,
           windowAddress,
-          state: session.status?.type ?? "idle",
+          state: deriveState(session),
           title: session.info?.title ?? "",
         }) + "\n");
       }
@@ -50,6 +51,13 @@ export const SessionStatusPlugin = async ({ $ }) => {
   process.on("SIGINT",  () => { socket?.destroy(); process.exit(0); });
   process.on("SIGTERM", () => { socket?.destroy(); process.exit(0); });
 
+  // State priority: error > permission > retry > busy > idle
+  function deriveState(session) {
+    if (session.hasError)                          return "error";
+    if (session.pendingPermissions?.size > 0)      return "permission";
+    return session.status?.type ?? "idle";
+  }
+
   async function updateSession(sessionId, updates) {
     sessions.set(sessionId, { ...sessions.get(sessionId), ...updates });
     const session = sessions.get(sessionId);
@@ -57,7 +65,7 @@ export const SessionStatusPlugin = async ({ $ }) => {
       type: "update",
       key: sessionId,
       windowAddress,
-      state: session.status?.type ?? "idle",
+      state: deriveState(session),
       title: session.info?.title ?? "",
     });
   }
@@ -71,7 +79,31 @@ export const SessionStatusPlugin = async ({ $ }) => {
           break;
         }
         case "session.status": {
-          await updateSession(event.properties.sessionID, { status: event.properties.status });
+          const { sessionID, status } = event.properties;
+          // A new status event means the session is responsive again — clear any error.
+          await updateSession(sessionID, { status, hasError: false });
+          break;
+        }
+        case "session.error": {
+          const sessionId = event.properties.sessionID;
+          if (!sessionId) break;
+          await updateSession(sessionId, { hasError: true });
+          break;
+        }
+        case "permission.updated": {
+          const { sessionID, id } = event.properties;
+          const session = sessions.get(sessionID) ?? {};
+          const permissions = new Set(session.pendingPermissions);
+          permissions.add(id);
+          await updateSession(sessionID, { pendingPermissions: permissions });
+          break;
+        }
+        case "permission.replied": {
+          const { sessionID, permissionID } = event.properties;
+          const session = sessions.get(sessionID) ?? {};
+          const permissions = new Set(session.pendingPermissions);
+          permissions.delete(permissionID);
+          await updateSession(sessionID, { pendingPermissions: permissions });
           break;
         }
         case "session.deleted": {
