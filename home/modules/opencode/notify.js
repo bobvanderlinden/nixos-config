@@ -7,7 +7,7 @@ export const NotifyPlugin = async ({ $, client }) => {
    */
   async function isWindowFocused() {
     if (!windowAddress) return false;
-    const activeAddress = (await $`hyprctl activewindow -j`.quiet().json()).address;
+    const activeAddress = (await $`hyprctl activewindow -j`.quiet().json()).address?.replace(/^0x/, "");
     return activeAddress === windowAddress;
   }
 

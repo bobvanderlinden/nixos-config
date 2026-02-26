@@ -99,9 +99,9 @@ async def watch_hyprland_focus(
             event, _, data = decoded.partition(">>")
             if verbose:
                 print(f"Event: {event} data: {data}", file=sys.stderr)
-            if event == "activewindowv2" and f"0x{data}" == window_address:
+            if event == "activewindowv2" and data == window_address:
                 return WindowEvent.FOCUSED
-            if event == "closewindow" and f"0x{data}" == window_address:
+            if event == "closewindow" and data == window_address:
                 return WindowEvent.CLOSED
     finally:
         writer.close()
@@ -244,7 +244,7 @@ async def _main() -> None:
         if args.verbose:
             print(f"Focusing window {window_address}", file=sys.stderr)
         subprocess.run(  # noqa: S603
-            ["hyprctl", "dispatch", "focuswindow", f"address:{window_address}"],
+            ["hyprctl", "dispatch", "focuswindow", f"address:0x{window_address}"],
             check=False,
         )
 
