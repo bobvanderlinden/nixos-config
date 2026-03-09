@@ -253,13 +253,33 @@ in
 
     wayland.windowManager.hyprland =
       let
-        # Starts Bitwarden and 1Password when the scratchpad is first opened.
-        # Used as on-created-empty for the scratchpad workspace.
-        # 1Password's main window is moved to the scratchpad by listening for
+        # Starts Bitwarden and 1Password when the vault workspace is first opened.
+        # Used as on-created-empty for the vault workspace.
+        # 1Password's main window is moved to the vault by listening for
         # the windowtitlev2 IPC event — static windowrules can't distinguish
         # the main window from the auth dialog since both share initialTitle
         # "1Password" at creation time.
-        scratchpadOpen = pkgs.writeShellScript "scratchpad-open" ''
+        slackOpen = pkgs.writeShellScript "slack-open" ''
+          # Start Slack if not already running
+          if ! hyprctl clients -j | ${pkgs.jq}/bin/jq -e '.[] | select(.initialClass == "Slack")' > /dev/null 2>&1; then
+            slack &
+            disown
+          fi
+
+          # Poll until the Slack main window appears, then move it to the slack workspace.
+          for _ in $(seq 1 20); do
+            address=$(hyprctl clients -j | ${pkgs.jq}/bin/jq -r '
+              .[] | select(.initialClass == "Slack") | .address
+            ' | head -1)
+            if [[ -n "$address" ]]; then
+              hyprctl dispatch movetoworkspacesilent "special:slack,address:$address"
+              break
+            fi
+            sleep 0.5
+          done
+        '';
+
+        vaultOpen = pkgs.writeShellScript "vault-open" ''
           # Start Bitwarden if not already running
           if ! hyprctl clients -j | ${pkgs.jq}/bin/jq -e '.[] | select(.class == "Bitwarden")' > /dev/null 2>&1; then
             bitwarden &
@@ -273,13 +293,13 @@ in
           fi
 
           # Poll until the 1Password main window appears (title contains "— 1Password"),
-          # then move it to the scratchpad and unpin/unfloat it.
+          # then move it to the vault and unpin/unfloat it.
           for _ in $(seq 1 20); do
             address=$(hyprctl clients -j | ${pkgs.jq}/bin/jq -r '
               .[] | select(.class == "1password") | .address
             ' | head -1)
             if [[ -n "$address" ]]; then
-                hyprctl dispatch movetoworkspacesilent "special:scratchpad,address:$address"
+                hyprctl dispatch movetoworkspacesilent "special:vault,address:$address"
                 # togglefloating also unpins the window
                 hyprctl dispatch togglefloating address:"$address"
               break
@@ -300,7 +320,8 @@ in
           };
 
           workspace = [
-            "special:scratchpad, shadow:true, on-created-empty:${scratchpadOpen}, gapsin:10, gapsout:60"
+            "special:vault, shadow:true, on-created-empty:${vaultOpen}, gapsin:10, gapsout:60"
+            "special:slack, shadow:true, on-created-empty:${slackOpen}, gapsin:10, gapsout:60"
           ];
 
           windowrule = [
@@ -311,11 +332,11 @@ in
             # Zoom-us
             "float on, match:class (Zoom Workplace), suppress_event maximize, pin on, dim_around off, decorate off"
 
-            # Bitwarden on the scratchpad
-            "match:class (Bitwarden), no_screen_share on, workspace special:scratchpad silent, rounding 12"
+            # Bitwarden on the vault workspace
+            "match:class (Bitwarden), no_screen_share on, workspace special:vault silent, rounding 12"
 
             # All 1Password windows: float + pin by default (auth dialog, quick access, etc.)
-            # The scratchpad-open script unpins and unfloats the main window after moving it.
+            # The vault-open script unpins and unfloats the main window after moving it.
             "match:class (1password), no_screen_share on, rounding 12, float on, pin on"
           ];
 
@@ -412,20 +433,23 @@ in
             "$mod SHIFT, 0, movetoworkspace, 10"
 
             # Reassign current workspace to a number
-            "$mod SHIFT CTRL, 1, exec, hyprctl dispatch renameworkspace $(hyprctl activeworkspace -j | jq --raw-output '.id') 1"
-            "$mod SHIFT CTRL, 2, exec, hyprctl dispatch renameworkspace $(hyprctl activeworkspace -j | jq --raw-output '.id') 2"
-            "$mod SHIFT CTRL, 3, exec, hyprctl dispatch renameworkspace $(hyprctl activeworkspace -j | jq --raw-output '.id') 3"
-            "$mod SHIFT CTRL, 4, exec, hyprctl dispatch renameworkspace $(hyprctl activeworkspace -j | jq --raw-output '.id') 4"
-            "$mod SHIFT CTRL, 5, exec, hyprctl dispatch renameworkspace $(hyprctl activeworkspace -j | jq --raw-output '.id') 5"
-            "$mod SHIFT CTRL, 6, exec, hyprctl dispatch renameworkspace $(hyprctl activeworkspace -j | jq --raw-output '.id') 6"
-            "$mod SHIFT CTRL, 7, exec, hyprctl dispatch renameworkspace $(hyprctl activeworkspace -j | jq --raw-output '.id') 7"
-            "$mod SHIFT CTRL, 8, exec, hyprctl dispatch renameworkspace $(hyprctl activeworkspace -j | jq --raw-output '.id') 8"
-            "$mod SHIFT CTRL, 9, exec, hyprctl dispatch renameworkspace $(hyprctl activeworkspace -j | jq --raw-output '.id') 9"
-            "$mod SHIFT CTRL, 0, exec, hyprctl dispatch renameworkspace $(hyprctl activeworkspace -j | jq --raw-output '.id') 10"
+            "$mod SHIFT CTRL, 1, exec, ${lib.getExe reassign-workspace} 1"
+            "$mod SHIFT CTRL, 2, exec, ${lib.getExe reassign-workspace} 2"
+            "$mod SHIFT CTRL, 3, exec, ${lib.getExe reassign-workspace} 3"
+            "$mod SHIFT CTRL, 4, exec, ${lib.getExe reassign-workspace} 4"
+            "$mod SHIFT CTRL, 5, exec, ${lib.getExe reassign-workspace} 5"
+            "$mod SHIFT CTRL, 6, exec, ${lib.getExe reassign-workspace} 6"
+            "$mod SHIFT CTRL, 7, exec, ${lib.getExe reassign-workspace} 7"
+            "$mod SHIFT CTRL, 8, exec, ${lib.getExe reassign-workspace} 8"
+            "$mod SHIFT CTRL, 9, exec, ${lib.getExe reassign-workspace} 9"
+            "$mod SHIFT CTRL, 0, exec, ${lib.getExe reassign-workspace} 10"
 
-            # Special workspace (scratchpad)
-            "$mod, grave, togglespecialworkspace, scratchpad"
-            "$mod SHIFT, grave, movetoworkspace, special:scratchpad"
+            # Special workspace (vault: Bitwarden + 1Password)
+            "$mod, grave, togglespecialworkspace, vault"
+            "$mod SHIFT, grave, movetoworkspace, special:vault"
+
+            # Special workspace (Slack)
+            "$mod, Tab, togglespecialworkspace, slack"
 
             # Move workspace to monitor
             "CTRL ALT $mod SHIFT, Left, movecurrentworkspacetomonitor, l"
