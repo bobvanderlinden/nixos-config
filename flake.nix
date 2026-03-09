@@ -18,6 +18,10 @@
       url = "github:peteonrails/voxtype";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    networkmanager-openvpn3 = {
+      url = "git+file:///home/bob.vanderlinden/projects/bobvanderlinden/NetworkManager-openvpn3";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     quickshell = {
       url = "git+https://git.outfoxxed.me/outfoxxed/quickshell";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -115,7 +119,7 @@
       };
 
       overlays.workarounds =
-        final: prev:
+        _final: _prev:
         # let
         #   pkgsStable = import inputs.nixpkgs-stable {
         #     system = prev.system;
@@ -152,6 +156,7 @@
         voxtype-home-manager = {
           home-manager.sharedModules = [ inputs.voxtype.homeManagerModules.default ];
         };
+        networkmanager-openvpn3 = inputs.networkmanager-openvpn3.nixosModules.default;
       };
 
       # System configuration for laptop.
