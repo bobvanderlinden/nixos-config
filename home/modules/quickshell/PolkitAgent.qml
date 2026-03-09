@@ -12,27 +12,15 @@ import QtQuick.Controls
 Item {
     id: root
 
-    PolkitAgent {
-        id: agent
-        onIsActiveChanged: {
-            if (isActive) {
-                dialog.flow = agent.flow;
-                dialog.visible = true;
-            } else {
-                dialog.visible = false;
-            }
-        }
-    }
-
     // ── Authentication dialog ─────────────────────────────────────────────────
 
     PanelWindow {
         id: dialog
-        visible: false
 
-        property AuthFlow flow: null
+        // Declarative binding: show whenever polkit has an active request.
+        visible: agent.isActive
 
-        // Center on the focused screen.
+        // Center on the primary screen.
         screen: Quickshell.screens[0]
 
         WlrLayershell.layer: WlrLayer.Overlay
@@ -51,10 +39,10 @@ Item {
 
         // Grab keyboard focus so password can be typed immediately.
         HyprlandFocusGrab {
-            active: dialog.visible
+            active: agent.isActive
             windows: [dialog]
             onCleared: {
-                if (dialog.flow) dialog.flow.cancelAuthenticationRequest();
+                if (agent.flow) agent.flow.cancelAuthenticationRequest();
             }
         }
 
@@ -68,13 +56,10 @@ Item {
             border.width: 1
 
             // Error shake animation
-            property real shakeX: 0
-            transform: Translate { x: shakeBackground.shakeX }
-
             SequentialAnimation {
                 id: shakeBackground
                 property real shakeX: 0
-                running: dialog.flow && dialog.flow.failed
+                running: agent.flow && agent.flow.failed
                 loops: 1
                 NumberAnimation { target: shakeBackground; property: "shakeX"; from: 0;   to: -8; duration: 50 }
                 NumberAnimation { target: shakeBackground; property: "shakeX"; from: -8;  to:  8; duration: 50 }
@@ -82,6 +67,7 @@ Item {
                 NumberAnimation { target: shakeBackground; property: "shakeX"; from: -8;  to:  8; duration: 50 }
                 NumberAnimation { target: shakeBackground; property: "shakeX"; from:  8;  to:  0; duration: 50 }
             }
+            transform: Translate { x: shakeBackground.shakeX }
 
             ColumnLayout {
                 id: contentCol
@@ -111,7 +97,7 @@ Item {
                         spacing: 2
 
                         Text {
-                            text: dialog.flow ? dialog.flow.message : "Authentication Required"
+                            text: agent.flow?.message ?? "Authentication Required"
                             color: "#f8f8f2"
                             font.pixelSize: 14
                             font.bold: true
@@ -120,8 +106,8 @@ Item {
                         }
 
                         Text {
-                            visible: dialog.flow && dialog.flow.actionId !== ""
-                            text: dialog.flow ? dialog.flow.actionId : ""
+                            visible: (agent.flow?.actionId ?? "") !== ""
+                            text: agent.flow?.actionId ?? ""
                             color: "#6272a4"
                             font.pixelSize: 10
                             elide: Text.ElideRight
@@ -132,9 +118,9 @@ Item {
 
                 // Supplementary message (error or prompt from agent)
                 Text {
-                    visible: dialog.flow && dialog.flow.supplementaryMessage !== ""
-                    text: dialog.flow ? dialog.flow.supplementaryMessage : ""
-                    color: (dialog.flow && dialog.flow.supplementaryIsError) ? "#ff5555" : "#6272a4"
+                    visible: (agent.flow?.supplementaryMessage ?? "") !== ""
+                    text: agent.flow?.supplementaryMessage ?? ""
+                    color: (agent.flow?.supplementaryIsError ?? false) ? "#ff5555" : "#6272a4"
                     font.pixelSize: 12
                     wrapMode: Text.Wrap
                     Layout.fillWidth: true
@@ -142,13 +128,13 @@ Item {
 
                 // Password input
                 Rectangle {
-                    visible: dialog.flow && dialog.flow.isResponseRequired
+                    visible: agent.flow?.isResponseRequired ?? false
                     Layout.fillWidth: true
                     implicitHeight: 34
                     radius: 6
                     color: "#313244"
                     border.color: passwordInput.activeFocus
-                        ? ((dialog.flow && dialog.flow.failed) ? "#ff5555" : "#bd93f9")
+                        ? ((agent.flow?.failed ?? false) ? "#ff5555" : "#bd93f9")
                         : "#44475a"
                     border.width: 1
 
@@ -162,9 +148,9 @@ Item {
                             rightMargin: 10
                         }
                         verticalAlignment: TextInput.AlignVCenter
-                        echoMode: (dialog.flow && !dialog.flow.responseVisible)
-                            ? TextInput.Password
-                            : TextInput.Normal
+                        echoMode: (agent.flow?.responseVisible ?? false)
+                            ? TextInput.Normal
+                            : TextInput.Password
                         color: "#f8f8f2"
                         font.pixelSize: 13
                         font.family: "SauceCodePro Nerd Font"
@@ -174,7 +160,7 @@ Item {
                         Keys.onReturnPressed: submitPassword()
                         Keys.onEnterPressed: submitPassword()
                         Keys.onEscapePressed: {
-                            if (dialog.flow) dialog.flow.cancelAuthenticationRequest();
+                            if (agent.flow) agent.flow.cancelAuthenticationRequest();
                         }
                     }
 
@@ -185,7 +171,7 @@ Item {
                             leftMargin: 10
                         }
                         verticalAlignment: Text.AlignVCenter
-                        text: dialog.flow ? dialog.flow.inputPrompt : "Password"
+                        text: agent.flow?.inputPrompt ?? "Password"
                         color: "#44475a"
                         font.pixelSize: 13
                         font.family: "SauceCodePro Nerd Font"
@@ -226,7 +212,7 @@ Item {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
-                                if (dialog.flow) dialog.flow.cancelAuthenticationRequest();
+                                if (agent.flow) agent.flow.cancelAuthenticationRequest();
                             }
                         }
                     }
@@ -237,7 +223,7 @@ Item {
                         implicitHeight: 32
                         radius: 6
                         color: authHover.hovered ? "#a070e0" : "#bd93f9"
-                        enabled: dialog.flow && dialog.flow.isResponseRequired
+                        enabled: agent.flow?.isResponseRequired ?? false
 
                         Behavior on color { ColorAnimation { duration: 100 } }
 
@@ -262,21 +248,33 @@ Item {
             }
         }
 
-        Component.onCompleted: {
-            passwordInput.forceActiveFocus();
-        }
-
         onVisibleChanged: {
             if (visible) {
                 passwordInput.text = "";
                 passwordInput.forceActiveFocus();
             }
         }
+
+        // Reset password field when flow changes (new auth request after failure)
+        Connections {
+            target: agent.flow
+            enabled: agent.flow !== null
+            function onIsResponseRequiredChanged() {
+                passwordInput.text = "";
+                if (agent.flow?.isResponseRequired) {
+                    passwordInput.forceActiveFocus();
+                }
+            }
+        }
+    }
+
+    PolkitAgent {
+        id: agent
     }
 
     function submitPassword() {
-        if (!dialog.flow) return;
-        dialog.flow.submit(passwordInput.text);
+        if (!agent.flow) return;
+        agent.flow.submit(passwordInput.text);
         passwordInput.text = "";
     }
 }
