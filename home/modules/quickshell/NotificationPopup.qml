@@ -9,9 +9,10 @@ import QtQuick.Layouts
 PanelWindow {
     id: root
 
-    required property var screen
+    // Use a distinct name to avoid shadowing PanelWindow's built-in 'screen' property.
+    required property var targetScreen
 
-    screen: root.screen
+    screen: root.targetScreen
 
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "quickshell-notifications"

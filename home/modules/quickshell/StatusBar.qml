@@ -8,10 +8,11 @@ import QtQuick.Layouts
 PanelWindow {
     id: bar
 
-    // Set by parent (shell.qml Variants loop)
-    required property var screen
+    // Set by parent (shell.qml Variants loop).
+    // Use a distinct name to avoid shadowing PanelWindow's built-in 'screen' property.
+    required property var targetScreen
 
-    screen: bar.screen
+    screen: bar.targetScreen
     anchors.bottom: true
     anchors.left: true
     anchors.right: true
@@ -39,7 +40,11 @@ PanelWindow {
 
         SystemdFailedUnits { }
 
-        AgentsWidget {
+        PrivacyWidget {
+            barWindow: bar
+        }
+
+        GithubWidget {
             barWindow: bar
         }
 
@@ -47,17 +52,21 @@ PanelWindow {
             barWindow: bar
         }
 
+        AgentsWidget {
+            barWindow: bar
+        }
+
         SessionTimeWidget { }
+
+        VolumeWidget {
+            barWindow: bar
+        }
 
         NetworkWidget {
             barWindow: bar
         }
 
         BatteryWidget {
-            barWindow: bar
-        }
-
-        VolumeWidget {
             barWindow: bar
         }
 

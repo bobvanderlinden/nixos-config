@@ -1,6 +1,8 @@
 //@ pragma UseQApplication
+//@ pragma IconTheme Adwaita
 import Quickshell
 import Quickshell.Services.Notifications
+import Quickshell.Services.Polkit
 import QtQuick
 
 // Shell root - manages the bar, notification daemon, and OSD overlays.
@@ -40,8 +42,7 @@ ShellRoot {
 
         delegate: NotificationPopup {
             required property var modelData
-            screen: modelData
-            // notifModel is accessible by id from anywhere in the same ShellRoot
+            targetScreen: modelData
         }
     }
 
@@ -51,7 +52,7 @@ ShellRoot {
 
         delegate: StatusBar {
             required property var modelData
-            screen: modelData
+            targetScreen: modelData
         }
     }
 
@@ -74,4 +75,7 @@ ShellRoot {
             screen: modelData
         }
     }
+
+    // ── Polkit authentication agent (single instance) ─────────────────────────
+    PolkitAgent { }
 }
