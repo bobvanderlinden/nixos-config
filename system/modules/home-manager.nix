@@ -16,6 +16,7 @@ in
   home-manager.extraSpecialArgs = { inherit inputs; };
   environment.pathsToLink = [
     "/share/applications"
+    "/share/wayland-sessions"
   ];
   home-manager.users."${username}".imports = [ ./../../home ];
 }

@@ -97,7 +97,7 @@
   };
   services.resolved.enable = true;
   programs.openvpn3.enable = true;
-  services.tailscale.enable = true;
+  programs.networkmanager-openvpn3.enable = true;
 
   fonts = {
     fontDir.enable = true;
@@ -263,24 +263,21 @@
     longitude = 5.9115896491034565;
   };
 
-  programs.hyprland = {
-    enable = true;
-  };
+  programs.hyprland.enable = true;
   services.greetd = {
     enable = true;
     settings = {
       default_session = {
-        command = "${lib.getExe pkgs.cage} ${lib.getExe pkgs.gtkgreet}";
+        command = "${lib.getExe pkgs.tuigreet} --sessions /run/current-system/sw/share/wayland-sessions";
+        user = "greeter";
       };
       initial_session = {
-        command = "${config.programs.hyprland.package}/bin/start-hyprland";
+        command = "${pkgs.bash}/bin/bash --login -c 'exec start-hyprland'";
         user = config.suites.single-user.user;
       };
     };
   };
   services.systemd-lock-handler.enable = true;
-
-  services.displayManager.autoLogin.enable = true;
 
   # Fingerprint reader
   services.fprintd.enable = true;
@@ -321,7 +318,7 @@
   nixpkgs.config.allowUnfree = true;
   nixpkgs.config.permittedInsecurePackages = [ "electron-25.9.0" ];
 
-  documentation.man.generateCaches = false;
+  documentation.man.cache.enable = false;
   documentation.nixos.enable = false;
 
   # system.replaceRuntimeDependencies = [
