@@ -338,6 +338,7 @@ in
             # All 1Password windows: float + pin by default (auth dialog, quick access, etc.)
             # The vault-open script unpins and unfloats the main window after moving it.
             "match:class (1password), no_screen_share on, rounding 12, float on, pin on"
+
           ];
 
           env =
@@ -747,7 +748,6 @@ in
 
     services.gpg-agent.enable = true;
 
-    services.network-manager-applet.enable = true;
     services.blueberry.enable = true;
     services.statebus.enable = true;
     services.mpris-proxy.enable = true;
@@ -822,11 +822,11 @@ in
 
     services.xssproxy.enable = false;
     services.lxqt-policykit-agent.enable = false;
-    services.polkit-gnome.enable = true;
+    services.polkit-gnome.enable = false; # replaced by PolkitAgent.qml in quickshell
     services.hyprpolkitagent.enable = false;
 
     programs.voxtype = {
-      enable = true;
+      enable = false;
       package = inputs.voxtype.packages.${pkgs.system}.default;
       service.enable = true;
       model.name = "base.en";
@@ -853,6 +853,9 @@ in
 
     xdg.configFile."opencode/plugins/notify.js".source =
       config.lib.file.mkOutOfStoreSymlink "/home/bob.vanderlinden/projects/nixos-config/home/modules/opencode/notify.js";
+
+    xdg.configFile."opencode/plugins/systemd-inhibit.js".source =
+      config.lib.file.mkOutOfStoreSymlink "/home/bob.vanderlinden/projects/nixos-config/home/modules/opencode/systemd-inhibit.js";
     # news.display = "silent";
 
     home.pointerCursor = {
@@ -1057,6 +1060,7 @@ in
           };
           read = {
             "/nix/store/*" = "allow";
+            "~/.cache/uv/*" = "allow";
           };
         };
         mcp = {
@@ -1245,13 +1249,17 @@ in
     services.activitywatch = {
       enable = true;
       watchers = {
-        aw-watcher-afk = {
-          package = pkgs.activitywatch;
-        };
         aw-watcher-window-hyprland = {
           package = pkgs.aw-watcher-window-hyprland;
         };
       };
+    };
+
+    # The activitywatch watcher module does not expose a way to set service
+    # environment variables, so we override the unit to pass through the
+    # Hyprland IPC socket identifier that hyprctl needs to connect.
+    systemd.user.services.activitywatch-watcher-aw-watcher-window-hyprland = {
+      Service.PassEnvironment = "HYPRLAND_INSTANCE_SIGNATURE";
     };
 
     home.stateVersion = "21.03";
