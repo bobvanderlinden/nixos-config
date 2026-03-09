@@ -110,6 +110,7 @@ in
       git-worktree-shell
       agent-worktree
       agent
+      agents-idle
       git-xargs
       tig
       mergiraf
@@ -124,6 +125,7 @@ in
       ast-grep
 
       # System Tools
+      brightnessctl
       socat
       file
       qemu
@@ -187,6 +189,7 @@ in
       (lib.hiPrio vscode-wrapper)
       editor
       terminal
+      reassign-workspace
       (lib.hiPrio chromium-wrapper)
 
       # Productivity
@@ -212,6 +215,7 @@ in
       xdg-utils
       nixpkgs-review
       tabiew
+      vex-tui
 
       # Fonts
       liberation_ttf
