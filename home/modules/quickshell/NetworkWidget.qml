@@ -6,8 +6,9 @@ import QtQuick
 import QtQuick.Layouts
 
 // Network status widget. Reactive via Quickshell.Networking (no polling).
-// Bar label: wifi icon + optional VPN icon.
+// Bar label: wired/wifi icon + optional VPN icon.
 // Hover to open popup with:
+//   - Wired connection (if active)
 //   - Wi-Fi network list (sorted by signal; connected first)
 //   - NM VPN section
 //   - OpenVPN3 section
@@ -49,11 +50,12 @@ PopupWidget {
         : false
 
     property string netText: {
+        if (wiredConnected) return "󰈀";
         if (connectedNetwork) return wifiIcon(connectedNetwork.signalStrength);
         return "󰤭";
     }
 
-    property bool disconnected: !wifiConnecting && netText === "󰤭"
+    property bool disconnected: !wiredConnected && !wifiConnecting && netText === "󰤭"
     property bool vpnActive: nmVpnConnections.some(c => c.active) || openvpn3Profiles.some(p => p.active)
 
     // Stable snapshot of sorted networks — re-snapshotted when popup opens
@@ -85,10 +87,12 @@ PopupWidget {
     // ── NM VPN ────────────────────────────────────────────────────────────────
 
     property var nmVpnConnections: []
+    property var nmWiredConnections: []
 
-    function parseNmVpnConnections(output) {
+    function parseNmConnections(output) {
         const ESCAPE = "\x00";
-        const connections = [];
+        const vpns = [];
+        const wired = [];
         const lines = output.trim().split("\n");
         for (const line of lines) {
             if (!line) continue;
@@ -97,18 +101,25 @@ PopupWidget {
             const name   = parts[0].replace(new RegExp(ESCAPE, "g"), ":");
             const uuid   = parts[1].replace(new RegExp(ESCAPE, "g"), ":");
             const type   = parts[2].replace(new RegExp(ESCAPE, "g"), ":");
-            const device = parts[3].replace(new RegExp(ESCAPE, "g"), ":");
-            if (type !== "vpn" && type !== "wireguard") continue;
-            connections.push({ uuid, name, active: device !== "--" && device !== "" });
+            const device = parts[3].replace(new RegExp(ESCAPE, "g"), ":").trim();
+            const active = device !== "--" && device !== "";
+            if (type === "vpn" || type === "wireguard") {
+                vpns.push({ uuid, name, active });
+            } else if (type === "802-3-ethernet") {
+                if (active) wired.push({ uuid, name, device, active });
+            }
         }
-        return connections;
+        root.nmVpnConnections = vpns;
+        root.nmWiredConnections = wired;
     }
+
+    property bool wiredConnected: nmWiredConnections.length > 0
 
     Process {
         id: nmListProcess
         command: ["nmcli", "--terse", "--fields", "NAME,UUID,TYPE,DEVICE", "connection", "show"]
         stdout: StdioCollector {
-            onStreamFinished: root.nmVpnConnections = root.parseNmVpnConnections(text)
+            onStreamFinished: root.parseNmConnections(text)
         }
     }
 
@@ -251,6 +262,67 @@ PopupWidget {
     popupContent: Component {
     ColumnLayout {
         spacing: 6
+
+        // ── Wired section ─────────────────────────────────────────────────────
+        ColumnLayout {
+            visible: root.nmWiredConnections.length > 0
+            Layout.fillWidth: true
+            spacing: 4
+
+            Text {
+                text: "Wired"
+                color: "#6272a4"
+                font.pixelSize: 10
+                font.family: "SauceCodePro Nerd Font"
+                font.bold: true
+            }
+
+            Repeater {
+                model: root.nmWiredConnections
+                delegate: Item {
+                    required property var modelData
+                    Layout.fillWidth: true
+                    implicitWidth: 220
+                    implicitHeight: 28
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: 4
+                        color: "#313244"
+                    }
+
+                    RowLayout {
+                        anchors { fill: parent; leftMargin: 6; rightMargin: 6 }
+                        spacing: 6
+
+                        Text {
+                            text: "󰈀"
+                            color: "#89b4fa"
+                            font.pixelSize: 13
+                            font.family: "SauceCodePro Nerd Font"
+                        }
+
+                        Text {
+                            text: modelData.name
+                            color: "#f8f8f2"
+                            font.pixelSize: 12
+                            font.family: "SauceCodePro Nerd Font"
+                            elide: Text.ElideRight
+                            Layout.fillWidth: true
+                        }
+
+                        Text {
+                            text: "󰄴"
+                            color: "#89b4fa"
+                            font.pixelSize: 11
+                            font.family: "SauceCodePro Nerd Font"
+                        }
+                    }
+                }
+            }
+
+            Rectangle { Layout.fillWidth: true; height: 1; color: "#44475a" }
+        }
 
         // ── Wi-Fi header ──────────────────────────────────────────────────────
         RowLayout {
@@ -550,6 +622,8 @@ PopupWidget {
         barWindow: root.barWindow
         widget: root
         text: {
+            if (root.wiredConnected)
+                return root.nmWiredConnections[0].name + " (" + root.nmWiredConnections[0].device + ")";
             if (root.wifiConnecting && root.wifiDevice) {
                 const state = root.wifiDevice.nmState;
                 if (state === NMDeviceState.NeedAuth) return "Waiting for password…";

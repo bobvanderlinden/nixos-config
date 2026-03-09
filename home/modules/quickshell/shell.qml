@@ -2,7 +2,6 @@
 //@ pragma IconTheme Adwaita
 import Quickshell
 import Quickshell.Services.Notifications
-import Quickshell.Services.Polkit
 import QtQuick
 
 // Shell root - manages the bar, notification daemon, and OSD overlays.
@@ -77,5 +76,5 @@ ShellRoot {
     }
 
     // ── Polkit authentication agent (single instance) ─────────────────────────
-    PolkitAgent { }
+    PolkitDialog { }
 }
