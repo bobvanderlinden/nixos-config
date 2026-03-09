@@ -44,7 +44,7 @@ export const NotifyPlugin = async ({ $, client }) => {
           break;
         }
 
-        case "permission.updated": {
+        case "permission.asked": {
           const permission = event.properties;
 
           // Skip notification if our window is currently focused — the user

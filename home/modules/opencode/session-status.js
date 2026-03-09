@@ -109,7 +109,7 @@ export const SessionStatusPlugin = async ({ $ }) => {
           await updateSession(sessionID, { hasError: true });
           break;
         }
-        case "permission.updated": {
+        case "permission.asked": {
           const { sessionID, id } = event.properties;
           if (!sessions.has(sessionID)) break;
           const session = sessions.get(sessionID);
@@ -119,7 +119,7 @@ export const SessionStatusPlugin = async ({ $ }) => {
           break;
         }
         case "permission.replied": {
-          const { sessionID, permissionID } = event.properties;
+          const { sessionID, requestID: permissionID } = event.properties;
           if (!sessions.has(sessionID)) break;
           const session = sessions.get(sessionID);
           const permissions = new Set(session.pendingPermissions);
