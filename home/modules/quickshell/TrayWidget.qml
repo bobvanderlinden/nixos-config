@@ -23,8 +23,8 @@ RowLayout {
             Image {
                 anchors.fill: parent
                 source: item.icon
-                sourceSize.width: parent.width
-                sourceSize.height: parent.height
+                sourceSize.width: 22
+                sourceSize.height: 22
                 smooth: true
                 fillMode: Image.PreserveAspectFit
             }

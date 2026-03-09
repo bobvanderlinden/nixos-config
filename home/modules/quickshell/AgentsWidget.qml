@@ -5,21 +5,14 @@ import QtQuick.Layouts
 
 // Agent sessions widget.
 //
-// Collapsed (bar): pill containing robot emoji + one dot per session.
-//   Dot colour reflects the most urgent state of each session:
-//     red    (#ff5555) = error
-//     yellow (#f1fa8c) = permission (waiting for user approval)
-//     blue   (#8be9fd) = question (waiting for user reply)
-//     orange (#fab283) = busy / retry
-//     grey   (#6272a4) = idle
-//   Hidden entirely when there are no sessions.
-//
-// Expanded (hover): a PopupWindow appears above the bar listing all
-//   sessions with title + todo progress (X/Y, green when all done) + state badge.
-//   Clicking a row focuses the agent's window via hyprctl.
-//   Auto-closes when the mouse leaves.
-BarPill {
+// Collapsed (bar): pill with robot emoji + one dot per session.
+// Expanded (hover): popup listing sessions with title + todos + state badge.
+//   Clicking a row focuses the agent's window.
+PopupWidget {
     id: root
+
+    popupWidth: 320
+    visible: AgentState.sessions.length > 0
 
     function stateColor(state) {
         switch (state) {
@@ -28,7 +21,7 @@ BarPill {
             case "question":   return "#8be9fd";
             case "busy":
             case "retry":      return "#fab283";
-            default:           return "#6272a4";  // idle
+            default:           return "#6272a4";
         }
     }
 
@@ -39,107 +32,39 @@ BarPill {
             case "question":   return "#1a2d3a";
             case "busy":
             case "retry":      return "#3d2a1a";
-            default:           return "#2d2d3f";  // idle
+            default:           return "#2d2d3f";
         }
     }
 
-    visible: AgentState.sessions.length > 0
+    // ── Pill ──────────────────────────────────────────────────────────────────
 
-    // Must be set by StatusBar to the enclosing PanelWindow.
-    required property var barWindow
+    pillContent: Component {
+        RowLayout {
+            spacing: 4
 
-    // ── Collapsed: pill contents ──────────────────────────────────────────────
-
-    RowLayout {
-        id: pillRow
-        spacing: 4
-
-        Text {
-            text: "🤖"
-            font.pixelSize: 12
-            Layout.alignment: Qt.AlignVCenter
-        }
-
-        Repeater {
-            id: dotRepeater
-            model: AgentState.sessions
-
-            Rectangle {
-                required property var modelData
-                width: 8
-                height: 8
-                radius: 4
+            Text {
+                text: "🤖"
+                font.pixelSize: 12
                 Layout.alignment: Qt.AlignVCenter
-                color: root.stateColor(modelData.state)
             }
-        }
-    }
 
-    // ── Hover detection ───────────────────────────────────────────────────────
+            Repeater {
+                model: AgentState.sessions
 
-    HoverHandler {
-        id: barHover
-    }
-
-    // ── Expanded: popup above the bar ────────────────────────────────────────
-
-    // Small delay before hiding so the mouse can travel from bar to popup
-    // without the popup disappearing in the gap.
-    Timer {
-        id: hideTimer
-        interval: 200
-        onTriggered: popup.visible = false
-    }
-
-    PopupWindow {
-        id: popup
-        visible: false
-
-        onVisibleChanged: if (visible) hideTimer.stop()
-
-        Connections {
-            target: barHover
-            function onHoveredChanged() {
-                if (barHover.hovered) {
-                    hideTimer.stop();
-                    popup.visible = true;
-                } else if (!popupHover.hovered) {
-                    hideTimer.restart();
+                Rectangle {
+                    required property var modelData
+                    width: 8; height: 8; radius: 4
+                    Layout.alignment: Qt.AlignVCenter
+                    color: root.stateColor(modelData.state)
                 }
             }
         }
+    }
 
-        Connections {
-            target: popupHover
-            function onHoveredChanged() {
-                if (popupHover.hovered) {
-                    hideTimer.stop();
-                } else if (!barHover.hovered) {
-                    hideTimer.restart();
-                }
-            }
-        }
+    // ── Popup ─────────────────────────────────────────────────────────────────
 
-        anchor.window: root.barWindow
-        anchor.rect.x: root.x
-        anchor.rect.y: -popup.implicitHeight
-        anchor.rect.width: 1
-        anchor.rect.height: 1
-
-        implicitWidth: 320
-        implicitHeight: popupCol.implicitHeight + 12
-        color: "#2a2b3d"
-
-        HoverHandler { id: popupHover }
-
+    popupContent: Component {
         ColumnLayout {
-            id: popupCol
-            anchors {
-                left: parent.left
-                right: parent.right
-                top: parent.top
-                margins: 6
-            }
             spacing: 2
 
             Repeater {
@@ -155,37 +80,27 @@ BarPill {
                         return Hyprland.toplevels.values.find(t => t.address === session.windowAddress) ?? null;
                     }
                     property string workspaceId: (hyprToplevel?.workspace?.id ?? 0) > 0
-                        ? hyprToplevel.workspace.id.toString()
-                        : ""
+                        ? hyprToplevel.workspace.id.toString() : ""
 
                     Layout.fillWidth: true
                     implicitHeight: rowLayout.implicitHeight + 8
                     radius: 4
-                    color: rowHover.hovered && canFocus ? "#383a59" : "transparent"
+                    color: rowHover.hovered && canFocus ? "#313244" : "transparent"
+                    Behavior on color { ColorAnimation { duration: 80 } }
 
                     HoverHandler { id: rowHover }
 
                     RowLayout {
                         id: rowLayout
-                        anchors {
-                            left: parent.left
-                            right: parent.right
-                            verticalCenter: parent.verticalCenter
-                            leftMargin: 8
-                            rightMargin: 8
-                        }
+                        anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; leftMargin: 6; rightMargin: 6 }
                         spacing: 8
 
-                        // State dot
                         Rectangle {
-                            width: 8
-                            height: 8
-                            radius: 4
+                            width: 8; height: 8; radius: 4
                             color: root.stateColor(session.state)
                             Layout.alignment: Qt.AlignVCenter
                         }
 
-                        // Title + workspace
                         ColumnLayout {
                             Layout.fillWidth: true
                             spacing: 1
@@ -195,6 +110,7 @@ BarPill {
                                 text: session.title !== "" ? session.title : "(unknown)"
                                 color: canFocus ? "#f8f8f2" : "#6272a4"
                                 font.pixelSize: 12
+                                font.family: "SauceCodePro Nerd Font"
                                 elide: Text.ElideRight
                             }
 
@@ -203,10 +119,10 @@ BarPill {
                                 text: "workspace " + workspaceId
                                 color: "#44475a"
                                 font.pixelSize: 10
+                                font.family: "SauceCodePro Nerd Font"
                             }
                         }
 
-                        // Todo progress (X/Y), hidden when no todos
                         Text {
                             property var activeTodos: (session.todos ?? []).filter(t => t.status !== "cancelled")
                             property int completedCount: activeTodos.filter(t => t.status === "completed").length
@@ -214,10 +130,10 @@ BarPill {
                             text: completedCount + "/" + activeTodos.length
                             color: completedCount === activeTodos.length ? "#50fa7b" : "#6272a4"
                             font.pixelSize: 10
+                            font.family: "SauceCodePro Nerd Font"
                             Layout.alignment: Qt.AlignVCenter
                         }
 
-                        // State badge
                         Rectangle {
                             implicitWidth: stateLabel.implicitWidth + 8
                             implicitHeight: 16
@@ -230,6 +146,7 @@ BarPill {
                                 text: session.state
                                 color: root.stateColor(session.state)
                                 font.pixelSize: 10
+                                font.family: "SauceCodePro Nerd Font"
                             }
                         }
                     }
@@ -240,8 +157,7 @@ BarPill {
                         cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
                         onClicked: {
                             Hyprland.dispatch("focuswindow address:0x" + session.windowAddress);
-                            hideTimer.stop();
-                            popup.visible = false;
+                            BarState.activePopupWidget = null;
                         }
                     }
                 }
