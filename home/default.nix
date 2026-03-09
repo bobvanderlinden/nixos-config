@@ -18,13 +18,25 @@ let
   '';
 
   editor = pkgs.writeShellScriptBin "editor" ''
-    code "$@" &
+    code "$@" > /dev/null 2>&1 &
     disown
   '';
 
   terminal = pkgs.writeShellScriptBin "terminal" ''
-    ghostty --working-directory="$(pwd)" &
+    ghostty --working-directory="$(pwd)" > /dev/null 2>&1 &
     disown
+  '';
+
+  reassign-workspace = pkgs.writeShellScriptBin "reassign-workspace" ''
+    target=$1
+    current=$(${lib.getExe' pkgs.hyprland "hyprctl"} activeworkspace -j | ${lib.getExe pkgs.jq} --raw-output '.id')
+    ${lib.getExe' pkgs.hyprland "hyprctl"} clients -j \
+      | ${lib.getExe pkgs.jq} --raw-output --argjson current "$current" \
+          '.[] | select(.workspace.id == $current) | .address' \
+      | while read -r address; do
+          ${lib.getExe' pkgs.hyprland "hyprctl"} dispatch movetoworkspacesilent "$target,address:$address"
+        done
+    ${lib.getExe' pkgs.hyprland "hyprctl"} dispatch workspace "$target"
   '';
 
   vscode-wrapper = pkgs.writeShellScriptBin "code" ''
