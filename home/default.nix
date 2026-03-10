@@ -1027,6 +1027,7 @@ in
         editor = "code --wait";
       };
     };
+    programs.gh-dash.enable = true;
     programs.jq.enable = true;
     programs.neovim.enable = true;
     programs.opencode = {
