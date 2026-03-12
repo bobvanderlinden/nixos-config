@@ -3,7 +3,7 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     # nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-24.11";
     home-manager = {
-      url = "github:nix-community/home-manager";
+      url = "github:ambroisie/home-manager/mergiraf-integrations";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     flake-utils.url = "github:numtide/flake-utils";
@@ -234,8 +234,7 @@
                   if [[ "$(readlink --canonicalize system-result)" != "$(readlink --canonicalize /nix/var/nix/profiles/system)" ]]
                   then
                     ${pkgs.coin}/bin/coin
-                    sudo nix-env -p /nix/var/nix/profiles/system --set "$(readlink system-result)"
-                    sudo system-result/bin/switch-to-configuration switch
+                    pkexec sh -c "nix-env -p /nix/var/nix/profiles/system --set \"$(readlink system-result)\" && $(readlink system-result)/bin/switch-to-configuration switch"
                   fi
                   ./home-result/activate
                 '';
