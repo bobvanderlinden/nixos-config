@@ -8,11 +8,52 @@ import QtQuick.Layouts
 // Polkit authentication agent — OSD-style panel above the bar.
 // One instance for the whole session (instantiated once in shell.qml).
 //
-// Two modes driven by flow.isResponseRequired:
-//   false — fingerprint / waiting: big icon + message, no input
-//   true  — password prompt:       icon + prompt + password field
+// Shows fingerprint prompt initially, then shows password field after delay
+// or when user starts typing. This allows fingerprint auth to work alongside
+// password auth since PAM runs fprintd first.
 Item {
     id: root
+
+    // Track if we're in the initial fingerprint-waiting phase
+    property bool fingerprintPhase: false
+
+    // Show password field after fingerprint phase ends
+    readonly property bool showPasswordField: (agent.flow?.isResponseRequired ?? false) && !fingerprintPhase
+
+    // Timer to give user time to use fingerprint before showing password
+    Timer {
+        id: fingerprintTimer
+        interval: 3000  // 3 seconds to touch fingerprint
+        onTriggered: {
+            root.fingerprintPhase = false;
+        }
+    }
+
+    // When agent becomes active, start fingerprint phase
+    Connections {
+        target: agent
+        function onIsActiveChanged() {
+            if (agent.isActive) {
+                root.fingerprintPhase = true;
+                fingerprintTimer.start();
+            } else {
+                root.fingerprintPhase = false;
+                fingerprintTimer.stop();
+            }
+        }
+    }
+
+    // If user presses any key, skip to password mode immediately
+    Connections {
+        target: panel
+        function onActiveFocusItemChanged() {
+            // User interacted, switch to password mode
+            if (panel.activeFocusItem && root.fingerprintPhase) {
+                root.fingerprintPhase = false;
+                fingerprintTimer.stop();
+            }
+        }
+    }
 
     PanelWindow {
         id: panel
@@ -33,7 +74,7 @@ Item {
 
         // Square-ish: fixed 200×200, grows to 200×260 when password field shown.
         implicitWidth: 200
-        implicitHeight: (agent.flow?.isResponseRequired ?? false) ? 220 : 180
+        implicitHeight: (!root.fingerprintPhase && (agent.flow?.isResponseRequired ?? false)) ? 220 : 180
 
         Behavior on implicitHeight {
             NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
@@ -42,9 +83,9 @@ Item {
         color: "transparent"
         mask: Region {}
 
-        // Grab keyboard focus when a password is needed.
+        // Grab keyboard focus when authentication is active.
         HyprlandFocusGrab {
-            active: agent.flow?.isResponseRequired ?? false
+            active: agent.isActive
             windows: [panel]
             onCleared: {
                 if (agent.flow) agent.flow.cancelAuthenticationRequest();
@@ -92,7 +133,8 @@ Item {
 
                 Text {
                     Layout.alignment: Qt.AlignHCenter
-                    text: (agent.flow?.isResponseRequired ?? false) ? "󰌋" : "󰈷"
+                    // Show fingerprint icon during fingerprint phase, password icon otherwise
+                    text: root.fingerprintPhase ? "󰈷" : "󰌋"
                     font.pixelSize: 48
                     font.family: "SauceCodePro Nerd Font"
                     color: (agent.flow?.failed ?? false) ? "#ff5555" : "#bd93f9"
@@ -109,7 +151,9 @@ Item {
                     text: {
                         if (agent.flow?.supplementaryMessage ?? "" !== "")
                             return agent.flow.supplementaryMessage;
-                        if (agent.flow?.isResponseRequired ?? false)
+                        if (root.fingerprintPhase)
+                            return "Touch fingerprint sensor\nor type password";
+                        if (root.showPasswordField)
                             return agent.flow?.inputPrompt ?? "Enter password";
                         return agent.flow?.message ?? "Authenticating…";
                     }
@@ -119,10 +163,10 @@ Item {
                     wrapMode: Text.Wrap
                 }
 
-                // ── Password field (password mode only) ───────────────────────
+                // ── Password field (visible when not in fingerprint phase) ───────────────────────
 
                 Rectangle {
-                    visible: agent.flow?.isResponseRequired ?? false
+                    visible: !root.fingerprintPhase && (agent.flow?.isResponseRequired ?? false)
                     Layout.fillWidth: true
                     implicitHeight: 34
                     radius: 8
@@ -150,6 +194,14 @@ Item {
                         Keys.onEscapePressed: {
                             if (agent.flow) agent.flow.cancelAuthenticationRequest();
                         }
+
+                        // Skip fingerprint phase when user starts typing
+                        onTextChanged: {
+                            if (text.length > 0 && root.fingerprintPhase) {
+                                root.fingerprintPhase = false;
+                                fingerprintTimer.stop();
+                            }
+                        }
                     }
 
                     // Placeholder text
@@ -169,17 +221,17 @@ Item {
         onVisibleChanged: {
             if (visible) {
                 passwordInput.text = "";
-                if (agent.flow?.isResponseRequired ?? false)
-                    passwordInput.forceActiveFocus();
+                // Always focus password input to capture keystrokes
+                passwordInput.forceActiveFocus();
             }
         }
 
         Connections {
-            target: agent.flow
-            enabled: agent.flow !== null
-            function onIsResponseRequiredChanged() {
+            target: root
+            function onFingerprintPhaseChanged() {
                 passwordInput.text = "";
-                if (agent.flow?.isResponseRequired)
+                // Focus password input when switching out of fingerprint phase
+                if (!root.fingerprintPhase && agent.flow?.isResponseRequired)
                     passwordInput.forceActiveFocus();
             }
         }
