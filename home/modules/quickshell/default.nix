@@ -1,7 +1,6 @@
 {
   pkgs,
-  config,
-  lib,
+  impurity,
   ...
 }:
 {
@@ -21,7 +20,6 @@
 
   # Symlink the entire quickshell source directory directly into XDG config.
   # Any edit to a .qml file is picked up by QuickShell's hot-reload immediately
-  # without needing switch-home.
-  xdg.configFile."quickshell".source =
-    config.lib.file.mkOutOfStoreSymlink "/home/bob.vanderlinden/projects/nixos-config/home/modules/quickshell";
+  # without needing switch-home (when impurity is enabled).
+  xdg.configFile."quickshell".source = impurity.link ./.;
 }

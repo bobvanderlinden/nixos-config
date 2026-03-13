@@ -26,6 +26,9 @@
       url = "git+https://git.outfoxxed.me/outfoxxed/quickshell";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    impurity = {
+      url = "github:outfoxxed/impurity.nix";
+    };
     pyproject-nix = {
       url = "github:pyproject-nix/pyproject.nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -156,6 +159,15 @@
         voxtype-home-manager = {
           home-manager.sharedModules = [ inputs.voxtype.homeManagerModules.default ];
         };
+        impurity-home-manager = {
+          home-manager.sharedModules = [
+            inputs.impurity.nixosModules.default
+            {
+              impurity.configRoot = self;
+              impurity.enable = builtins.getEnv "IMPURITY_PATH" != "";
+            }
+          ];
+        };
         networkmanager-openvpn3 = inputs.networkmanager-openvpn3.nixosModules.default;
       };
 
@@ -213,7 +225,9 @@
               switch-home = pkgs.writeShellApplication {
                 name = "switch-home";
                 text = ''
-                  nom build --keep-going --out-link home-result ${self}#nixosConfigurations."$(hostname)".config.home-manager.users.\""$USER"\".home.activationPackage
+                  IMPURITY_PATH="$(pwd)"
+                  export IMPURITY_PATH
+                  nom build --impure --keep-going --out-link home-result ${self}#nixosConfigurations."$(hostname)".config.home-manager.users.\""$USER"\".home.activationPackage
                   ./home-result/activate
                 '';
                 runtimeInputs = [ pkgs.nix-output-monitor ];
@@ -229,12 +243,14 @@
               switch = pkgs.writeShellApplication {
                 name = "switch";
                 text = ''
+                  IMPURITY_PATH="$(pwd)"
+                  export IMPURITY_PATH
                   nom build --impure --keep-going --out-link system-result ${self}#nixosConfigurations."$(hostname)".config.system.build.toplevel
-                  nom build --keep-going --out-link home-result ${self}#nixosConfigurations."$(hostname)".config.home-manager.users.\""$USER"\".home.activationPackage
+                  nom build --impure --keep-going --out-link home-result ${self}#nixosConfigurations."$(hostname)".config.home-manager.users.\""$USER"\".home.activationPackage
                   if [[ "$(readlink --canonicalize system-result)" != "$(readlink --canonicalize /nix/var/nix/profiles/system)" ]]
                   then
                     ${pkgs.coin}/bin/coin
-                    pkexec sh -c "nix-env -p /nix/var/nix/profiles/system --set \"$(readlink system-result)\" && $(readlink system-result)/bin/switch-to-configuration switch"
+                    sudo sh -c "nix-env -p /nix/var/nix/profiles/system --set \"$(readlink system-result)\" && $(readlink system-result)/bin/switch-to-configuration switch"
                   fi
                   ./home-result/activate
                 '';
