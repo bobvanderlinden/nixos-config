@@ -732,6 +732,12 @@ in
         auto_sync = false;
         update_check = false;
         style = "compact";
+        ui.columns = [
+          "duration"
+          "time"
+          "directory"
+          "command"
+        ];
       };
     };
 
