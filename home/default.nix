@@ -175,6 +175,7 @@ in
       # Security & Privacy
       bitwarden-desktop
       bitwarden-cli
+      bitwarden-cli-bio
       keepassxc
       gnupg
       seahorse
@@ -875,6 +876,7 @@ in
 
     home.shellAliases = {
       g = "git";
+      bw = "bwbio";
     };
 
     programs.git = {
