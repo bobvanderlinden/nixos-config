@@ -25,6 +25,13 @@ PopupWidget {
             spacing: 4
 
             Text {
+                text: "󰊤"
+                color: root.pillColor
+                font.pixelSize: 12
+                font.family: "SauceCodePro Nerd Font"
+            }
+
+            Text {
                 text: root.pillIcon
                 color: root.pillColor
                 font.pixelSize: 12

@@ -16,6 +16,7 @@
   home.packages = [
     pkgs.session-time
     pkgs.inotify-tools
+    pkgs.vja
   ];
 
   # Symlink the entire quickshell source directory directly into XDG config.

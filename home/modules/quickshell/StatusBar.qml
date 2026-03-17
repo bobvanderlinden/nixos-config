@@ -40,6 +40,10 @@ PanelWindow {
 
         SystemdFailedUnits { }
 
+        TodoWidget {
+            barWindow: bar
+        }
+
         PrivacyWidget {
             barWindow: bar
         }

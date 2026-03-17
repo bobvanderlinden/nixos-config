@@ -98,7 +98,7 @@ RowLayout {
         barWindow: root.barWindow
         openProcess: openProc
         pillIcon: ""
-        pillColor: "#50fa7b"
+        pillColor: "#ffb86c"
         pullRequests: root.reviewPrs
     }
 
@@ -106,7 +106,7 @@ RowLayout {
         barWindow: root.barWindow
         openProcess: openProc
         pillIcon: "󰄬"
-        pillColor: "#bd93f9"
+        pillColor: "#50fa7b"
         pullRequests: root.approvedPrs
     }
 }
