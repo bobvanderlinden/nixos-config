@@ -69,6 +69,7 @@
       };
     };
   };
+  services.blueman.enable = true;
 
   hardware.logitech.wireless = {
     enable = true;
@@ -297,6 +298,10 @@
   };
 
   services.flatpak.enable = true;
+
+  # Thunar file manager support
+  services.gvfs.enable = true; # For trash, mounting remote filesystems, etc.
+  services.tumbler.enable = true; # For thumbnail generation
 
   # virtualisation.virtualbox.host.enable = true;
   virtualisation.docker = {
