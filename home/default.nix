@@ -75,6 +75,7 @@ in
     ./modules/xdg-desktop-portal.nix
     ./modules/xdg-desktop-portal-hyprland.nix
     ./modules/quickshell
+    ./modules/opencode
   ];
   config = {
     home.packages = with pkgs; [
@@ -832,37 +833,7 @@ in
     services.polkit-gnome.enable = false; # replaced by PolkitAgent.qml in quickshell
     services.hyprpolkitagent.enable = false;
 
-    programs.voxtype = {
-      enable = false;
-      package = inputs.voxtype.packages.${pkgs.system}.default;
-      service.enable = true;
-      model.name = "base.en";
-      settings = {
-        state_file = "auto";
-        hotkey.enabled = false; # Using Hyprland keybindings instead
-        audio = {
-          device = "default";
-          sample_rate = 16000;
-          max_duration_secs = 60;
-        };
-        whisper.language = "en";
-        output = {
-          mode = "type";
-          notification.on_transcription = true;
-        };
-        status.icon_theme = "emoji";
-      };
-    };
-
     xdg.enable = true;
-    xdg.configFile."opencode/plugins/session-status.js".source =
-      config.lib.file.mkOutOfStoreSymlink "/home/bob.vanderlinden/projects/nixos-config/home/modules/opencode/session-status.js";
-
-    xdg.configFile."opencode/plugins/notify.js".source =
-      config.lib.file.mkOutOfStoreSymlink "/home/bob.vanderlinden/projects/nixos-config/home/modules/opencode/notify.js";
-
-    xdg.configFile."opencode/plugins/systemd-inhibit.js".source =
-      config.lib.file.mkOutOfStoreSymlink "/home/bob.vanderlinden/projects/nixos-config/home/modules/opencode/systemd-inhibit.js";
     # news.display = "silent";
 
     home.pointerCursor = {
