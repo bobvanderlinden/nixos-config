@@ -77,8 +77,8 @@ fi
 git fetch upstream HEAD
 
 if [[ -n "${GITHUB_PR_NUMBER-}" ]]; then
+  BRANCH_NAME="$(gh pr view "$GITHUB_PR_NUMBER" --json headRefName --jq '.headRefName')"
   git fetch upstream pull/"$GITHUB_PR_NUMBER"/head
-  BRANCH_NAME="$(git name-rev --name-only FETCH_HEAD)"
   git branch --force "$BRANCH_NAME" FETCH_HEAD
   REVISION="$BRANCH_NAME"
 else
