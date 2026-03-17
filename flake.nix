@@ -3,7 +3,7 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     # nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-24.11";
     home-manager = {
-      url = "github:ambroisie/home-manager/mergiraf-integrations";
+      url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     flake-utils.url = "github:numtide/flake-utils";
@@ -14,20 +14,16 @@
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    voxtype = {
-      url = "github:peteonrails/voxtype";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
     networkmanager-openvpn3 = {
       url = "git+file:///home/bob.vanderlinden/projects/bobvanderlinden/NetworkManager-openvpn3";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    quickshell = {
-      url = "git+https://git.outfoxxed.me/outfoxxed/quickshell";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
     impurity = {
       url = "github:outfoxxed/impurity.nix";
+    };
+    quickshell = {
+      url = "git+https://git.outfoxxed.me/quickshell/quickshell";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
     pyproject-nix = {
       url = "github:pyproject-nix/pyproject.nix";
@@ -65,7 +61,6 @@
       pyproject-nix,
       uv2nix,
       pyproject-build-systems,
-      quickshell,
       ...
     }@inputs:
     let
@@ -117,9 +112,6 @@
       overlays.pyproject = _final: _prev: {
         inherit pyproject-nix uv2nix pyproject-build-systems;
       };
-      overlays.quickshell = _final: _prev: {
-        quickshell = quickshell.packages.${system}.default;
-      };
 
       overlays.workarounds =
         _final: _prev:
@@ -140,6 +132,10 @@
           # });
         };
 
+      overlays.quickshell = final: _prev: {
+        quickshell = inputs.quickshell.packages.${final.system}.default;
+      };
+
       nixosModules = import ./system/modules // {
         overlays = {
           nixpkgs.overlays = defaultOverlays;
@@ -155,9 +151,6 @@
         # inherit (nix-index-database.nixosModules) nix-index;
         nix-index-database-home-manager = {
           home-manager.sharedModules = [ nix-index-database.homeModules.nix-index ];
-        };
-        voxtype-home-manager = {
-          home-manager.sharedModules = [ inputs.voxtype.homeManagerModules.default ];
         };
         impurity-home-manager = {
           home-manager.sharedModules = [
@@ -250,7 +243,7 @@
                   if [[ "$(readlink --canonicalize system-result)" != "$(readlink --canonicalize /nix/var/nix/profiles/system)" ]]
                   then
                     ${pkgs.coin}/bin/coin
-                    sudo sh -c "nix-env -p /nix/var/nix/profiles/system --set \"$(readlink system-result)\" && $(readlink system-result)/bin/switch-to-configuration switch"
+                    pkexec sh -c "nix-env -p /nix/var/nix/profiles/system --set \"$(readlink system-result)\" && $(readlink system-result)/bin/switch-to-configuration switch"
                   fi
                   ./home-result/activate
                 '';
