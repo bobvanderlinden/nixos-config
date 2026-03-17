@@ -67,7 +67,7 @@ let
 in
 {
   imports = [
-    ./modules/blueberry.nix
+    # ./modules/blueberry.nix
     ./modules/statebus.nix
     ./modules/xssproxy.nix
     ./modules/nushell.nix
@@ -92,7 +92,6 @@ in
       maven
       deno
       devenv
-      watchman
       strace
       ltrace
       kubectl
@@ -199,6 +198,7 @@ in
       libreoffice
       speedcrunch
       chatgpt-cli
+      vja
 
       # CLI Utilities
       entr
@@ -989,7 +989,11 @@ in
       git.enable = true;
     };
 
-    programs.mergiraf.enable = true;
+    programs.mergiraf = {
+      enable = true;
+      enableJujutsuIntegration = true;
+      enableGitIntegration = true;
+    };
     programs.gh = {
       enable = true;
       settings = {
