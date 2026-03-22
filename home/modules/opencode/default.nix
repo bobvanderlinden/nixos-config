@@ -4,6 +4,7 @@
 }:
 {
   imports = [
+    ./direnv.nix
     ./secrets.nix
   ];
 
@@ -11,6 +12,7 @@
     enable = true;
     settings = {
       permission = {
+        skill = "deny"; # Use custom 'skills' tool instead
         websearch = "allow";
         webfetch = "allow";
         bash = {
@@ -41,8 +43,11 @@
     };
   };
 
-  # Symlink the plugins directory directly into XDG config.
-  # Any edit to a plugin file is picked up immediately without needing
+  # Symlink the plugins and tools directories directly into XDG config.
+  # Any edit to a plugin/tool file is picked up immediately without needing
   # switch-home (when impurity is enabled).
   xdg.configFile."opencode/plugins".source = impurity.link ./plugins;
+
+  # We cannot use symlnks, because ts imports will use the real path.
+  # xdg.configFile."opencode/tools".source = impurity.link ./tools;
 }
