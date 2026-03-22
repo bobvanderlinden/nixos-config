@@ -1,10 +1,10 @@
 set -o errexit
 title="Screen recording"
 video_file="$HOME"/recording.mp4
-notification_id="$(notify-send --transient --urgency critical --print-id "$title" "Initializing...")"
+notification_id="$(notify-send --urgency critical --expire-time 0 --print-id "$title" "Initializing...")"
 geometry="$(slurp)"
 parallel -j 0 --halt now,done=1 <<EOF
-notify-send --replace-id "$notification_id" --transient --urgency critical --wait "$title" "Recording..."
+notify-send --replace-id "$notification_id" --urgency critical --expire-time 0 --wait "$title" "Recording..."
 wf-recorder --geometry "$geometry" --overwrite -f "$video_file"
 EOF
 
