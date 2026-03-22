@@ -35,11 +35,15 @@ Rectangle {
         running: true
         stdout: StdioCollector {
             onStreamFinished: {
+                // Skip parsing if output is empty or looks like an error message
+                if (!this.text || this.text.trim() === "" || this.text.startsWith("Error:")) {
+                    return;
+                }
                 try {
                     var parsed = JSON.parse(this.text);
                     root.tasks = parsed.filter(t => !t.done);
                 } catch (e) {
-                    console.warn("TodoWidget: failed to parse vja output:", e);
+                    // Silently ignore parse errors (e.g., server unreachable)
                 }
             }
         }

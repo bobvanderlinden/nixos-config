@@ -43,18 +43,6 @@ Item {
         }
     }
 
-    // If user presses any key, skip to password mode immediately
-    Connections {
-        target: panel
-        function onActiveFocusItemChanged() {
-            // User interacted, switch to password mode
-            if (panel.activeFocusItem && root.fingerprintPhase) {
-                root.fingerprintPhase = false;
-                fingerprintTimer.stop();
-            }
-        }
-    }
-
     PanelWindow {
         id: panel
 
@@ -93,6 +81,21 @@ Item {
         }
 
         // ── OSD card ─────────────────────────────────────────────────────────
+
+        // FocusScope to capture key presses during fingerprint phase
+        FocusScope {
+            id: focusScope
+            anchors.fill: parent
+            focus: agent.isActive
+
+            // If user presses any key during fingerprint phase, skip to password mode
+            Keys.onPressed: (event) => {
+                if (root.fingerprintPhase) {
+                    root.fingerprintPhase = false;
+                    fingerprintTimer.stop();
+                }
+            }
+        }
 
         Rectangle {
             id: card

@@ -287,15 +287,15 @@ PanelWindow {
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
-                        if (!notification) return;
-                        const defaultAction = notification.actions
-                            ? notification.actions.find(a => a.identifier === "default")
+                        if (!toastItem.notification) return;
+                        const defaultAction = toastItem.notification.actions
+                            ? toastItem.notification.actions.find(a => a.identifier === "default")
                             : null;
                         if (defaultAction) {
                             defaultAction.invoke();
-                            notification.dismiss();
+                            toastItem.notification.dismiss();
                         } else {
-                            notification.dismiss();
+                            toastItem.notification.dismiss();
                         }
                     }
                 }
