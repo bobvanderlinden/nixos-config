@@ -309,6 +309,20 @@ in
             sleep 0.5
           done
         '';
+
+        toggleWorkspaceLayout = pkgs.writeShellScript "toggle-workspace-layout" ''
+          set -eu
+
+          active_workspace_json="$(${lib.getExe' pkgs.hyprland "hyprctl"} -j activeworkspace)"
+          ws_id="$(printf '%s' "$active_workspace_json" | ${lib.getExe pkgs.jq} --raw-output '.id')"
+          current_layout="$(printf '%s' "$active_workspace_json" | ${lib.getExe pkgs.jq} --raw-output '.tiledLayout')"
+
+          if [ "$current_layout" = "scrolling" ]; then
+            exec ${lib.getExe' pkgs.hyprland "hyprctl"} keyword workspace "$ws_id, layout:dwindle, gapsin:0, gapsout:0"
+          else
+            exec ${lib.getExe' pkgs.hyprland "hyprctl"} keyword workspace "$ws_id, layout:scrolling, layoutopt:direction:right, gapsin:8, gapsout:28"
+          fi
+        '';
       in
       {
         enable = true;
@@ -319,12 +333,17 @@ in
           general = {
             gaps_in = 0;
             gaps_out = 0;
+            no_focus_fallback = false;
           };
 
           workspace = [
             "special:vault, shadow:true, on-created-empty:${vaultOpen}, gapsin:10, gapsout:60"
             "special:slack, shadow:true, on-created-empty:${slackOpen}, gapsin:10, gapsout:60"
           ];
+
+          scrolling = {
+            direction = "right";
+          };
 
           windowrule = [
             # IntelliJ IDEs
@@ -340,6 +359,9 @@ in
             # All 1Password windows: float + pin by default (auth dialog, quick access, etc.)
             # The vault-open script unpins and unfloats the main window after moving it.
             "match:class (1password), no_screen_share on, rounding 12, float on, pin on"
+
+            # Grouped/tabbed windows look better without the slide-in animation.
+            "no_anim 1, match:group 1"
 
           ];
 
@@ -412,6 +434,12 @@ in
             "$mod, G, togglegroup"
             "$mod, F, fullscreen, 1"
             "$mod SHIFT, F, togglefloating"
+            "$mod, S, exec, ${toggleWorkspaceLayout}"
+            "$mod, comma, layoutmsg, focus l"
+            "$mod, period, layoutmsg, focus r"
+            "$mod SHIFT, comma, layoutmsg, swapcol l"
+            "$mod SHIFT, period, layoutmsg, swapcol r"
+            "$mod, P, layoutmsg, promote"
 
             # Workspaces
             "$mod, 1, workspace, 1"
@@ -484,12 +512,19 @@ in
             "$mod, switch:[Lid Switch], exec, hyprlock"
           ];
 
-          # Disable all Hyprland animations (see https://wiki.hyprland.org/Configuring/Animations/)
+          bezier = [
+            "subtle, 0.20, 0.90, 0.25, 1.00"
+          ];
+
+          # Keep motion subtle, but restore enough movement to make scrolling
+          # layout changes easier to track visually.
           animation = [
-            "global, 0"
+            "global, 1, 3, default"
             "fade, 0"
-            "windows, 0"
+            "windows, 1, 2, subtle, slide"
             "workspaces, 0"
+            "border, 0"
+            "layers, 0"
           ];
 
           misc = {
@@ -1032,7 +1067,14 @@ in
     # The activitywatch watcher module does not expose a way to set service
     # environment variables, so we override the unit to pass through the
     # Hyprland IPC socket identifier that hyprctl needs to connect.
+    # We also bind to hyprland-session.target so the service restarts when
+    # Hyprland restarts (the HYPRLAND_INSTANCE_SIGNATURE changes each session).
     systemd.user.services.activitywatch-watcher-aw-watcher-window-hyprland = {
+      Unit = {
+        BindsTo = [ "hyprland-session.target" ];
+        After = [ "hyprland-session.target" ];
+      };
+      Install.WantedBy = [ "hyprland-session.target" ];
       Service.PassEnvironment = "HYPRLAND_INSTANCE_SIGNATURE";
     };
 
