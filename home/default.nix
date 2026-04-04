@@ -687,6 +687,7 @@ in
         name = "Adwaita-dark";
         package = pkgs.gnome-themes-extra;
       };
+      gtk4.theme = config.gtk.theme;
       gtk2.extraConfig = ''
         gtk-error-bell = 0
       '';
