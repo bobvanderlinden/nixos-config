@@ -133,7 +133,7 @@
         };
 
       overlays.quickshell = final: _prev: {
-        quickshell = inputs.quickshell.packages.${final.system}.default;
+        quickshell = inputs.quickshell.packages.${final.stdenv.hostPlatform.system}.default;
       };
 
       nixosModules = import ./system/modules // {
