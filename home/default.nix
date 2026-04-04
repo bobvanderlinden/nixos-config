@@ -227,7 +227,6 @@ in
       coin
       patchelf
       home-manager
-      claude-code
     ];
 
     i18n.inputMethod = {
