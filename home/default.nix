@@ -1040,7 +1040,11 @@ in
     };
     programs.gh-dash.enable = true;
     programs.jq.enable = true;
-    programs.neovim.enable = true;
+    programs.neovim = {
+      enable = true;
+      withRuby = true;
+      withPython3 = true;
+    };
     programs.nix-index.enable = true;
 
     # Source: https://discourse.nixos.org/t/atril-is-blurry-engrampa-is-not-sway-scale-2/2865/2
