@@ -34,12 +34,12 @@
           url = "https://mcp.context7.com/mcp";
         };
       };
-      keybinds = {
-        # Remove home/end from message scrolling so they only move the cursor
-        # in the input buffer (input_buffer_home / input_buffer_end).
-        messages_first = "ctrl+g";
-        messages_last = "ctrl+alt+g";
-      };
+    };
+    tui.keybinds = {
+      # Remove home/end from message scrolling so they only move the cursor
+      # in the input buffer (input_buffer_home / input_buffer_end).
+      messages_first = "ctrl+g";
+      messages_last = "ctrl+alt+g";
     };
   };
 
