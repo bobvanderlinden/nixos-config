@@ -81,6 +81,11 @@
             #   hash = "sha256-z9760cR8MA+gmYCssPRpIDA8bvteh5cr3gSttHmzA1g=";
             # })
           ];
+          postPatch = ''
+            sed -i '/^  hostPlatform ? stdenv.hostPlatform,$/d' pkgs/development/compilers/flutter/host-artifacts.nix
+            sed -i 's/^let$/let\
+              hostPlatform = stdenv.hostPlatform;/' pkgs/development/compilers/flutter/host-artifacts.nix
+          '';
         };
       username = "bob.vanderlinden";
       defaultOverlays = [
