@@ -264,16 +264,21 @@
     longitude = 5.9115896491034565;
   };
 
-  programs.hyprland.enable = true;
+  programs.hyprland = {
+    enable = true;
+    withUWSM = true;
+  };
+  programs.regreet.enable = true;
+
   services.greetd = {
     enable = true;
     settings = {
       default_session = {
-        command = "${lib.getExe pkgs.tuigreet} --sessions /run/current-system/sw/share/wayland-sessions";
+        command = "${pkgs.dbus}/bin/dbus-run-session ${lib.getExe pkgs.cage} -s -d -- ${lib.getExe config.programs.regreet.package}";
         user = "greeter";
       };
       initial_session = {
-        command = "${pkgs.bash}/bin/bash --login -c 'exec start-hyprland'";
+        command = "${lib.getExe pkgs.bash} --login -c 'exec ${lib.getExe pkgs.uwsm} start -e -D Hyprland hyprland.desktop'";
         user = config.suites.single-user.user;
       };
     };
@@ -281,11 +286,7 @@
   services.systemd-lock-handler.enable = true;
 
   # Fingerprint reader
-  services.fprintd.enable = true;
-  security.pam.services.login.fprintAuth = true;
   security.pam.services.hyprlock = { };
-
-  services.gnome.gnome-keyring.enable = true;
 
   programs.fish.enable = true;
   programs.bash.completion.enable = true;
@@ -322,6 +323,19 @@
 
   nixpkgs.config.allowUnfree = true;
   nixpkgs.config.permittedInsecurePackages = [ "electron-25.9.0" ];
+
+  # hardware-configuration.nix enables the broad firmware bundles, but on this
+  # HP laptop we only observed firmware usage for the Intel AX211 Wi-Fi and
+  # Bluetooth, Intel iGPU, Intel SOF audio, and Cirrus speaker amp firmware.
+  # Keep the firmware list explicit so nixpkgs updates do not pull in unrelated
+  # bundles like the duplicate b43 variants that caused build warnings.
+  hardware.enableAllFirmware = lib.mkForce false;
+  hardware.enableRedistributableFirmware = lib.mkForce false;
+  hardware.firmware = with pkgs; [
+    linux-firmware
+    sof-firmware
+    wireless-regdb
+  ];
 
   documentation.man.cache.enable = false;
   documentation.nixos.enable = false;

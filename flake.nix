@@ -76,16 +76,11 @@
           name = "nixpkgs-patched";
           src = inputs.nixpkgs;
           patches = [
-            # (pkgs.fetchurl {
-            #   url = "https://github.com/NixOS/nixpkgs/pull/474174.patch";
-            #   hash = "sha256-z9760cR8MA+gmYCssPRpIDA8bvteh5cr3gSttHmzA1g=";
-            # })
+            (pkgs.fetchurl {
+              url = "https://github.com/bobvanderlinden/nixpkgs/commit/5f058c5201d855074eaae9d93b215106dc598c00.patch";
+              hash = "sha256-IFL8zgMv7JYIp4FzRU/+YbBGtZ0hOHp5H+VoI7oWv5A=";
+            })
           ];
-          postPatch = ''
-            sed -i '/^  hostPlatform ? stdenv.hostPlatform,$/d' pkgs/development/compilers/flutter/host-artifacts.nix
-            sed -i 's/^let$/let\
-              hostPlatform = stdenv.hostPlatform;/' pkgs/development/compilers/flutter/host-artifacts.nix
-          '';
         };
       username = "bob.vanderlinden";
       defaultOverlays = [
@@ -192,6 +187,16 @@
         pkgs = mkPkgs { inherit system; };
       in
       {
+        checks = pkgs.lib.optionalAttrs (system == "x86_64-linux") {
+          greetd-autologin-keyring = pkgs.testers.runNixOSTest (
+            import ./tests/greetd-autologin-keyring.nix {
+              lib = pkgs.lib;
+              inherit pkgs;
+              greetdAutologinKeyringModule = self.nixosModules."greetd-autologin-keyring";
+            }
+          );
+        };
+
         packages =
           let
             inherit (builtins) attrNames;

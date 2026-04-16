@@ -1,9 +1,9 @@
 """
-agents-idle — exits 0 when all opencode agents are in the idle state.
+agents-idle — exits 0 when no opencode agents are actively running.
 
 Connects to the statebus subscribe socket, receives the current session state
-replay, then monitors live updates. Exits 0 once every session is idle or no
-sessions exist.
+replay, then monitors live updates. Exits 0 once no session is in an active
+state or no sessions exist.
 """
 
 import json
@@ -18,8 +18,8 @@ SOCKET_PATH = f"/run/user/{os.getuid()}/statebus-sub.sock"
 REPLAY_SETTLE_TIMEOUT = 0.1
 
 
-def all_idle(sessions: dict[str, str]) -> bool:
-    return all(state == "idle" for state in sessions.values())
+def any_active(sessions: dict[str, str]) -> bool:
+    return any(state in {"busy", "retry"} for state in sessions.values())
 
 
 def main() -> None:
@@ -42,14 +42,14 @@ def main() -> None:
             if not readable:
                 # Timeout elapsed with no new data — replay is complete.
                 replay_done = True
-                if all_idle(sessions):
+                if not any_active(sessions):
                     sys.exit(0)
                 continue
 
             data = sock.recv(4096)
             if not data:
                 # Server closed the connection.
-                if all_idle(sessions):
+                if not any_active(sessions):
                     sys.exit(0)
                 sys.exit(1)
 
@@ -75,7 +75,7 @@ def main() -> None:
                 elif message_type == "remove" and key:
                     sessions.pop(key, None)
 
-                if replay_done and all_idle(sessions):
+                if replay_done and not any_active(sessions):
                     sys.exit(0)
 
 

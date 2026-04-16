@@ -24,7 +24,7 @@
           "curl *" = "allow";
         };
         read = {
-          "/nix/store/*" = "allow";
+          "/nix/store/**" = "allow";
           "~/.cache/uv/*" = "allow";
         };
       };

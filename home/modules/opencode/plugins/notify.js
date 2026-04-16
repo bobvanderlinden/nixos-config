@@ -1,6 +1,11 @@
 export const NotifyPlugin = async ({ $, client }) => {
   const windowAddress = process.env.HYPR_WINDOW_ADDRESS ?? null;
 
+  async function getRootSessionInfo(sessionId) {
+    const sessionInfo = (await client.session.get({ path: { id: sessionId } })).data;
+    return sessionInfo?.parentID ? null : sessionInfo;
+  }
+
   /**
    * Returns true if the OpenCode window is currently focused, meaning
    * the user is actively looking at it and does not need a notification.
@@ -31,8 +36,10 @@ export const NotifyPlugin = async ({ $, client }) => {
           const sessionId = event.properties.sessionID;
           if (!sessionId) throw new Error(`Expected sessionID in ${event.type} event`);
 
-          // Agent is now idle — fetch title.
-          const sessionInfo = (await client.session.get({ path: { id: sessionId } })).data;
+          // Only notify for top-level sessions.
+          const sessionInfo = await getRootSessionInfo(sessionId);
+          if (!sessionInfo) break;
+
           const title = sessionInfo?.title ?? "";
 
           // Skip notification if our window is currently focused.
@@ -46,6 +53,10 @@ export const NotifyPlugin = async ({ $, client }) => {
 
         case "permission.asked": {
           const permission = event.properties;
+
+          // Only notify for top-level sessions.
+          const sessionInfo = await getRootSessionInfo(permission.sessionID);
+          if (!sessionInfo) break;
 
           // Skip notification if our window is currently focused — the user
           // can already see the permission prompt in the TUI.

@@ -9,7 +9,6 @@
     enable = true;
     package = pkgs.quickshell;
     systemd.enable = true;
-    # target defaults to config.wayland.systemd.target (hyprland-session.target)
   };
 
   # Additional binaries that the QML widgets call by name.

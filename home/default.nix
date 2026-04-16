@@ -8,6 +8,8 @@
 let
   inherit (lib) mapAttrsToList;
 
+  hyprlandSessionTarget = "wayland-session@hyprland.desktop.target";
+
   backgroundColor = "1a1b26";
   wallpaperSvg = pkgs.fetchurl {
     url = "https://raw.githubusercontent.com/NixOS/nixos-artwork/4ad062cee62116f6055e2876e9638e7bb399d219/logo/nix-snowflake-colours.svg";
@@ -136,6 +138,7 @@ in
       dua
       nix-output-monitor
       nh
+      systemctl-wait
 
       # Network Tools
       nmap
@@ -325,6 +328,7 @@ in
       in
       {
         enable = true;
+        systemd.enable = false;
         systemd.variables = [ "--all" ];
         settings = {
           "$mod" = "SUPER";
@@ -673,6 +677,8 @@ in
 
     fonts.fontconfig.enable = true;
     manual.manpages.enable = false;
+    # Fish enables man cache generation by default, which triggers noisy mandb warnings.
+    programs.man.generateCaches = false;
     gtk = {
       enable = true;
       font = {
@@ -1069,17 +1075,46 @@ in
       };
     };
 
+    # Home Manager normally expects the session launcher to start
+    # hm-graphical-session.target, which in turn activates
+    # graphical-session.target and tray.target. With uwsm launching Hyprland,
+    # bridge that behavior onto the uwsm per-session target instead.
+    systemd.user.targets.hm-graphical-session = {
+      Unit = {
+        Description = "Home Manager graphical session";
+        Requires = [ "graphical-session-pre.target" ];
+        After = [ hyprlandSessionTarget ];
+        BindsTo = [
+          hyprlandSessionTarget
+          "graphical-session.target"
+          "tray.target"
+        ];
+      };
+      Install.WantedBy = [ hyprlandSessionTarget ];
+    };
+
     # The activitywatch watcher module does not expose a way to set service
     # environment variables, so we override the unit to pass through the
     # Hyprland IPC socket identifier that hyprctl needs to connect.
-    # We also bind to hyprland-session.target so the service restarts when
-    # Hyprland restarts (the HYPRLAND_INSTANCE_SIGNATURE changes each session).
+    # With uwsm, bind it directly to the compositor session target so it picks
+    # up a fresh instance signature on Hyprland restarts.
+    # xsettingsd also needs the session environment imported by uwsm before it
+    # starts, otherwise it races Xwayland and fails to connect to DISPLAY.
+    systemd.user.services.xsettingsd = {
+      Unit = {
+        BindsTo = [ hyprlandSessionTarget ];
+        After = [ hyprlandSessionTarget ];
+        PartOf = [ hyprlandSessionTarget ];
+      };
+      Install.WantedBy = lib.mkForce [ hyprlandSessionTarget ];
+    };
+
     systemd.user.services.activitywatch-watcher-aw-watcher-window-hyprland = {
       Unit = {
-        BindsTo = [ "hyprland-session.target" ];
-        After = [ "hyprland-session.target" ];
+        BindsTo = [ hyprlandSessionTarget ];
+        After = [ hyprlandSessionTarget ];
       };
-      Install.WantedBy = [ "hyprland-session.target" ];
+      Install.WantedBy = [ hyprlandSessionTarget ];
       Service.PassEnvironment = "HYPRLAND_INSTANCE_SIGNATURE";
     };
 
