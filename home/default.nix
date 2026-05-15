@@ -188,6 +188,7 @@ in
 
       # Media & Graphics
       imagemagick
+      pkgs."3dmmex"
       vlc
       gimp3
       feh
