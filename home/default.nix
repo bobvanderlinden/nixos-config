@@ -359,6 +359,7 @@ in
       in
       {
         enable = true;
+        configType = "lua";
         systemd.enable = false;
         systemd.variables = [ "--all" ];
         settings = {
