@@ -282,7 +282,10 @@
         user = "greeter";
       };
       initial_session = {
-        command = "${lib.getExe pkgs.bash} --login -c 'exec ${lib.getExe pkgs.uwsm} start -e -D Hyprland hyprland.desktop'";
+        # Start Hyprland directly under uwsm.
+        # Going through hyprland.desktop adds start-hyprland, which has been
+        # failing under uwsm before the compositor fully comes up.
+        command = "${lib.getExe pkgs.bash} --login -c 'exec ${lib.getExe pkgs.uwsm} start -F -- ${lib.getExe config.programs.hyprland.package}'";
         user = config.suites.single-user.user;
       };
     };
