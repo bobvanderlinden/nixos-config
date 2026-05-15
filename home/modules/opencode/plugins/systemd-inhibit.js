@@ -1,273 +1,163 @@
-import { closeSync } from "node:fs";
-import { createRequire } from "node:module";
-
-const requireFromOpencodeConfig = createRequire(
-  `${process.env.HOME}/.config/opencode/package.json`,
-);
-const dbusNext = requireFromOpencodeConfig("dbus-next");
-
-const LOGIND_SERVICE = "org.freedesktop.login1";
-const LOGIND_PATH = "/org/freedesktop/login1";
-const LOGIND_INTERFACE = "org.freedesktop.login1.Manager";
-const INHIBIT_RECONCILE_INTERVAL_MS = 30_000;
+import { spawn } from "child_process";
 
 /**
- * Holds a logind sleep/idle inhibitor lock while any top-level OpenCode session
- * in this instance is actively running.
+ * Holds a systemd sleep/idle inhibitor lock while any OpenCode session is
+ * actively running, preventing the system from suspending or going idle
+ * mid-task.
  *
- * The lock is acquired through logind's D-Bus Inhibit() method, which returns
- * a Unix file descriptor. logind keeps the inhibitor for as long as that file
- * descriptor remains open, so we can release the lock by closing the descriptor
- * directly instead of keeping a helper process alive.
+ * A session is considered active when it is busy or retrying AND it is not
+ * waiting for the user to answer a question. When the AI uses the "question"
+ * tool the agent is paused - the user must respond - so the lock is released.
  *
- * A session is considered active when it is busy or retrying and not waiting
- * for a user question or permission reply.
+ * The lock is acquired by spawning `systemd-inhibit ... cat` with a pipe on
+ * stdin. systemd grants the inhibitor for the lifetime of the wrapped command
+ * (`cat`). `cat` exits when its stdin reaches EOF, which happens when the
+ * write end of the pipe is closed - either explicitly by releaseInhibitLock()
+ * or automatically by the kernel when the parent process dies (even SIGKILL).
+ * This ensures the lock is always released, even on a hard kill.
  */
 export const SystemdInhibitPlugin = async ({ client }) => {
-  // Per root session state:
-  // sessionId -> { isBusy: boolean, hasQuestion: boolean, pendingPermissions: Set<string> }
+  // Per-session state: sessionId -> { isBusy: boolean, hasQuestion: boolean, pendingPermissions: Set<string> }
   const sessions = new Map();
+  const ignoredSessionIds = new Set();
 
-  let inhibitFd = null;
-  let inhibitDesired = false;
-  let inhibitSync = Promise.resolve();
-
-  let bus = null;
-  let logindManager = null;
-  let reconcilePromise = null;
-  let shuttingDown = false;
+  let inhibitorProcess = null;
 
   function isSessionActive({ isBusy, hasQuestion, pendingPermissions }) {
     return isBusy && !hasQuestion && pendingPermissions.size === 0;
   }
 
-  function isBusyStatus(status) {
-    return status?.type === "busy" || status?.type === "retry";
-  }
-
-  function updateDesiredInhibit() {
-    inhibitDesired = [...sessions.values()].some(isSessionActive);
-    void syncInhibitLock();
-  }
-
   function setRootSession(sessionId, updates) {
+    ignoredSessionIds.delete(sessionId);
     const current = sessions.get(sessionId) ?? {
-      hasQuestion: false,
       isBusy: false,
+      hasQuestion: false,
       pendingPermissions: new Set(),
     };
     sessions.set(sessionId, { ...current, ...updates });
-    updateDesiredInhibit();
+    update();
   }
 
   function removeSession(sessionId) {
-    if (!sessions.delete(sessionId)) return;
-    updateDesiredInhibit();
-  }
-
-  function ensureBus() {
-    if (bus !== null) return bus;
-
-    bus = dbusNext.systemBus({ negotiateUnixFd: true });
-    bus.on("error", () => {
-      logindManager = null;
-    });
-    bus.on("end", () => {
-      bus = null;
-      logindManager = null;
-    });
-
-    return bus;
-  }
-
-  async function getLogindManager() {
-    if (logindManager !== null) return logindManager;
-
-    const proxy = await ensureBus().getProxyObject(LOGIND_SERVICE, LOGIND_PATH);
-    logindManager = proxy.getInterface(LOGIND_INTERFACE);
-    return logindManager;
-  }
-
-  async function acquireInhibitLock() {
-    if (inhibitFd !== null) return;
-
-    const manager = await getLogindManager();
-    const nextFd = await manager.Inhibit(
-      "idle:sleep",
-      "opencode",
-      "AI agent is running",
-      "block",
-    );
-
-    if (!Number.isInteger(nextFd)) {
-      throw new Error(`Expected logind Inhibit() to return an fd, got ${String(nextFd)}`);
-    }
-
-    if (!inhibitDesired || shuttingDown) {
-      closeSync(nextFd);
-      return;
-    }
-
-    inhibitFd = nextFd;
-  }
-
-  function releaseInhibitLock() {
-    if (inhibitFd === null) return;
-
-    const fd = inhibitFd;
-    inhibitFd = null;
-
-    try {
-      closeSync(fd);
-    } catch {
-      // Ignore close races during shutdown.
-    }
-  }
-
-  function syncInhibitLock() {
-    inhibitSync = inhibitSync
-      .catch(() => {})
-      .then(async () => {
-        while (!shuttingDown && inhibitDesired !== (inhibitFd !== null)) {
-          if (inhibitDesired) {
-            await acquireInhibitLock();
-          } else {
-            releaseInhibitLock();
-          }
-        }
-      })
-      .catch((error) => {
-        console.error("SystemdInhibitPlugin failed to sync logind inhibitor", error);
-      });
-
-    return inhibitSync;
+    sessions.delete(sessionId);
+    update();
   }
 
   async function hydrateRootSession(sessionId, updates) {
+    if (ignoredSessionIds.has(sessionId)) return;
+
     try {
       const { data: info } = await client.session.get({
         path: { id: sessionId },
         throwOnError: true,
       });
       if (info.parentID) {
+        ignoredSessionIds.add(sessionId);
         removeSession(sessionId);
         return;
       }
+
       setRootSession(sessionId, updates);
     } catch {
       // Ignore sessions that disappeared between the event and the lookup.
     }
   }
 
-  function reconcileSessions() {
-    if (reconcilePromise !== null) return reconcilePromise;
+  function updateOrHydrateRootSession(sessionId, updates) {
+    const session = sessions.get(sessionId);
+    if (session) {
+      setRootSession(sessionId, updates(session));
+      return true;
+    }
 
-    reconcilePromise = Promise.all([
-      client.session.list({
-        query: { roots: true },
-        throwOnError: true,
-      }),
-      client.session.status({
-        throwOnError: true,
-      }),
-    ])
-      .then(([listResponse, statusResponse]) => {
-        const rootSessions = listResponse.data;
-        const statuses = statusResponse.data;
-        const rootSessionIds = new Set(rootSessions.map((session) => session.id));
-
-        for (const sessionId of sessions.keys()) {
-          if (!rootSessionIds.has(sessionId)) {
-            sessions.delete(sessionId);
-          }
-        }
-
-        for (const session of rootSessions) {
-          const status = statuses[session.id];
-          const busy = isBusyStatus(status);
-          const current = sessions.get(session.id);
-
-          sessions.set(session.id, {
-            hasQuestion: busy ? current?.hasQuestion ?? false : false,
-            isBusy: busy,
-            pendingPermissions: busy ? current?.pendingPermissions ?? new Set() : new Set(),
-          });
-        }
-
-        updateDesiredInhibit();
-      })
-      .catch((error) => {
-        console.error("SystemdInhibitPlugin failed to reconcile sessions", error);
-      })
-      .finally(() => {
-        reconcilePromise = null;
-      });
-
-    return reconcilePromise;
+    if (ignoredSessionIds.has(sessionId)) return true;
+    void hydrateRootSession(sessionId, updates(null));
+    return false;
   }
 
-  const reconcileTimer = setInterval(() => {
-    void reconcileSessions();
-  }, INHIBIT_RECONCILE_INTERVAL_MS);
-  reconcileTimer.unref?.();
-  void reconcileSessions();
+  function acquireInhibitLock() {
+    if (inhibitorProcess !== null) return;
 
-  function shutdown() {
-    if (shuttingDown) return;
-    shuttingDown = true;
-    clearInterval(reconcileTimer);
-    releaseInhibitLock();
-    bus?.disconnect();
-    bus = null;
-    logindManager = null;
+    inhibitorProcess = spawn(
+      "systemd-inhibit",
+      [
+        "--what=idle:sleep",
+        "--who=opencode",
+        "--why=AI agent is running",
+        "--mode=block",
+        "cat",
+      ],
+      // "pipe" on stdin: we hold the write end open. When this process dies
+      // (including SIGKILL), the kernel closes the write end -> cat gets EOF
+      // -> exits -> systemd-inhibit releases the inhibitor lock.
+      { stdio: ["pipe", "ignore", "ignore"], detached: false },
+    );
+
+    inhibitorProcess.on("exit", () => {
+      // Unexpected exit - clear the reference so a future busy event
+      // can re-acquire the lock.
+      inhibitorProcess = null;
+    });
   }
 
-  process.on("exit", shutdown);
+  function releaseInhibitLock() {
+    if (inhibitorProcess === null) return;
+    // Closing stdin sends EOF to cat, which causes it to exit cleanly.
+    inhibitorProcess.stdin.destroy();
+    inhibitorProcess = null;
+  }
+
+  function update() {
+    const anyActive = [...sessions.values()].some(isSessionActive);
+    if (anyActive) {
+      acquireInhibitLock();
+    } else {
+      releaseInhibitLock();
+    }
+  }
+
+  process.on("exit", releaseInhibitLock);
   process.on("SIGINT", () => {
-    shutdown();
+    releaseInhibitLock();
     process.exit(0);
   });
   process.on("SIGTERM", () => {
-    shutdown();
+    releaseInhibitLock();
     process.exit(0);
   });
 
   return {
     event: async ({ event }) => {
       switch (event.type) {
+        case "session.status": {
+          const { sessionID, status } = event.properties;
+          const isBusy = status.type === "busy" || status.type === "retry";
+
+          updateOrHydrateRootSession(sessionID, (session) => ({
+            isBusy,
+            // Mirror session-status.js: clear question state on a new busy/retry
+            // status as a safety net in case the question tool's completed event
+            // was missed.
+            hasQuestion: session && !isBusy ? session.hasQuestion : false,
+            pendingPermissions: session && isBusy ? session.pendingPermissions : new Set(),
+          }));
+          break;
+        }
+
         case "session.created":
         case "session.updated": {
           const { info } = event.properties;
           if (info.parentID) {
+            ignoredSessionIds.add(info.id);
             removeSession(info.id);
             break;
           }
 
           const current = sessions.get(info.id);
           setRootSession(info.id, {
-            hasQuestion: current?.hasQuestion ?? false,
             isBusy: current?.isBusy ?? false,
+            hasQuestion: current?.hasQuestion ?? false,
             pendingPermissions: current?.pendingPermissions ?? new Set(),
-          });
-          break;
-        }
-
-        case "session.status": {
-          const { sessionID, status } = event.properties;
-          const busy = isBusyStatus(status);
-          const current = sessions.get(sessionID);
-
-          if (current) {
-            setRootSession(sessionID, {
-              hasQuestion: false,
-              isBusy: busy,
-            });
-            break;
-          }
-
-          void hydrateRootSession(sessionID, {
-            hasQuestion: false,
-            isBusy: busy,
           });
           break;
         }
@@ -276,71 +166,44 @@ export const SystemdInhibitPlugin = async ({ client }) => {
           const { part } = event.properties;
           if (part.type !== "tool" || part.tool !== "question") break;
 
-          const current = sessions.get(part.sessionID);
-          if (!current) break;
-
           const hasQuestion =
             part.state.status === "pending" || part.state.status === "running";
-          setRootSession(part.sessionID, { hasQuestion });
+          updateOrHydrateRootSession(part.sessionID, () => ({ hasQuestion }));
+          break;
+        }
+
+        case "session.idle": {
+          const { sessionID } = event.properties;
+          ignoredSessionIds.delete(sessionID);
+          removeSession(sessionID);
           break;
         }
 
         case "permission.asked": {
           const { sessionID, id } = event.properties;
-          const current = sessions.get(sessionID);
-
-          if (current) {
-            const pendingPermissions = new Set(current.pendingPermissions);
+          updateOrHydrateRootSession(sessionID, (session) => {
+            const pendingPermissions = new Set(session?.pendingPermissions ?? []);
             pendingPermissions.add(id);
-            setRootSession(sessionID, { pendingPermissions });
-            break;
-          }
-
-          void hydrateRootSession(sessionID, {
-            pendingPermissions: new Set([id]),
+            return { pendingPermissions };
           });
           break;
         }
 
         case "permission.replied": {
           const { sessionID, requestID } = event.properties;
-          const current = sessions.get(sessionID);
-          if (!current) break;
+          const session = sessions.get(sessionID);
+          if (!session) break;
 
-          const pendingPermissions = new Set(current.pendingPermissions);
+          const pendingPermissions = new Set(session.pendingPermissions);
           pendingPermissions.delete(requestID);
           setRootSession(sessionID, { pendingPermissions });
           break;
         }
 
-        case "session.error": {
-          const { sessionID } = event.properties;
-          const current = sessions.get(sessionID);
-          if (!current) break;
-
-          setRootSession(sessionID, {
-            hasQuestion: false,
-            isBusy: false,
-            pendingPermissions: new Set(),
-          });
-          break;
-        }
-
-        case "session.idle": {
-          const { sessionID } = event.properties;
-          const current = sessions.get(sessionID);
-          if (!current) break;
-
-          setRootSession(sessionID, {
-            hasQuestion: false,
-            isBusy: false,
-            pendingPermissions: new Set(),
-          });
-          break;
-        }
-
         case "session.deleted": {
-          removeSession(event.properties.info.id);
+          const { info } = event.properties;
+          ignoredSessionIds.delete(info.id);
+          removeSession(info.id);
           break;
         }
       }

@@ -15,6 +15,9 @@
         skill = "deny"; # Use custom 'skills' tool instead
         websearch = "allow";
         webfetch = "allow";
+        external_directory = {
+          "/nix/store/**" = "allow";
+        };
         bash = {
           "systemctl suspend" = "allow";
           "git *" = "allow";
