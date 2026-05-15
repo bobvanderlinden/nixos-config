@@ -360,6 +360,7 @@ in
         '';
       in
       {
+        configType = "lua";
         enable = true;
         systemd.enable = false;
         systemd.variables = [ "--all" ];
