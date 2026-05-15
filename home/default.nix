@@ -234,7 +234,6 @@ in
       speedcrunch
       chatgpt-cli
       vja
-
       # CLI Utilities
       entr
       xclip
