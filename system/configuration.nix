@@ -28,6 +28,10 @@
   boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
 
   programs.nix-ld.enable = true;
+  programs.ydotool = {
+    enable = true;
+    group = "input";
+  };
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.

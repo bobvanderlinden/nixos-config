@@ -66,6 +66,7 @@ let
       ${lib.getExe config.programs.chromium.package} \
       "$@"
   '';
+
 in
 {
   imports = [
@@ -76,10 +77,41 @@ in
     ./modules/swaybg.nix
     ./modules/xdg-desktop-portal.nix
     ./modules/xdg-desktop-portal-hyprland.nix
+    ./modules/hyprwhspr-rs/default.nix
     ./modules/quickshell
     ./modules/opencode
   ];
   config = {
+    hyprwhspr-rs = {
+      enable = true;
+      settings = {
+        shortcuts = {
+          press = null;
+          hold = "SUPER+V";
+        };
+        audio_feedback = true;
+        auto_copy_clipboard = true;
+        fast_vad = {
+          enabled = true;
+          profile = "aggressive";
+        };
+        transcription = {
+          provider = "groq";
+          request_timeout_secs = 45;
+          max_retries = 2;
+          groq = {
+            model = "whisper-large-v3-turbo";
+            endpoint = "https://api.groq.com/openai/v1/audio/transcriptions";
+            prompt = "Transcribe spoken text accurately with punctuation and capitalization. Return only the transcription.";
+          };
+        };
+      };
+      hyprland = {
+        enable = false;
+        holdKey = "$mod, V";
+      };
+    };
+
     home.packages = with pkgs; [
       darkman
       gnome-keyring

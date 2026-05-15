@@ -6,6 +6,23 @@
 }:
 let
   cfg = config.hyprwhspr-rs;
+  jsonFormat = pkgs.formats.json { };
+  servicePath = lib.makeBinPath [
+    pkgs.coreutils
+    pkgs.ffmpeg
+    pkgs.findutils
+    pkgs.gnugrep
+    pkgs.gnused
+    pkgs.systemd
+  ];
+  serviceSbinPath = lib.makeSearchPath "sbin" [
+    pkgs.coreutils
+    pkgs.ffmpeg
+    pkgs.findutils
+    pkgs.gnugrep
+    pkgs.gnused
+    pkgs.systemd
+  ];
 in
 {
   options.hyprwhspr-rs = {
@@ -13,21 +30,16 @@ in
 
     package = lib.mkPackageOption pkgs "hyprwhspr-rs" { };
 
+    environmentFile = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = "${config.home.homeDirectory}/.config/hyprwhspr-rs/env";
+      defaultText = lib.literalExpression ''"${config.home.homeDirectory}/.config/hyprwhspr-rs/env"'';
+      example = "/path/to/hyprwhspr-rs.env";
+      description = "File containing provider API keys for hyprwhspr-rs.";
+    };
+
     settings = lib.mkOption {
-      type =
-        with lib.types;
-        let
-          valueType = nullOr (oneOf [
-            bool
-            int
-            float
-            str
-            path
-            (attrsOf valueType)
-            (listOf valueType)
-          ]);
-        in
-        attrsOf valueType;
+      type = jsonFormat.type;
       default = { };
       description = "Settings written to hyprwhspr-rs config.jsonc.";
     };
@@ -47,7 +59,30 @@ in
   config = lib.mkIf cfg.enable {
     home.packages = [ cfg.package ];
 
-    xdg.configFile."hyprwhspr-rs/config.jsonc".text = builtins.toJSON cfg.settings;
+    xdg.configFile."hyprwhspr-rs/config.jsonc".source =
+      jsonFormat.generate "hyprwhspr-rs-config.json" cfg.settings;
+
+    systemd.user.services.hyprwhspr-rs = {
+      Unit = {
+        Description = "Native speech-to-text voice dictation for Hyprland";
+        After = [
+          "graphical-session.target"
+          "pipewire.service"
+        ];
+        PartOf = [ "graphical-session.target" ];
+      };
+
+      Install = {
+        WantedBy = [ "graphical-session.target" ];
+      };
+
+      Service = {
+        ExecStart = lib.getExe cfg.package;
+        Restart = "on-failure";
+        EnvironmentFile = lib.optional (cfg.environmentFile != null) cfg.environmentFile;
+        Environment = [ "PATH=${servicePath}:${serviceSbinPath}" ];
+      };
+    };
 
     wayland.windowManager.hyprland.settings.bind = lib.mkIf cfg.hyprland.enable (
       lib.mkAfter [
