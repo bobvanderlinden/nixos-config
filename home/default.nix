@@ -188,6 +188,7 @@ in
       zoom-us
       signal-desktop
 
+      pkgs."3dmmex"
       # Text Editors & IDEs
       helix
       (lib.hiPrio vscode-wrapper)

@@ -105,9 +105,12 @@
     {
       overlays.default =
         final: prev:
-        prev.lib.packagesFromDirectoryRecursive {
+        (prev.lib.packagesFromDirectoryRecursive {
           inherit (final) callPackage;
           directory = ./packages;
+        })
+        // {
+          "3dmmex" = final.callPackage ./packages/3dmmex/package.nix { };
         };
       overlays.pyproject = _final: _prev: {
         inherit pyproject-nix uv2nix pyproject-build-systems;
