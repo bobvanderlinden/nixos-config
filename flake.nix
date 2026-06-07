@@ -117,7 +117,7 @@
       };
 
       overlays.workarounds =
-        _final: _prev:
+        final: prev:
         # let
         #   pkgsStable = import inputs.nixpkgs-stable {
         #     system = prev.system;
@@ -133,6 +133,15 @@
           #     })
           #   ];
           # });
+
+          fwupd = prev.fwupd.overrideAttrs (oldAttrs: {
+            postPatch = (oldAttrs.postPatch or "") + ''
+              substituteInPlace libfwupdplugin/fu-path-store.c \
+                --replace-fail \
+                  '{"FWUPD_LIBDIR_PKG", FU_PATH_KIND_LIBDIR_PKG},' \
+                  '{"FWUPD_LIBDIR_PKG", FU_PATH_KIND_LIBDIR_PKG}, {"FWUPD_EFIAPPDIR", FU_PATH_KIND_EFIAPPDIR},'
+            '';
+          });
         };
 
       overlays.quickshell = final: _prev: {
