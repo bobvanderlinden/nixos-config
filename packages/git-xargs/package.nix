@@ -2,7 +2,7 @@
   lib,
   buildGoModule,
   fetchFromGitHub,
-# git,
+  # git,
 }:
 let
   pname = "git-xargs";

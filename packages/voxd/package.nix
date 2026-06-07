@@ -45,7 +45,14 @@ python3Packages.buildPythonApplication rec {
 
   # Runtime dependencies for clipboard and typing functionality
   makeWrapperArgs = [
-    "--prefix PATH : ${lib.makeBinPath [ ydotool xclip wl-clipboard pulseaudio ]}"
+    "--prefix PATH : ${
+      lib.makeBinPath [
+        ydotool
+        xclip
+        wl-clipboard
+        pulseaudio
+      ]
+    }"
   ];
 
   # Skip tests as they may require audio devices or models
