@@ -82,27 +82,28 @@ stdenv.mkDerivation (finalAttrs: {
     (lib.cmakeFeature "3DMM_BRENDER_LIBRARY" "Source")
     (lib.cmakeFeature "FETCHCONTENT_SOURCE_DIR_3DMM-BRENDER" "${finalAttrs.brenderSrc}")
     (lib.cmakeFeature "FETCHCONTENT_SOURCE_DIR_MINIAUDIO" "${finalAttrs.miniaudioSrc}")
-    (lib.cmakeFeature "FETCHCONTENT_SOURCE_DIR_NATIVEFILEDIALOG-EXTENDED" "${finalAttrs.nativeFileDialogExtendedSrc}")
+    (lib.cmakeFeature "FETCHCONTENT_SOURCE_DIR_NATIVEFILEDIALOG-EXTENDED" "${finalAttrs.nativeFileDialogExtendedSrc
+    }")
     (lib.cmakeFeature "FETCHCONTENT_SOURCE_DIR_INIPARSER" "${finalAttrs.iniparserSrc}")
   ];
 
   postPatch = ''
-    substituteInPlace CMakeLists.txt \
-      --replace-fail 'execute_process(
-  COMMAND git describe --tags --always
-  WORKING_DIRECTORY ''${PROJECT_SOURCE_DIR}
-  OUTPUT_VARIABLE GIT_VERSION
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-)' 'if (EXISTS "''${PROJECT_SOURCE_DIR}/.git")
-  execute_process(
-    COMMAND git describe --tags --always
-    WORKING_DIRECTORY ''${PROJECT_SOURCE_DIR}
-    OUTPUT_VARIABLE GIT_VERSION
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-  )
- else()
-  set(GIT_VERSION "v${finalAttrs.version}")
-endif()'
+        substituteInPlace CMakeLists.txt \
+          --replace-fail 'execute_process(
+      COMMAND git describe --tags --always
+      WORKING_DIRECTORY ''${PROJECT_SOURCE_DIR}
+      OUTPUT_VARIABLE GIT_VERSION
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+    )' 'if (EXISTS "''${PROJECT_SOURCE_DIR}/.git")
+      execute_process(
+        COMMAND git describe --tags --always
+        WORKING_DIRECTORY ''${PROJECT_SOURCE_DIR}
+        OUTPUT_VARIABLE GIT_VERSION
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+      )
+     else()
+      set(GIT_VERSION "v${finalAttrs.version}")
+    endif()'
   '';
 
   postInstall = ''
