@@ -126,7 +126,7 @@ async def _main() -> None:
     parser.add_argument("body", nargs="?", default="")
     args = parser.parse_args()
 
-    window_address = args.window_address
+    window_address = args.window_address.removeprefix("0x")
 
     if args.bell:
         sys.stderr.write("\a")
@@ -244,7 +244,11 @@ async def _main() -> None:
         if args.verbose:
             print(f"Focusing window {window_address}", file=sys.stderr)
         subprocess.run(  # noqa: S603
-            ["hyprctl", "dispatch", "focuswindow", f"address:0x{window_address}"],
+            [
+                "hyprctl",
+                "dispatch",
+                f'hl.dsp.focus({{ window = "address:0x{window_address}" }})',
+            ],
             check=False,
         )
 

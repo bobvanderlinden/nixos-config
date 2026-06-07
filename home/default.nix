@@ -8,8 +8,6 @@
 let
   inherit (lib) mapAttrsToList;
 
-  hyprlandSessionTarget = "wayland-session@hyprland.desktop.target";
-
   backgroundColor = "1a1b26";
   wallpaperSvg = pkgs.fetchurl {
     url = "https://raw.githubusercontent.com/NixOS/nixos-artwork/4ad062cee62116f6055e2876e9638e7bb399d219/logo/nix-snowflake-colours.svg";
@@ -36,9 +34,9 @@ let
       | ${lib.getExe pkgs.jq} --raw-output --argjson current "$current" \
           '.[] | select(.workspace.id == $current) | .address' \
       | while read -r address; do
-          ${lib.getExe' pkgs.hyprland "hyprctl"} dispatch movetoworkspacesilent "$target,address:$address"
+          ${lib.getExe' pkgs.hyprland "hyprctl"} dispatch "hl.dsp.window.move({ workspace = \"$target\", window = \"address:$address\", silent = true })"
         done
-    ${lib.getExe' pkgs.hyprland "hyprctl"} dispatch workspace "$target"
+    ${lib.getExe' pkgs.hyprland "hyprctl"} dispatch "hl.dsp.focus({ workspace = \"$target\" })"
   '';
 
   vscode-wrapper = pkgs.writeShellScriptBin "code" ''
@@ -77,6 +75,7 @@ in
     ./modules/swaybg.nix
     ./modules/xdg-desktop-portal.nix
     ./modules/xdg-desktop-portal-hyprland.nix
+    ./modules/hypr
     ./modules/hyprwhspr-rs/default.nix
     ./modules/quickshell
     ./modules/opencode
@@ -286,292 +285,6 @@ in
         in
         "${rofi-themes-collection}/themes/rounded-blue-dark.rasi";
     };
-
-    wayland.windowManager.hyprland =
-      let
-        # Starts Bitwarden and 1Password when the vault workspace is first opened.
-        # Used as on-created-empty for the vault workspace.
-        # 1Password's main window is moved to the vault by listening for
-        # the windowtitlev2 IPC event — static windowrules can't distinguish
-        # the main window from the auth dialog since both share initialTitle
-        # "1Password" at creation time.
-        slackOpen = pkgs.writeShellScript "slack-open" ''
-          # Start Slack if not already running
-          if ! hyprctl clients -j | ${pkgs.jq}/bin/jq -e '.[] | select(.initialClass == "Slack")' > /dev/null 2>&1; then
-            slack &
-            disown
-          fi
-
-          # Poll until the Slack main window appears, then move it to the slack workspace.
-          for _ in $(seq 1 20); do
-            address=$(hyprctl clients -j | ${pkgs.jq}/bin/jq -r '
-              .[] | select(.initialClass == "Slack") | .address
-            ' | head -1)
-            if [[ -n "$address" ]]; then
-              hyprctl dispatch movetoworkspacesilent "special:slack,address:$address"
-              break
-            fi
-            sleep 0.5
-          done
-        '';
-
-        vaultOpen = pkgs.writeShellScript "vault-open" ''
-          # Start Bitwarden if not already running
-          if ! hyprctl clients -j | ${pkgs.jq}/bin/jq -e '.[] | select(.class == "Bitwarden")' > /dev/null 2>&1; then
-            bitwarden &
-            disown
-          fi
-
-          # Start 1Password if not already running
-          if ! hyprctl clients -j | ${pkgs.jq}/bin/jq -e '.[] | select(.class == "1password")' > /dev/null 2>&1; then
-            1password &
-            disown
-          fi
-
-          # Poll until the 1Password main window appears (title contains "— 1Password"),
-          # then move it to the vault and unpin/unfloat it.
-          for _ in $(seq 1 20); do
-            address=$(hyprctl clients -j | ${pkgs.jq}/bin/jq -r '
-              .[] | select(.class == "1password") | .address
-            ' | head -1)
-            if [[ -n "$address" ]]; then
-                hyprctl dispatch movetoworkspacesilent "special:vault,address:$address"
-                # togglefloating also unpins the window
-                hyprctl dispatch togglefloating address:"$address"
-              break
-            fi
-            sleep 0.5
-          done
-        '';
-
-        toggleWorkspaceLayout = pkgs.writeShellScript "toggle-workspace-layout" ''
-          set -eu
-
-          active_workspace_json="$(${lib.getExe' pkgs.hyprland "hyprctl"} -j activeworkspace)"
-          ws_id="$(printf '%s' "$active_workspace_json" | ${lib.getExe pkgs.jq} --raw-output '.id')"
-          current_layout="$(printf '%s' "$active_workspace_json" | ${lib.getExe pkgs.jq} --raw-output '.tiledLayout')"
-
-          if [ "$current_layout" = "scrolling" ]; then
-            exec ${lib.getExe' pkgs.hyprland "hyprctl"} keyword workspace "$ws_id, layout:dwindle, gapsin:0, gapsout:0"
-          else
-            exec ${lib.getExe' pkgs.hyprland "hyprctl"} keyword workspace "$ws_id, layout:scrolling, layoutopt:direction:right, gapsin:8, gapsout:28"
-          fi
-        '';
-      in
-      {
-        enable = true;
-        configType = "lua";
-        systemd.enable = false;
-        systemd.variables = [ "--all" ];
-        settings = {
-          "$mod" = "SUPER";
-
-          general = {
-            gaps_in = 0;
-            gaps_out = 0;
-            no_focus_fallback = false;
-          };
-
-          workspace = [
-            "special:vault, shadow:true, on-created-empty:${vaultOpen}, gapsin:10, gapsout:60"
-            "special:slack, shadow:true, on-created-empty:${slackOpen}, gapsin:10, gapsout:60"
-          ];
-
-          scrolling = {
-            direction = "right";
-          };
-
-          windowrule = [
-            # IntelliJ IDEs
-            "no_initial_focus on, match:class (jetbrains-.*), match:title ^win(.*)"
-            "size 672 700, match:class (jetbrains-.*), match:title (), match:float 1"
-
-            # Zoom-us
-            "float on, match:class (Zoom Workplace), suppress_event maximize, pin on, dim_around off, decorate off"
-
-            # Bitwarden on the vault workspace
-            "match:class (Bitwarden), no_screen_share on, workspace special:vault silent, rounding 12"
-
-            # All 1Password windows: float + pin by default (auth dialog, quick access, etc.)
-            # The vault-open script unpins and unfloats the main window after moving it.
-            "match:class (1password), no_screen_share on, rounding 12, float on, pin on"
-
-            # Grouped/tabbed windows look better without the slide-in animation.
-            "no_anim 1, match:group 1"
-
-          ];
-
-          env =
-            let
-              envkv = {
-                BROWSER = "chromium";
-                EDITOR = "code --wait";
-
-                # Source: https://github.com/NixOS/nixpkgs/issues/271461#issuecomment-1934829672
-                ELECTRON_OZONE_PLATFORM_HINT = "wayland";
-
-                # Source: https://github.com/NixOS/nixpkgs/blob/45004c6f6330b1ff6f3d6c3a0ea8019f6c18a930/nixos/modules/programs/sway.nix#L47-L53
-                SDL_VIDEODRIVER = "wayland";
-                QT_QPA_PLATFORM = "wayland";
-                QT_WAYLAND_DISABLE_WINDOWDECORATION = "1";
-                _JAVA_AWT_WM_NONREPARENTING = "1";
-
-                # Source: https://wiki.archlinux.org/title/Wayland#Clutter
-                CLUTTER_BACKEND = "wayland";
-
-                MOZ_DISABLE_RDD_SANDBOX = "1";
-                EGL_PLATFORM = "wayland";
-
-                # Make Chromium and Electron use Ozone Wayland support
-                NIXOS_OZONE_WL = "1";
-              };
-            in
-            mapAttrsToList (k: v: "${k},${v}") envkv;
-
-          bind = [
-            "$mod, T, exec, ghostty --working-directory=$HOME"
-            "$mod, W, exec, chromium"
-            "$mod, E, exec, thunar"
-            "$mod, Q, exec, ${config.programs.rofi.finalPackage}/bin/rofi -show combi -modes combi -combi-modes run,emoji -combi-hide-mode-prefix"
-            "$mod, Delete, exec, loginctl lock-session"
-            "$mod, Print, exec, flameshot gui"
-            "$mod SHIFT, Print, exec, wl-screenrecord"
-            "$mod, C, killactive"
-
-            # Focus movement
-            "$mod, H, movefocus, l"
-            "$mod, J, movefocus, u"
-            "$mod, K, movefocus, d"
-            "$mod, L, movefocus, r"
-            "$mod, Left, movefocus, l"
-            "$mod, Up, movefocus, u"
-            "$mod, Down, movefocus, d"
-            "$mod, Right, movefocus, r"
-            "$mod, Tab, changegroupactive, f"
-            "$mod SHIFT, Tab, changegroupactive, b"
-
-            # Move window
-            "$mod SHIFT, H, movewindow, l"
-            "$mod SHIFT, K, movewindow, u"
-            "$mod SHIFT, J, movewindow, d"
-            "$mod SHIFT, L, movewindow, r"
-            "$mod SHIFT, Left, movewindow, l"
-            "$mod SHIFT, Up, movewindow, u"
-            "$mod SHIFT, Down, movewindow, d"
-            "$mod SHIFT, Right, movewindow, r"
-
-            # Resize window
-            "$mod CTRL, Left, resizeactive, -20 0"
-            "$mod CTRL, Down, resizeactive, 0 20"
-            "$mod CTRL, Up, resizeactive, 0 -20"
-            "$mod CTRL, Right, resizeactive, 20 0"
-
-            # Split/Fullscreen/Layout
-            "$mod, G, togglegroup"
-            "$mod, F, fullscreen, 1"
-            "$mod SHIFT, F, togglefloating"
-            "$mod, S, exec, ${toggleWorkspaceLayout}"
-            "$mod, comma, layoutmsg, focus l"
-            "$mod, period, layoutmsg, focus r"
-            "$mod SHIFT, comma, layoutmsg, swapcol l"
-            "$mod SHIFT, period, layoutmsg, swapcol r"
-            "$mod, P, layoutmsg, promote"
-
-            # Workspaces
-            "$mod, 1, workspace, 1"
-            "$mod, 2, workspace, 2"
-            "$mod, 3, workspace, 3"
-            "$mod, 4, workspace, 4"
-            "$mod, 5, workspace, 5"
-            "$mod, 6, workspace, 6"
-            "$mod, 7, workspace, 7"
-            "$mod, 8, workspace, 8"
-            "$mod, 9, workspace, 9"
-            "$mod, 0, workspace, 10"
-            "$mod SHIFT, 1, movetoworkspace, 1"
-            "$mod SHIFT, 2, movetoworkspace, 2"
-            "$mod SHIFT, 3, movetoworkspace, 3"
-            "$mod SHIFT, 4, movetoworkspace, 4"
-            "$mod SHIFT, 5, movetoworkspace, 5"
-            "$mod SHIFT, 6, movetoworkspace, 6"
-            "$mod SHIFT, 7, movetoworkspace, 7"
-            "$mod SHIFT, 8, movetoworkspace, 8"
-            "$mod SHIFT, 9, movetoworkspace, 9"
-            "$mod SHIFT, 0, movetoworkspace, 10"
-
-            # Reassign current workspace to a number
-            "$mod SHIFT CTRL, 1, exec, ${lib.getExe reassign-workspace} 1"
-            "$mod SHIFT CTRL, 2, exec, ${lib.getExe reassign-workspace} 2"
-            "$mod SHIFT CTRL, 3, exec, ${lib.getExe reassign-workspace} 3"
-            "$mod SHIFT CTRL, 4, exec, ${lib.getExe reassign-workspace} 4"
-            "$mod SHIFT CTRL, 5, exec, ${lib.getExe reassign-workspace} 5"
-            "$mod SHIFT CTRL, 6, exec, ${lib.getExe reassign-workspace} 6"
-            "$mod SHIFT CTRL, 7, exec, ${lib.getExe reassign-workspace} 7"
-            "$mod SHIFT CTRL, 8, exec, ${lib.getExe reassign-workspace} 8"
-            "$mod SHIFT CTRL, 9, exec, ${lib.getExe reassign-workspace} 9"
-            "$mod SHIFT CTRL, 0, exec, ${lib.getExe reassign-workspace} 10"
-
-            # Special workspace (vault: Bitwarden + 1Password)
-            "$mod, grave, togglespecialworkspace, vault"
-            "$mod SHIFT, grave, movetoworkspace, special:vault"
-
-            # Special workspace (Slack)
-            "$mod, Tab, togglespecialworkspace, slack"
-
-            # Move workspace to monitor
-            "CTRL ALT $mod SHIFT, Left, movecurrentworkspacetomonitor, l"
-            "CTRL ALT $mod SHIFT, Right, movecurrentworkspacetomonitor, r"
-
-            # Restart Hyprland
-            "$mod SHIFT, R, exec, hyprctl reload"
-
-            # Media keys
-            " , XF86AudioRaiseVolume, exec, ${pkgs.wireplumber}/bin/wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+"
-            " , XF86AudioLowerVolume, exec, ${pkgs.wireplumber}/bin/wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"
-            " , XF86AudioMute, exec, ${pkgs.wireplumber}/bin/wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
-            " , XF86AudioPlay, exec, ${pkgs.playerctl}/bin/playerctl play"
-            " , XF86AudioPause, exec, ${pkgs.playerctl}/bin/playerctl pause"
-            " , XF86AudioNext, exec, ${pkgs.playerctl}/bin/playerctl next"
-            " , XF86AudioPrev, exec, ${pkgs.playerctl}/bin/playerctl previous"
-
-            # Brightness
-            " , XF86MonBrightnessUp, exec, ${pkgs.brightnessctl}/bin/brightnessctl set 5%+"
-            " , XF86MonBrightnessDown, exec, ${pkgs.brightnessctl}/bin/brightnessctl set 5%-"
-          ];
-
-          bindm = [
-            "$mod, mouse:272, movewindow" # Drag window with SUPER + Left Mouse Button
-            "$mod, mouse:273, resizewindow" # Resize window with SUPER + Right Mouse Button
-          ];
-
-          bindl = [
-            "$mod, switch:[Lid Switch], exec, hyprlock"
-          ];
-
-          bezier = [
-            "subtle, 0.20, 0.90, 0.25, 1.00"
-          ];
-
-          # Keep motion subtle, but restore enough movement to make scrolling
-          # layout changes easier to track visually.
-          animation = [
-            "global, 1, 3, default"
-            "fade, 0"
-            "windows, 1, 2, subtle, slide"
-            "workspaces, 0"
-            "border, 0"
-            "layers, 0"
-          ];
-
-          misc = {
-            disable_hyprland_logo = true;
-            disable_splash_rendering = true;
-            background_color = "rgb(${backgroundColor})";
-          };
-
-        };
-      };
-
     programs.hyprlock = {
       enable = true;
       settings = {
@@ -604,7 +317,7 @@ in
         general = {
           lock_cmd = "pidof hyprlock || hyprlock";
           before_sleep_cmd = "loginctl lock-session";
-          after_sleep_cmd = "hyprctl dispatch dpms on";
+          after_sleep_cmd = "hyprctl dispatch 'hl.dsp.dpms({ action = \"enable\" })'";
           on_unlock_cmd = "${lib.getExe pkgs.session-time} --reset";
         };
 
@@ -739,36 +452,33 @@ in
       enable = true;
       # To prepare for default config deprecation.
       enableDefaultConfig = false;
-      matchBlocks = {
-        "*".serverAliveInterval = 180;
-        "beheer1.ioservice.net beheer1.stpst.nl beheer2.ioservice.net beheer2.stpst.nl" = {
-          user = "bob.vanderlinden";
-          forwardAgent = false;
-          identityFile = "~/.ssh/nedap_rsa";
-        };
+      settings."*" = { };
+      extraConfig = ''
+        Host 127.0.0.1
+          ForwardAgent no
+          User bob.vanderlinden
+          IdentityFile ~/.ssh/nedap_rsa
+          VerifyHostKeyDNS no
 
-        "nl12* nl14* nl22* nl24* vm* nvs* nas* *.healthcare.nedap.local *.consul" = {
-          user = "bob.vanderlinden";
-          forwardAgent = false;
-          identityFile = "~/.ssh/nedap_rsa";
-          extraOptions = {
-            VerifyHostKeyDNS = "no";
-            ProxyJump = "beheer1.ioservice.net";
-          };
-        };
+        Host beheer1.ioservice.net beheer1.stpst.nl beheer2.ioservice.net beheer2.stpst.nl
+          ForwardAgent no
+          User bob.vanderlinden
+          IdentityFile ~/.ssh/nedap_rsa
 
-        "127.0.0.1" = {
-          user = "bob.vanderlinden";
-          forwardAgent = false;
-          identityFile = "~/.ssh/nedap_rsa";
-          extraOptions.VerifyHostKeyDNS = "no";
-        };
+        Host github.com gist.github.com
+          User git
+          IdentityFile ~/.ssh/github_ed25519
 
-        "github.com gist.github.com" = {
-          user = "git";
-          identityFile = "~/.ssh/github_ed25519";
-        };
-      };
+        Host nl12* nl14* nl22* nl24* vm* nvs* nas* *.healthcare.nedap.local *.consul
+          ForwardAgent no
+          User bob.vanderlinden
+          IdentityFile ~/.ssh/nedap_rsa
+          ProxyJump beheer1.ioservice.net
+          VerifyHostKeyDNS no
+
+        Host *
+          ServerAliveInterval 180
+      '';
     };
     programs.fzf.enable = true;
     programs.bat.enable = true;
@@ -1100,7 +810,7 @@ in
     programs.htop.enable = true;
 
     services.activitywatch = {
-      enable = true;
+      enable = false;
       watchers = {
         aw-watcher-window-hyprland = {
           package = pkgs.aw-watcher-window-hyprland;
@@ -1108,46 +818,11 @@ in
       };
     };
 
-    # Home Manager normally expects the session launcher to start
-    # hm-graphical-session.target, which in turn activates
-    # graphical-session.target and tray.target. With uwsm launching Hyprland,
-    # bridge that behavior onto the uwsm per-session target instead.
-    systemd.user.targets.hm-graphical-session = {
-      Unit = {
-        Description = "Home Manager graphical session";
-        Requires = [ "graphical-session-pre.target" ];
-        After = [ hyprlandSessionTarget ];
-        BindsTo = [
-          hyprlandSessionTarget
-          "graphical-session.target"
-          "tray.target"
-        ];
-      };
-      Install.WantedBy = [ hyprlandSessionTarget ];
-    };
-
     # The activitywatch watcher module does not expose a way to set service
     # environment variables, so we override the unit to pass through the
     # Hyprland IPC socket identifier that hyprctl needs to connect.
-    # With uwsm, bind it directly to the compositor session target so it picks
-    # up a fresh instance signature on Hyprland restarts.
-    # xsettingsd also needs the session environment imported by uwsm before it
-    # starts, otherwise it races Xwayland and fails to connect to DISPLAY.
-    systemd.user.services.xsettingsd = {
-      Unit = {
-        BindsTo = [ hyprlandSessionTarget ];
-        After = [ hyprlandSessionTarget ];
-        PartOf = [ hyprlandSessionTarget ];
-      };
-      Install.WantedBy = lib.mkForce [ hyprlandSessionTarget ];
-    };
 
     systemd.user.services.activitywatch-watcher-aw-watcher-window-hyprland = {
-      Unit = {
-        BindsTo = [ hyprlandSessionTarget ];
-        After = [ hyprlandSessionTarget ];
-      };
-      Install.WantedBy = [ hyprlandSessionTarget ];
       Service.PassEnvironment = "HYPRLAND_INSTANCE_SIGNATURE";
     };
 

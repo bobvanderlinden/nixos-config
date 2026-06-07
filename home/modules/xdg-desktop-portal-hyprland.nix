@@ -49,10 +49,6 @@ in
   config = lib.mkIf cfg.enable {
     services.xdg-desktop-portal.portals = [ cfg.package ];
 
-    xdg.configFile."hypr/xdph.conf".text = lib.hm.generators.toHyprconf {
-      attrs = cfg.settings;
-    };
-
     systemd.user.services.xdg-desktop-portal-hyprland = {
       Unit = {
         Description = "Portal service (Hyprland implementation)";

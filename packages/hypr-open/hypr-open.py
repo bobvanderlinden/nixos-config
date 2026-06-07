@@ -84,7 +84,8 @@ match matching_clients:
             ],
         )
     case [{"address": str(address)}, *_]:
-        exec(f"hyprctl dispatch focuswindow address:{address}")
+        focus_command = f'hl.dsp.focus({{ window = "address:{address}" }})'
+        exec(f"hyprctl dispatch '{focus_command}'")
         execvp(
             command_program,
             [
