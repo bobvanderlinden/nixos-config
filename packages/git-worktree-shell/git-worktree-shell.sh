@@ -72,7 +72,10 @@ then
 fi
 
 for link in "${LINKS[@]}"; do
-  [ -e "$WORKTREE_DIR/$link" ] || [ -e "$PWD/$link" ] && ln -s "$PWD/$link" "$WORKTREE_DIR/$link"
+  if [ -e "$PWD/$link" ] && [ ! -e "$WORKTREE_DIR/$link" ]
+  then
+    ln -s "$PWD/$link" "$WORKTREE_DIR/$link"
+  fi
 done
 
 for copy in "${COPY[@]}"; do
