@@ -86,7 +86,7 @@ in
       settings = {
         shortcuts = {
           press = null;
-          hold = "SUPER+V";
+          hold = null;
         };
         audio_feedback = true;
         auto_copy_clipboard = true;
@@ -99,7 +99,7 @@ in
           request_timeout_secs = 45;
           max_retries = 2;
           groq = {
-            model = "whisper-large-v3-turbo";
+            model = "whisper-large-v3";
             endpoint = "https://api.groq.com/openai/v1/audio/transcriptions";
             prompt = "Transcribe spoken text accurately with punctuation and capitalization. Return only the transcription.";
           };

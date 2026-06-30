@@ -156,6 +156,8 @@ bind_mod("Q", run("rofi -show combi -modes combi -combi-modes run,emoji -combi-h
 bind_mod("Delete", run("loginctl lock-session"))
 bind_mod("Print", run("flameshot gui"))
 bind_mod("SHIFT + Print", run("wl-screenrecord"))
+bind_mod("V", run("hyprwhspr-rs record start"))
+bind_mod("V", run("hyprwhspr-rs record stop"), { release = true })
 bind_mod("C", hl.dsp.window.close())
 
 bind_mod("H", hl.dsp.focus({ direction = "l" }))
