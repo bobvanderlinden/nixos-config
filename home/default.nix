@@ -170,6 +170,7 @@ in
       nix-output-monitor
       nh
       systemctl-wait
+      adhoc
 
       # Network Tools
       nmap
