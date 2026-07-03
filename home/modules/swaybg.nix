@@ -15,6 +15,34 @@ let
     types
     ;
   cfg = config.programs.swaybg;
+  swaybgArgs = flatten (
+    mapAttrsToList (
+      output:
+      {
+        mode,
+        color,
+        image,
+      }:
+      (
+        [
+          "--output"
+          output
+        ]
+        ++ (optionals (mode != null) [
+          "--mode"
+          mode
+        ])
+        ++ (optionals (color != null) [
+          "--color"
+          color
+        ])
+        ++ (optionals (image != null) [
+          "--image"
+          image
+        ])
+      )
+    ) cfg.outputs
+  );
   outputModule = types.submodule {
     options = {
       mode = lib.mkOption {
@@ -51,11 +79,6 @@ in
   options = {
     programs.swaybg = {
       enable = lib.mkEnableOption "swaybg";
-      target = lib.mkOption {
-        type = types.str;
-        default = "graphical-session.target";
-        example = "sway-session.target";
-      };
       package = lib.mkOption {
         type = types.package;
         default = pkgs.swaybg;
@@ -82,50 +105,16 @@ in
   };
 
   config = mkIf cfg.enable {
-    systemd.user.services.swaybg = {
-      Unit = {
-        Description = "swaybg";
-        PartOf = [ cfg.target ];
-        After = [ cfg.target ];
-        ConditionEnvironment = "WAYLAND_DISPLAY";
-      };
-      Service = {
-        ExecStart = "${cfg.package}/bin/swaybg ${
-          escapeShellArgs (
-            flatten (
-              mapAttrsToList (
-                output:
-                {
-                  mode,
-                  color,
-                  image,
-                }:
-                (
-                  [
-                    "--output"
-                    output
-                  ]
-                  ++ (optionals (mode != null) [
-                    "--mode"
-                    mode
-                  ])
-                  ++ (optionals (color != null) [
-                    "--color"
-                    color
-                  ])
-                  ++ (optionals (image != null) [
-                    "--image"
-                    image
-                  ])
-                )
-              ) cfg.outputs
-            )
-          )
-        }";
-      };
-      Install = {
-        WantedBy = [ cfg.target ];
-      };
-    };
+    # Launched from Hyprland (see home/modules/hypr/hyprland.lua) rather than a
+    # systemd user service, to avoid racing the Wayland session at login.
+    home.packages = [
+      (pkgs.writeShellApplication {
+        name = "swaybg-session";
+        runtimeInputs = [ cfg.package ];
+        text = ''
+          exec swaybg ${escapeShellArgs swaybgArgs}
+        '';
+      })
+    ];
   };
 }

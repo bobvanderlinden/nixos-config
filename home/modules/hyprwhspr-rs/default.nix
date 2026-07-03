@@ -7,7 +7,8 @@
 let
   cfg = config.hyprwhspr-rs;
   jsonFormat = pkgs.formats.json { };
-  servicePath = lib.makeBinPath [
+  runtimeInputs = [
+    cfg.package
     pkgs.coreutils
     pkgs.ffmpeg
     pkgs.findutils
@@ -15,14 +16,24 @@ let
     pkgs.gnused
     pkgs.systemd
   ];
-  serviceSbinPath = lib.makeSearchPath "sbin" [
-    pkgs.coreutils
-    pkgs.ffmpeg
-    pkgs.findutils
-    pkgs.gnugrep
-    pkgs.gnused
-    pkgs.systemd
-  ];
+  # Launches hyprwhspr-rs with its runtime dependencies on PATH and the
+  # provider API keys sourced from environmentFile. Started from Hyprland
+  # (see home/modules/hypr/hyprland.lua) instead of a systemd user service.
+  hyprwhspr-rs-session = pkgs.writeShellApplication {
+    name = "hyprwhspr-rs-session";
+    inherit runtimeInputs;
+    text = ''
+      ${lib.optionalString (cfg.environmentFile != null) ''
+        if [ -r ${lib.escapeShellArg cfg.environmentFile} ]; then
+          set -a
+          # shellcheck source=/dev/null
+          . ${lib.escapeShellArg cfg.environmentFile}
+          set +a
+        fi
+      ''}
+      exec hyprwhspr-rs
+    '';
+  };
 in
 {
   options.hyprwhspr-rs = {
@@ -57,32 +68,13 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    home.packages = [ cfg.package ];
+    home.packages = [
+      cfg.package
+      hyprwhspr-rs-session
+    ];
 
     xdg.configFile."hyprwhspr-rs/config.jsonc".source =
       jsonFormat.generate "hyprwhspr-rs-config.json" cfg.settings;
-
-    systemd.user.services.hyprwhspr-rs = {
-      Unit = {
-        Description = "Native speech-to-text voice dictation for Hyprland";
-        After = [
-          "graphical-session.target"
-          "pipewire.service"
-        ];
-        PartOf = [ "graphical-session.target" ];
-      };
-
-      Install = {
-        WantedBy = [ "graphical-session.target" ];
-      };
-
-      Service = {
-        ExecStart = lib.getExe cfg.package;
-        Restart = "on-failure";
-        EnvironmentFile = lib.optional (cfg.environmentFile != null) cfg.environmentFile;
-        Environment = [ "PATH=${servicePath}:${serviceSbinPath}" ];
-      };
-    };
 
     wayland.windowManager.hyprland.settings.bind = lib.mkIf cfg.hyprland.enable (
       lib.mkAfter [

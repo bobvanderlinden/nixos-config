@@ -4,11 +4,14 @@
   ...
 }:
 {
-  # Quickshell program + systemd service via home-manager module.
+  # Quickshell program via home-manager module.
+  # The systemd user service is intentionally disabled: it races the Wayland
+  # session at login and crashes ("no Qt platform plugin"). Quickshell is
+  # launched from Hyprland instead (see home/modules/hypr/hyprland.lua).
   programs.quickshell = {
     enable = true;
     package = pkgs.quickshell;
-    systemd.enable = true;
+    systemd.enable = false;
   };
 
   # Additional binaries that the QML widgets call by name.

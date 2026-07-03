@@ -15,6 +15,7 @@ import QtQuick.Layouts
 //       value: 0.75          // 0.0–1.0 fill fraction
 //       trackColor: "#bd93f9"
 //       label: "75%"
+//       labelWidth: 34
 //   }
 Scope {
     id: root
@@ -30,6 +31,7 @@ Scope {
     property real value: 0.0          // 0.0–1.0, controls track fill
     property color trackColor: "#bd93f9"
     property string label: ""
+    property real labelWidth: 34
 
     PanelWindow {
         screen: root.screen
@@ -103,7 +105,7 @@ Scope {
                     color: "#f8f8f2"
                     font.pixelSize: 12
                     font.family: "SauceCodePro Nerd Font"
-                    width: 34
+                    width: root.labelWidth
                     horizontalAlignment: Text.AlignRight
                 }
             }

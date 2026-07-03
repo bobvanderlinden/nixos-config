@@ -75,6 +75,16 @@ ShellRoot {
         }
     }
 
+    // ── hyprwhspr-rs processing OSD (one instance per screen) ────────────────
+    Variants {
+        model: Quickshell.screens
+
+        delegate: HyprwhsprOsd {
+            required property var modelData
+            screen: modelData
+        }
+    }
+
     // ── Polkit authentication agent (single instance) ─────────────────────────
     PolkitDialog { }
 }
