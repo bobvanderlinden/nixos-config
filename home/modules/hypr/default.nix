@@ -1,22 +1,9 @@
 {
-  config,
   impurity,
-  lib,
   pkgs,
   ...
 }:
 let
-  screencopy-picker = pkgs.writeShellApplication {
-    name = "screencopy-picker";
-    runtimeInputs = [
-      pkgs.hyprland
-      pkgs.jq
-    ];
-    text = ''
-      echo "[SELECTION]/screen:$(hyprctl activeworkspace -j | jq --raw-output .monitor)"
-    '';
-  };
-
   # hypr-once <name> <command> [args...]
   # Launches <command> once and holds a per-session lock for its lifetime, so
   # re-invocations (e.g. when `hyprctl reload` re-runs the start hook) become
@@ -31,14 +18,6 @@ let
       exec flock --nonblock "''${XDG_RUNTIME_DIR:-/run/user/$(id --user)}/hypr-once-$name.lock" "$@"
     '';
   };
-
-  xdphConfig = pkgs.writeText "xdph.conf" (
-    lib.hm.generators.toHyprconf {
-      attrs = {
-        screencopy.custom_picker_binary = "${screencopy-picker}/bin/screencopy-picker";
-      };
-    }
-  );
 in
 {
   home.packages = [
