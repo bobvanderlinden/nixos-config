@@ -268,7 +268,7 @@
                   if [[ "$(readlink --canonicalize system-result)" != "$(readlink --canonicalize /nix/var/nix/profiles/system)" ]]
                   then
                     ${pkgs.coin}/bin/coin
-                    sudo sh -c "nix-env -p /nix/var/nix/profiles/system --set \"$(readlink system-result)\" && $(readlink system-result)/bin/switch-to-configuration switch"
+                    /run/wrappers/bin/pkexec ${pkgs.runtimeShell} -c "${pkgs.nix}/bin/nix-env -p /nix/var/nix/profiles/system --set \"$(readlink system-result)\" && $(readlink system-result)/bin/switch-to-configuration switch"
                   fi
                   ./home-result/activate
                 '';

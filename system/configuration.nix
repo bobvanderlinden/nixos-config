@@ -44,7 +44,12 @@
   # Smartcard daemon for Yubikey
   services.pcscd.enable = true;
 
-  security.sudo.enable = true;
+  security.wrappers.pkexec = {
+    source = "${pkgs.polkit}/bin/pkexec";
+    owner = "root";
+    group = "root";
+    setuid = true;
+  };
 
   # On my desktop I don't want to run into file limitations.
   # Using vite with a large project made Chromium reach the
