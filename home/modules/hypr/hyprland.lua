@@ -43,6 +43,7 @@ hl.config({
   general = {
     gaps_in = 0,
     gaps_out = 0,
+    layout = "scrolling",
     no_focus_fallback = false,
   },
   misc = {
@@ -91,9 +92,12 @@ hl.window_rule({
 hl.window_rule({
   match = { class = "1password" },
   no_screen_share = true,
+  workspace = "special:vault silent",
   rounding = 12,
-  float = true,
-  pin = true,
+})
+hl.window_rule({
+  match = { class = "slack" },
+  workspace = "special:slack silent",
 })
 hl.window_rule({
   match = { group = true },
@@ -104,44 +108,13 @@ hl.workspace_rule({
   workspace = "special:vault",
   gaps_in = 10,
   gaps_out = 60,
-  on_created_empty = [[sh -lc "
-    if ! hyprctl clients -j | jq -e '.[] | select(.class == \"Bitwarden\")' > /dev/null 2>&1; then
-      bitwarden > /dev/null 2>&1 &
-    fi
-
-    if ! hyprctl clients -j | jq -e '.[] | select(.class == \"1password\")' > /dev/null 2>&1; then
-      1password > /dev/null 2>&1 &
-    fi
-
-    for _ in $(seq 1 20); do
-      address=$(hyprctl clients -j | jq -r '.[] | select(.class == \"1password\") | .address' | head -1)
-      if [ -n "$address" ]; then
-        hyprctl dispatch "hl.dsp.window.move({ workspace = \"special:vault\", window = \"address:$address\", silent = true })"
-        hyprctl dispatch "hl.dsp.window.float({ action = \"toggle\", window = \"address:$address\" })"
-        break
-      fi
-      sleep 0.5
-    done
-  "]],
+  on_created_empty = [[sh -lc "bitwarden > /dev/null 2>&1 & 1password > /dev/null 2>&1 &"]],
 })
 hl.workspace_rule({
   workspace = "special:slack",
   gaps_in = 10,
   gaps_out = 60,
-  on_created_empty = [[sh -lc "
-    if ! hyprctl clients -j | jq -e '.[] | select(.initialClass == \"Slack\")' > /dev/null 2>&1; then
-      slack > /dev/null 2>&1 &
-    fi
-
-    for _ in $(seq 1 20); do
-      address=$(hyprctl clients -j | jq -r '.[] | select(.initialClass == \"Slack\") | .address' | head -1)
-      if [ -n "$address" ]; then
-        hyprctl dispatch "hl.dsp.window.move({ workspace = \"special:slack\", window = \"address:$address\", silent = true })"
-        break
-      fi
-      sleep 0.5
-    done
-  "]],
+  on_created_empty = "slack",
 })
 
 hl.on("hyprland.start", function()
