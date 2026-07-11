@@ -162,6 +162,9 @@
     };
   };
   security.polkit.enable = true;
+  # Suspend after the default idle timeout (30 minutes). opencode holds a sleep
+  # inhibitor while an agent is running, so this won't fire mid-task.
+  services.logind.settings.Login.IdleAction = "suspend";
   services.upower = {
     enable = true;
     timeAction = 15 * 60;
