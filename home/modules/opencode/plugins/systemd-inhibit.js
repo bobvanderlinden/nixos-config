@@ -1,9 +1,10 @@
 import { spawn } from "child_process";
 
 /**
- * Holds a systemd sleep/idle inhibitor lock while any OpenCode session is
- * actively running, preventing the system from suspending or going idle
- * mid-task.
+ * Holds a systemd sleep inhibitor lock while any OpenCode session is actively
+ * running, preventing the system from suspending or hibernating mid-task
+ * (including on laptop lid close). Only sleep is inhibited, not idle, so the
+ * screen is still free to dim, blank and lock while an agent runs.
  *
  * A session is considered active when it is busy or retrying AND it is not
  * waiting for the user to answer a question. When the AI uses the "question"
@@ -81,7 +82,7 @@ export const SystemdInhibitPlugin = async ({ client }) => {
     inhibitorProcess = spawn(
       "systemd-inhibit",
       [
-        "--what=idle:sleep",
+        "--what=sleep",
         "--who=opencode",
         "--why=AI agent is running",
         "--mode=block",
