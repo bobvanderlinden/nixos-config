@@ -66,6 +66,24 @@
     let
       system = "x86_64-linux";
 
+      # We'd like to be able to add patches on top of nixpkgs, like pending pull requests.
+      # Source: https://github.com/NixOS/nixpkgs/pull/142273#issuecomment-948225922
+      patchedNixpkgs =
+        let
+          pkgs = inputs.nixpkgs.legacyPackages.${system};
+        in
+        pkgs.applyPatches {
+          name = "nixpkgs-patched";
+          src = inputs.nixpkgs;
+          patches = [
+            # Fix afdko otfautohint regression that breaks cantarell-fonts.
+            (pkgs.fetchpatch {
+              url = "https://github.com/NixOS/nixpkgs/pull/536673.patch";
+              hash = "sha256-Il1hTXGwDyn5C3pDkXbH1ZLyb5z5JQoL7ykXZXIeHuA=";
+            })
+          ];
+        };
+
       username = "bob.vanderlinden";
       defaultOverlays = [
         self.overlays.default
@@ -76,7 +94,7 @@
       mkPkgs =
         {
           system ? system,
-          nixpkgs ? inputs.nixpkgs,
+          nixpkgs ? patchedNixpkgs,
           config ? {
             allowUnfree = true;
           },
@@ -84,7 +102,7 @@
           ...
         }@options:
         import nixpkgs (options // { inherit system config overlays; });
-      nixosSystem = import (inputs.nixpkgs + "/nixos/lib/eval-config.nix");
+      nixosSystem = import (patchedNixpkgs + "/nixos/lib/eval-config.nix");
     in
     {
       overlays.default =
