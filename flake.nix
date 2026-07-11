@@ -127,50 +127,6 @@
         #   };
         # in
         {
-          # Upgrade opencode to v1.17.11 ahead of nixpkgs.
-          # opencode v1.17.11 pins bun@1.3.14, while nixpkgs ships 1.3.13.
-          # Use a scoped bun bump so the frozen lockfile validates.
-          opencode =
-            let
-              bun_1_3_14 = prev.bun.overrideAttrs (oldBun: rec {
-                version = "1.3.14";
-                src = prev.fetchurl {
-                  url = "https://github.com/oven-sh/bun/releases/download/bun-v${version}/bun-linux-x64.zip";
-                  hash = "sha256-lR7iruhV8IWVruxiJSJqKY0/6oOj3NZGXAnLzN9+hI8=";
-                };
-              });
-            in
-            (prev.opencode.override { bun = bun_1_3_14; }).overrideAttrs (oldAttrs: rec {
-              version = "1.17.11";
-              src = prev.fetchFromGitHub {
-                owner = "anomalyco";
-                repo = "opencode";
-                tag = "v${version}";
-                hash = "sha256-ZgmRHoI3rxsSM10sA4cZu/FxqwmgawQvlW3eykXQsqQ=";
-              };
-              node_modules = oldAttrs.node_modules.overrideAttrs (oldNm: {
-                inherit version src;
-                # opencode's committed bun.lock doesn't validate under
-                # --frozen-lockfile; drop it (bun is pinned to 1.3.14 so
-                # resolution stays deterministic, fixed by outputHash).
-                buildPhase = builtins.replaceStrings [ "--frozen-lockfile " ] [ "" ] oldNm.buildPhase;
-                outputHash = "sha256-PhFDNxeJHTQdT8mAJz7hVKnsUL3Ez6NSgnUSMz3LUqY=";
-              });
-              env = oldAttrs.env // {
-                OPENCODE_VERSION = version;
-              };
-              # v1.17.11's build.ts runs a smoke test (opencode --version) that
-              # segfaults inside the sandbox. Disable it; the version check hook
-              # still validates the final wrapped binary post-build.
-              postPatch = (oldAttrs.postPatch or "") + ''
-                substituteInPlace packages/opencode/script/build.ts \
-                  --replace-fail 'item.os === process.platform' 'false && item.os === process.platform'
-              '';
-              # `opencode completion` returns nothing in v1.17.11, breaking
-              # installShellCompletion. Skip it until nixpkgs catches up.
-              postInstall = "";
-            });
-
           # pasystray = prev.pasystray.overrideAttrs (prevAttrs: {
           #   patches = (prevAttrs.patches or [ ]) ++ [
           #     (prev.fetchpatch {
@@ -188,6 +144,7 @@
                   '{"FWUPD_LIBDIR_PKG", FU_PATH_KIND_LIBDIR_PKG}, {"FWUPD_EFIAPPDIR", FU_PATH_KIND_EFIAPPDIR},'
             '';
           });
+
         };
 
       overlays.quickshell = final: _prev: {
