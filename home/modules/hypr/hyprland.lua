@@ -118,14 +118,11 @@ hl.workspace_rule({
 })
 
 hl.on("hyprland.start", function()
-  hl.exec_cmd("systemctl --user restart xsettingsd.service")
-  hl.exec_cmd("systemctl --user restart activitywatch-watcher-aw-watcher-window-hyprland.service")
-  -- Graphical session apps, launched here instead of via systemd
-  -- graphical-session.target (which races the Wayland session at login).
-  -- hypr-once keeps these idempotent across `hyprctl reload`.
-  hl.exec_cmd("hypr-once swaybg swaybg-session")
-  hl.exec_cmd("hypr-once quickshell quickshell")
-  hl.exec_cmd("hypr-once hyprwhspr hyprwhspr-rs-session")
+  hl.exec_cmd("systemctl --user start hyprland-session.target")
+end)
+
+hl.on("hyprland.shutdown", function()
+  os.execute("systemctl --user stop hyprland-session.target && sleep 0.1")
 end)
 
 bind_mod("T", run("ghostty --working-directory=$HOME"))

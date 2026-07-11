@@ -1,17 +1,31 @@
 {
+  lib,
   pkgs,
   impurity,
   ...
 }:
 {
-  # Quickshell program via home-manager module.
-  # The systemd user service is intentionally disabled: it races the Wayland
-  # session at login and crashes ("no Qt platform plugin"). Quickshell is
-  # launched from Hyprland instead (see home/modules/hypr/hyprland.lua).
   programs.quickshell = {
     enable = true;
     package = pkgs.quickshell;
     systemd.enable = false;
+  };
+
+  systemd.user.services.quickshell = {
+    Unit = {
+      Description = "Quickshell desktop shell";
+      PartOf = [ "hyprland-session.target" ];
+      After = [ "hyprland-session.target" ];
+      ConditionEnvironment = "WAYLAND_DISPLAY";
+    };
+
+    Service = {
+      ExecStart = lib.getExe pkgs.quickshell;
+      Restart = "on-failure";
+      Slice = "session.slice";
+    };
+
+    Install.WantedBy = [ "hyprland-session.target" ];
   };
 
   # Additional binaries that the QML widgets call by name.

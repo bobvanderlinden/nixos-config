@@ -17,8 +17,7 @@ let
     pkgs.systemd
   ];
   # Launches hyprwhspr-rs with its runtime dependencies on PATH and the
-  # provider API keys sourced from environmentFile. Started from Hyprland
-  # (see home/modules/hypr/hyprland.lua) instead of a systemd user service.
+  # provider API keys sourced from environmentFile.
   hyprwhspr-rs-session = pkgs.writeShellApplication {
     name = "hyprwhspr-rs-session";
     inherit runtimeInputs;
@@ -75,6 +74,23 @@ in
 
     xdg.configFile."hyprwhspr-rs/config.jsonc".source =
       jsonFormat.generate "hyprwhspr-rs-config.json" cfg.settings;
+
+    systemd.user.services.hyprwhspr-rs = {
+      Unit = {
+        Description = "Hyprland desktop dictation service";
+        PartOf = [ "hyprland-session.target" ];
+        After = [ "hyprland-session.target" ];
+        ConditionEnvironment = "WAYLAND_DISPLAY";
+      };
+
+      Service = {
+        ExecStart = lib.getExe hyprwhspr-rs-session;
+        Restart = "on-failure";
+        Slice = "session.slice";
+      };
+
+      Install.WantedBy = [ "hyprland-session.target" ];
+    };
 
     wayland.windowManager.hyprland.settings.bind = lib.mkIf cfg.hyprland.enable (
       lib.mkAfter [

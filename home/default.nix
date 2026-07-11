@@ -343,6 +343,7 @@ in
 
     services.xdg-desktop-portal = {
       enable = true;
+      target = "hyprland-session.target";
       verbose = true;
       portals = with pkgs; [
         darkman
@@ -353,6 +354,7 @@ in
 
     services.xdg-desktop-portal-hyprland = {
       enable = true;
+      target = "hyprland-session.target";
       settings = {
         # Skip the interactive screencopy picker and pick the current monitor non-interactively.
         screencopy.custom_picker_binary =
@@ -591,6 +593,13 @@ in
         "Xft/RGBA" = "rgb";
       };
     };
+    systemd.user.services.xsettingsd = {
+      Unit = {
+        PartOf = [ "hyprland-session.target" ];
+        After = [ "hyprland-session.target" ];
+      };
+      Install.WantedBy = lib.mkForce [ "hyprland-session.target" ];
+    };
 
     programs.ghostty = {
       enable = true;
@@ -820,14 +829,6 @@ in
           package = pkgs.aw-watcher-window-hyprland;
         };
       };
-    };
-
-    # The activitywatch watcher module does not expose a way to set service
-    # environment variables, so we override the unit to pass through the
-    # Hyprland IPC socket identifier that hyprctl needs to connect.
-
-    systemd.user.services.activitywatch-watcher-aw-watcher-window-hyprland = {
-      Service.PassEnvironment = "HYPRLAND_INSTANCE_SIGNATURE";
     };
 
     home.stateVersion = "21.03";

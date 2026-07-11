@@ -105,16 +105,21 @@ in
   };
 
   config = mkIf cfg.enable {
-    # Launched from Hyprland (see home/modules/hypr/hyprland.lua) rather than a
-    # systemd user service, to avoid racing the Wayland session at login.
-    home.packages = [
-      (pkgs.writeShellApplication {
-        name = "swaybg-session";
-        runtimeInputs = [ cfg.package ];
-        text = ''
-          exec swaybg ${escapeShellArgs swaybgArgs}
-        '';
-      })
-    ];
+    systemd.user.services.swaybg = {
+      Unit = {
+        Description = "Wallpaper daemon";
+        PartOf = [ "hyprland-session.target" ];
+        After = [ "hyprland-session.target" ];
+        ConditionEnvironment = "WAYLAND_DISPLAY";
+      };
+
+      Service = {
+        ExecStart = "${lib.getExe cfg.package} ${escapeShellArgs swaybgArgs}";
+        Restart = "on-failure";
+        Slice = "session.slice";
+      };
+
+      Install.WantedBy = [ "hyprland-session.target" ];
+    };
   };
 }
