@@ -132,7 +132,6 @@ in
       postgresql
       oauth2c
       # azure-cli
-      (jetbrains.idea.override { forceWayland = true; })
 
       # Version Control
       hub
@@ -175,7 +174,6 @@ in
       # Network Tools
       nmap
       httpie
-      insomnia
       docker-compose
 
       # File Management
@@ -188,7 +186,6 @@ in
 
       # Media & Graphics
       imagemagick
-      pkgs."3dmmex"
       vlc
       gimp3
       feh
@@ -481,7 +478,12 @@ in
           ServerAliveInterval 180
       '';
     };
-    programs.fzf.enable = true;
+    programs.fzf = {
+      enable = true;
+      # Atuin owns Ctrl-R for history search; yield fzf's Ctrl-R binding to it.
+      # fzf keeps Ctrl-T (files) and Alt-C (directories).
+      historyWidget.command = "";
+    };
     programs.bat.enable = true;
     programs.fish = {
       enable = true;
@@ -615,6 +617,7 @@ in
     # news.display = "silent";
 
     home.pointerCursor = {
+      enable = true;
       x11.enable = true;
       gtk.enable = true;
       hyprcursor.enable = true;
