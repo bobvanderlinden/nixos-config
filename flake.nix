@@ -77,10 +77,10 @@
           src = inputs.nixpkgs;
           patches = [
             # Fix afdko otfautohint regression that breaks cantarell-fonts.
-            (pkgs.fetchpatch {
-              url = "https://github.com/NixOS/nixpkgs/pull/536673.patch";
-              hash = "sha256-Il1hTXGwDyn5C3pDkXbH1ZLyb5z5JQoL7ykXZXIeHuA=";
-            })
+            # (pkgs.fetchpatch {
+            #   url = "https://github.com/NixOS/nixpkgs/pull/536673.patch";
+            #   hash = "sha256-Il1hTXGwDyn5C3pDkXbH1ZLyb5z5JQoL7ykXZXIeHuA=";
+            # })
           ];
         };
 
