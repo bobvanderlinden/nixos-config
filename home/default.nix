@@ -72,6 +72,7 @@ in
     ./modules/statebus.nix
     ./modules/xssproxy.nix
     ./modules/nushell.nix
+    ./modules/rtk.nix
     ./modules/swaybg.nix
     ./modules/xdg-desktop-portal.nix
     ./modules/xdg-desktop-portal-hyprland.nix
@@ -81,6 +82,13 @@ in
     ./modules/opencode
   ];
   config = {
+    programs.rtk = {
+      enable = true;
+      settings = {
+        telemetry.enabled = false;
+      };
+    };
+
     hyprwhspr-rs = {
       enable = true;
       settings = {

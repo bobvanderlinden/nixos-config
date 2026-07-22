@@ -1,3 +1,5 @@
 #!/usr/bin/env bash
 
-exec opencode "$@"
+export PI_SKIP_VERSION_CHECK="${PI_SKIP_VERSION_CHECK:-1}"
+
+exec pi "$@"

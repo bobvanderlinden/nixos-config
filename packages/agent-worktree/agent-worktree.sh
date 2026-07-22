@@ -94,8 +94,8 @@ WORKTREE_ARGS=(
   --copy flake.lock
   --copy .nix
   --link .claude
-  --link .opencode
-  --link opencode.json
+  --link .pi
+  --link .agents
   --link .vscode
   --link CLAUDE.md
   --link AGENTS.md
@@ -115,15 +115,14 @@ if [[ ${#CONTEXT_PARTS[@]} -gt 0 ]]; then
   CONTEXT_FILE="$(mktemp --suffix=.md)"
   printf '%s\n' "${CONTEXT_PARTS[@]}" > "$CONTEXT_FILE"
   # The temp file is left in /tmp for the OS to clean up; exec replaces this
-  # process so a trap on EXIT would fire too early (before opencode reads it).
-  EXISTING_CONFIG_CONTENT="${OPENCODE_CONFIG_CONTENT:-{}}"
-  export OPENCODE_CONFIG_CONTENT
-  OPENCODE_CONFIG_CONTENT="$(printf '%s' "$EXISTING_CONFIG_CONTENT" | jq --arg path "$CONTEXT_FILE" '.instructions += [$path]')"
+  # process so a trap on EXIT would fire too early (before Pi reads it).
 fi
 
 # Determine the command to run (default: agent)
 if [[ $# -gt 0 ]]; then
   COMMAND=("$@")
+elif [[ -n "${CONTEXT_FILE-}" ]]; then
+  COMMAND=(agent --append-system-prompt "$CONTEXT_FILE")
 else
   COMMAND=(agent)
 fi

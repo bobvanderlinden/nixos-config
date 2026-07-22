@@ -2,7 +2,6 @@
   writeShellApplication,
   git,
   coreutils,
-  jq,
   git-worktree-shell,
   direnv,
 }:
@@ -12,7 +11,6 @@ writeShellApplication {
   runtimeInputs = [
     git
     coreutils
-    jq
     git-worktree-shell
     direnv
   ];
