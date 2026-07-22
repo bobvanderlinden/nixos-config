@@ -79,7 +79,7 @@ in
     ./modules/hypr
     ./modules/hyprwhspr-rs/default.nix
     ./modules/quickshell
-    ./modules/opencode
+    ./modules/pi
   ];
   config = {
     programs.rtk = {
