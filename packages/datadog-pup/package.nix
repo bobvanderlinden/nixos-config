@@ -5,21 +5,18 @@
 }:
 
 rustPlatform.buildRustPackage rec {
-  pname = "pup";
-  version = "1.5.0";
+  pname = "datadog-pup";
+  version = "1.6.6";
 
   src = fetchFromGitHub {
     owner = "DataDog";
     repo = "pup";
     rev = "v${version}";
-    hash = "sha256-9Jz3ft7XBOPQM1SolyBgSyvx8X8FNmbGOGduBDJRZYw=";
+    hash = "sha256-EN9r3hrqzkiS8h6M1mpqa5UZUEeGaR/zz8nT5UerSWY=";
   };
 
-  cargoHash = "sha256-kWSeNsDr+Ilg2Es7R8i3EhQiot8rbjWAl/Big3vmdjA=";
+  cargoHash = "sha256-3NSQ3Yzwk1nmWzzGQkSaIaDEb5058Jg+6dNUhKlGIv0=";
 
-  # The v1.5.0 test suite fails to compile: src/commands/auth.rs references a
-  # `token` function that is not in scope in the test module. This is an
-  # upstream bug unrelated to packaging; the release binary builds fine.
   doCheck = false;
 
   meta = {
