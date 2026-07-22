@@ -36,6 +36,16 @@ PopupWidget {
         }
     }
 
+    function normalizedWindowAddress(windowAddress) {
+        if (windowAddress === null || windowAddress === undefined || windowAddress === "") return "";
+        const address = windowAddress.toString();
+        return address.startsWith("0x") ? address : "0x" + address;
+    }
+
+    function windowSelector(windowAddress) {
+        return "address:" + normalizedWindowAddress(windowAddress);
+    }
+
     // ── Pill ──────────────────────────────────────────────────────────────────
 
     pillContent: Component {
@@ -73,11 +83,12 @@ PopupWidget {
                 Rectangle {
                     required property var modelData
                     property var session: modelData
-                    property bool canFocus: session.windowAddress !== null
+                    property bool canFocus: root.normalizedWindowAddress(session.windowAddress) !== ""
 
                     property var hyprToplevel: {
                         if (!session.windowAddress) return null;
-                        return Hyprland.toplevels.values.find(t => t.address === session.windowAddress) ?? null;
+                        const normalizedAddress = root.normalizedWindowAddress(session.windowAddress);
+                        return Hyprland.toplevels.values.find(toplevel => toplevel.address === normalizedAddress) ?? null;
                     }
                     property string workspaceId: (hyprToplevel?.workspace?.id ?? 0) > 0
                         ? hyprToplevel.workspace.id.toString() : ""
@@ -156,7 +167,7 @@ PopupWidget {
                         enabled: parent.canFocus
                         cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
                         onClicked: {
-                            Hyprland.dispatch("focuswindow address:0x" + session.windowAddress);
+                            Hyprland.dispatch("hl.dsp.focus({ window = \"" + root.windowSelector(session.windowAddress) + "\" })");
                             BarState.activePopupWidget = null;
                         }
                     }
