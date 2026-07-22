@@ -134,6 +134,7 @@ bind_mod("Print", run("flameshot gui"))
 bind_mod("SHIFT + Print", run("wl-screenrecord"))
 bind_mod("V", run("hyprwhspr-rs record start"))
 bind_mod("V", run("hyprwhspr-rs record stop"), { release = true })
+bind_mod("CTRL + V", run([[sh -lc 'selection=$(cliphist list | rofi -dmenu -p clipboard); [ -n "$selection" ] && printf %s "$selection" | cliphist decode | wl-copy']]))
 bind_mod("C", hl.dsp.window.close())
 
 bind_mod("H", hl.dsp.focus({ direction = "l" }))

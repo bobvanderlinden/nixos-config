@@ -337,6 +337,11 @@ in
     # swaync replaced by quickshell notification center
     services.swaync.enable = false;
 
+    services.cliphist = {
+      enable = true;
+      systemdTargets = [ "hyprland-session.target" ];
+    };
+
     programs.swaybg = {
       enable = true;
       outputs."*" = {
