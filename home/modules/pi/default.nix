@@ -1,17 +1,31 @@
-{ config, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
-  json = pkgs.formats.json { };
   piConfigDir = config.programs.pi-coding-agent.configDir;
+
+  extensionFiles = lib.filterAttrs (name: type: type == "regular" && lib.hasSuffix ".ts" name) (
+    builtins.readDir ./extensions
+  );
+  extensionFileLinks = lib.mapAttrs' (
+    name: _:
+    lib.nameValuePair "${piConfigDir}/extensions/${name}" {
+      source = ./extensions + "/${name}";
+    }
+  ) extensionFiles;
 in
 {
+  imports = [ ./semble.nix ];
+
   programs.pi-coding-agent = {
     enable = true;
     package = pkgs.pi-coding-agent;
 
     extraPackages = [
       pkgs.nodejs
-      config.programs.rtk.package
-      pkgs.semble
       pkgs.git
       pkgs.direnv
       pkgs.systemd
@@ -22,6 +36,9 @@ in
 
     settings = {
       lastChangelogVersion = "0.80.2";
+      collapseChangelog = true;
+      enableAnalytics = false;
+      enableInstallTelemetry = false;
       quietStartup = true;
       defaultProvider = "github-copilot";
       defaultModel = "gpt-5.5";
@@ -49,80 +66,10 @@ in
 
       - Read all skills that are related, instead of just one
       - When you have multiple tasks, read the related skill before each task
-
-      ## Code Search
-
-      Use `semble search` to find code by describing what it does or naming a symbol/identifier, instead of grep:
-
-      ```bash
-      semble search "authentication flow" ./my-project --max-snippet-lines 10
-      semble search "save_pretrained" ./my-project
-      semble search "save model to disk" ./my-project --top-k 10
-      ```
-
-      The index is built on first run and cached for subsequent runs. It is invalidated automatically when files change.
-
-      Use `--content docs` to search documentation and prose, `--content config` for config files, or `--content all` to search code, docs, and config:
-
-      ```bash
-      semble search "deployment guide" ./my-project --content docs
-      semble search "database host port" ./my-project --content config
-      semble search "authentication" ./my-project --content all
-      ```
-
-      Use `semble find-related` to discover code similar to a known location:
-
-      ```bash
-      semble find-related src/auth.py 42 ./my-project
-      ```
-
-      Prefer Semble for semantic or exploratory code search. Use grep only when every literal occurrence is needed.
     '';
   };
 
-  home.packages = [
-    pkgs.nodejs
-    pkgs.semble
-  ];
+  home.packages = [ pkgs.nodejs ];
 
-  home.sessionVariables.PI_SKIP_VERSION_CHECK = "1";
-
-  home.file."${piConfigDir}/mcp.json" = {
-    source = json.generate "pi-mcp.json" {
-      mcpServers = {
-        semble = {
-          command = "${pkgs.semble}/bin/semble";
-        };
-      };
-    };
-  };
-
-  home.file."${piConfigDir}/extensions/rtk.ts" = {
-    source = ./rtk.ts;
-  };
-
-  home.file."${piConfigDir}/extensions/direnv.ts" = {
-    source = ./extensions/direnv.ts;
-  };
-
-  home.file."${piConfigDir}/extensions/notify.ts" = {
-    source = ./extensions/notify.ts;
-  };
-
-  home.file."${piConfigDir}/extensions/secret-filter.ts" = {
-    source = ./extensions/secret-filter.ts;
-  };
-
-  home.file."${piConfigDir}/extensions/session-status.ts" = {
-    source = ./extensions/session-status.ts;
-  };
-
-  home.file."${piConfigDir}/extensions/systemd-inhibit.ts" = {
-    source = ./extensions/systemd-inhibit.ts;
-  };
-
-  home.file."${piConfigDir}/agents/semble-search.md" = {
-    source = ./semble-search.md;
-  };
-
+  home.file = extensionFileLinks;
 }

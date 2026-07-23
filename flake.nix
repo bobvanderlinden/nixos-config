@@ -76,6 +76,11 @@
           name = "nixpkgs-patched";
           src = inputs.nixpkgs;
           patches = [
+            # pi-coding-agent: 0.80.10 -> 0.81.1.
+            # Adapted from https://github.com/NixOS/nixpkgs/pull/544278.patch
+            # because the PR patch targets a newer nixpkgs than this flake input.
+            ./patches/nixpkgs/pi-coding-agent-0.81.1.patch
+
             # Fix afdko otfautohint regression that breaks cantarell-fonts.
             # (pkgs.fetchpatch {
             #   url = "https://github.com/NixOS/nixpkgs/pull/536673.patch";

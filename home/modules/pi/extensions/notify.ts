@@ -1,4 +1,5 @@
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent"
+import { spawn } from "node:child_process"
 import { basename } from "node:path"
 
 const NOTIFY_TIMEOUT_MS = 2_000
@@ -53,7 +54,16 @@ async function sendDesktopNotification(
   if (bell) argumentsList.push("--bell")
   argumentsList.push(summary, body)
 
-  await pi.exec("hypr-notify", argumentsList, { timeout: NOTIFY_TIMEOUT_MS })
+  // hypr-notify must keep running so it can receive the D-Bus action signal
+  // when the notification is clicked. pi.exec would wait for it and time out.
+  const child = spawn("hypr-notify", argumentsList, {
+    detached: true,
+    stdio: "ignore",
+  })
+  child.on("error", () => {
+    // The notification is best-effort. Avoid crashing pi if the helper is missing.
+  })
+  child.unref()
 }
 
 export default function (pi: ExtensionAPI) {

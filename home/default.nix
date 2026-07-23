@@ -72,7 +72,7 @@ in
     ./modules/statebus.nix
     ./modules/xssproxy.nix
     ./modules/nushell.nix
-    ./modules/rtk.nix
+    ./modules/rtk
     ./modules/swaybg.nix
     ./modules/xdg-desktop-portal.nix
     ./modules/xdg-desktop-portal-hyprland.nix
