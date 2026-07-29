@@ -412,10 +412,8 @@
       auto-optimise-store = true;
       log-lines = 100;
       warn-dirty = false;
-      # Only for Determinate-Nix
-      lazy-trees = true;
       eval-cache = true;
-      eval-cores = 0;
+      lint-url-literals = "fatal";
     };
   };
 
