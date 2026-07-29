@@ -18,10 +18,12 @@ let
   ) extensionFiles;
 in
 {
-  imports = [ ./semble.nix ];
+  imports = [ ./mcp.nix ];
 
   programs.pi-coding-agent = {
     enable = true;
+    enableMcpIntegration = lib.mkDefault true;
+    mcp.enable = lib.mkDefault true;
     package = pkgs.pi-coding-agent;
 
     extraPackages = [
@@ -46,11 +48,9 @@ in
       npmCommand = [ "${pkgs.nodejs}/bin/npm" ];
       packages = [
         "npm:pi-subagents"
-        "npm:pi-mcp-extension"
         "npm:pi-web-access"
         "npm:@ayulab/pi-rewind"
         "pi-lens"
-
       ];
     };
 

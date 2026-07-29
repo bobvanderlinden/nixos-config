@@ -80,6 +80,7 @@ in
     ./modules/hyprwhspr-rs/default.nix
     ./modules/quickshell
     ./modules/pi
+    ./modules/semble
   ];
   config = {
     programs.rtk = {

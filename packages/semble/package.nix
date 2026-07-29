@@ -27,9 +27,27 @@ let
 
   virtualenv = pythonSet.mkVirtualEnv "semble-env" workspace.deps.default;
 
+  sembleSource =
+    pkgs.runCommand "semble-${pythonSet.semble.version}-source"
+      {
+        src = pkgs.fetchurl {
+          inherit (pythonSet.semble.package.sdist) url;
+          hash = "sha256-s1eoWMixDKTO51VFtvJ+FuekF6uPwlHZBcgYLxcXycc=";
+        };
+      }
+      ''
+        mkdir --parents $out
+        tar --extract --gzip --file $src --strip-components=1 --directory $out
+      '';
+
   inherit (pkgs.callPackages pyproject-nix.build.util { }) mkApplication;
 in
-mkApplication {
+(mkApplication {
   venv = virtualenv;
   package = pythonSet.semble;
-}
+}).overrideAttrs
+  (oldAttrs: {
+    passthru = (oldAttrs.passthru or { }) // {
+      src = sembleSource;
+    };
+  })
