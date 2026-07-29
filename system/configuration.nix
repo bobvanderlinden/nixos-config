@@ -147,7 +147,7 @@
     unzip
     vim
     wget
-    htop
+    btop
     efibootmgr
 
     # Networking tools
