@@ -16,7 +16,7 @@
     # Autologin skips greetd's auth stack, so inject the boot-time LUKS
     # password during PAM session setup before gnome-keyring starts.
     rules.session.fdeBootPassword = {
-      order = config.security.pam.services.greetd.rules.session.gnome_keyring.order - 10;
+      order = config.security.pam.services.greetd.rules.session.login.order - 10;
       control = "optional";
       modulePath = "${pkgs.pam_fde_boot_pw}/lib/security/pam_fde_boot_pw.so";
       args = [ "inject_for=gkr" ];
