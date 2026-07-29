@@ -282,7 +282,14 @@
                   if [[ "$(readlink --canonicalize system-result)" != "$(readlink --canonicalize /nix/var/nix/profiles/system)" ]]
                   then
                     ${pkgs.coin}/bin/coin
-                    /run/wrappers/bin/pkexec ${pkgs.runtimeShell} -c "${pkgs.nix}/bin/nix-env -p /nix/var/nix/profiles/system --set \"$(readlink system-result)\" && $(readlink system-result)/bin/switch-to-configuration switch"
+                    system_result="$(readlink system-result)"
+                    switch_system_command="${pkgs.nix}/bin/nix-env -p /nix/var/nix/profiles/system --set \"$system_result\" && \"$system_result/bin/switch-to-configuration\" switch"
+                    if [[ -e /run/wrappers/bin/pkexec ]]
+                    then
+                      /run/wrappers/bin/pkexec ${pkgs.runtimeShell} -c "$switch_system_command"
+                    else
+                      /run/wrappers/bin/sudo ${pkgs.runtimeShell} -c "$switch_system_command"
+                    fi
                   fi
                   ./home-result/activate
                 '';
