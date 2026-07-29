@@ -95,6 +95,14 @@ hl.window_rule({
   workspace = "special:vault silent",
   rounding = 12,
 })
+-- Keep the 1Password authentication prompt visible and focused, not the main window.
+hl.window_rule({
+  match = { class = "1password", title = "^1Password$", float = true },
+  workspace = "unset",
+  pin = true,
+  stay_focused = true,
+  focus_on_activate = true,
+})
 hl.window_rule({
   match = { class = "slack" },
   workspace = "special:slack silent",
