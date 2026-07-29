@@ -25,6 +25,7 @@ class WindowEvent(enum.Enum):
 NOTIFICATIONS_BUS = "org.freedesktop.Notifications"
 NOTIFICATIONS_PATH = "/org/freedesktop/Notifications"
 NOTIFICATIONS_IFACE = "org.freedesktop.Notifications"
+NOTIFICATION_CLOSED_BY_USER = 2
 
 
 async def send_notification(
@@ -138,6 +139,7 @@ async def _main() -> None:
     action_event: asyncio.Event = asyncio.Event()
     close_event: asyncio.Event = asyncio.Event()
     invoked_action: list[str] = []
+    closed_by_user = False
 
     def on_action_invoked(message_notification_id: int, action_key: str) -> None:
         if message_notification_id == notification_id:
@@ -147,9 +149,11 @@ async def _main() -> None:
             action_event.set()
 
     def on_notification_closed(message_notification_id: int, reason: int) -> None:
+        nonlocal closed_by_user
         if message_notification_id == notification_id:
             if args.verbose:
                 print(f"Notification closed, reason: {reason}", file=sys.stderr)
+            closed_by_user = reason == NOTIFICATION_CLOSED_BY_USER
             close_event.set()
             action_event.set()  # unblock waiter if closed without action
 
@@ -239,8 +243,12 @@ async def _main() -> None:
             print("Action invoked, closing notification", file=sys.stderr)
         await close_notification(bus, notification_id)
 
-    # If the user clicked the action, focus the window.
-    if invoked_action and invoked_action[0] == "default" and window_address:
+    # Some notification daemons emit ActionInvoked for a body click, while others
+    # only emit NotificationClosed(reason=2). Treat both as activation so clicking
+    # the notification reliably focuses the originating window.
+    action_invoked = bool(invoked_action and invoked_action[0] == "default")
+    should_focus_window = action_invoked or closed_by_user
+    if should_focus_window and window_address:
         if args.verbose:
             print(f"Focusing window {window_address}", file=sys.stderr)
         subprocess.run(  # noqa: S603
