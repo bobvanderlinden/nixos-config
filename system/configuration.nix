@@ -27,6 +27,18 @@
   boot.loader.timeout = 0;
   boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
 
+  # Prefer keeping inactive pages in RAM/zram over writing them to disk swap.
+  boot.kernel.sysctl."vm.swappiness" = 10;
+  swapDevices = lib.mkForce [
+    { device = "/swapfile"; }
+  ];
+  zramSwap = {
+    enable = true;
+    algorithm = "zstd";
+    memoryPercent = 50;
+    priority = 100;
+  };
+
   programs.nix-ld.enable = true;
   programs.ydotool = {
     enable = true;
