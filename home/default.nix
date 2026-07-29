@@ -155,6 +155,8 @@ in
       tig
       mergiraf
       jujutsu
+      hunk
+      tuicr
 
       # Text Processing & Search
       ripgrep
@@ -403,6 +405,13 @@ in
       enable = true;
       settings = {
         git.overrideGpg = true;
+        git.pagers = [
+          {
+            name = "hunk";
+            colorArg = "always";
+            pager = "${lib.getExe pkgs.hunk} pager";
+          }
+        ];
         customCommands = [
           {
             key = "N";
@@ -413,6 +422,13 @@ in
             key = "U";
             context = "global";
             command = "git pull upstream HEAD";
+          }
+          {
+            key = "T";
+            context = "global";
+            command = "${lib.getExe pkgs.tuicr} -w";
+            description = "Review working tree with tuicr";
+            output = "terminal";
           }
         ];
         os.copyToClipboardCmd =
