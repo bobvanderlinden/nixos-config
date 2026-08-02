@@ -841,6 +841,9 @@ in
     };
     programs.gh = {
       enable = true;
+      extensions = [
+        pkgs.gh-stack
+      ];
       settings = {
         # See https://github.com/nix-community/home-manager/issues/4744
         version = "1";
