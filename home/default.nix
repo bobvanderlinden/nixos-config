@@ -57,8 +57,14 @@ let
   # Open URLs in the chromium instance on the current workspace.
   # Otherwise, open a new instance on the current workspace.
   chromium-wrapper = pkgs.writeShellScriptBin "chromium" ''
+    # Slack/Electron can launch the browser with CHROME_DESKTOP=slack.
+    # Chromium uses CHROME_DESKTOP as its Wayland app_id, which makes
+    # Hyprland see Chromium windows as Slack windows and apply Slack rules.
+    export CHROME_DESKTOP=chromium-browser
+
     exec ${lib.getExe pkgs.hypr-open} \
       --window-class chromium-browser \
+      --window-title-suffix=" - Chromium" \
       --new-window-argument="--new-window" \
       -- \
       ${lib.getExe config.programs.chromium.package} \
