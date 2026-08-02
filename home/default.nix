@@ -430,13 +430,6 @@ in
       enable = true;
       settings = {
         git.overrideGpg = true;
-        git.pagers = [
-          {
-            name = "hunk";
-            colorArg = "always";
-            pager = "${lib.getExe pkgs.hunk} pager";
-          }
-        ];
         customCommands = [
           {
             key = "N";
