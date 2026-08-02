@@ -6,7 +6,7 @@ import QtQuick.Layouts
 // Agent sessions widget.
 //
 // Collapsed (bar): pill with robot emoji + one dot per session.
-// Expanded (hover): popup listing sessions with title + todos + state badge.
+// Expanded (hover): popup listing sessions with status info + todos + status badge.
 //   Clicking a row focuses the agent's window.
 PopupWidget {
     id: root
@@ -65,7 +65,7 @@ PopupWidget {
                     required property var modelData
                     width: 8; height: 8; radius: 4
                     Layout.alignment: Qt.AlignVCenter
-                    color: root.stateColor(modelData.state)
+                    color: root.stateColor(modelData.agentStatus ?? modelData.agentState ?? modelData.state)
                 }
             }
         }
@@ -92,6 +92,10 @@ PopupWidget {
                     }
                     property string workspaceId: (hyprToplevel?.workspace?.id ?? 0) > 0
                         ? hyprToplevel.workspace.id.toString() : ""
+                    property string statusSummary: session.sessionDescription ?? session.description ?? ""
+                    property string displayText: statusSummary !== "" ? statusSummary
+                        : (session.title !== "" ? session.title : "(unknown)")
+                    property string agentStatus: session.agentStatus ?? session.agentState ?? session.state ?? "idle"
 
                     Layout.fillWidth: true
                     implicitHeight: rowLayout.implicitHeight + 8
@@ -108,7 +112,7 @@ PopupWidget {
 
                         Rectangle {
                             width: 8; height: 8; radius: 4
-                            color: root.stateColor(session.state)
+                            color: root.stateColor(agentStatus)
                             Layout.alignment: Qt.AlignVCenter
                         }
 
@@ -118,7 +122,7 @@ PopupWidget {
 
                             Text {
                                 Layout.fillWidth: true
-                                text: session.title !== "" ? session.title : "(unknown)"
+                                text: displayText
                                 color: canFocus ? "#f8f8f2" : "#6272a4"
                                 font.pixelSize: 12
                                 font.family: "SauceCodePro Nerd Font"
@@ -149,13 +153,13 @@ PopupWidget {
                             implicitWidth: stateLabel.implicitWidth + 8
                             implicitHeight: 16
                             radius: 3
-                            color: root.stateBgColor(session.state)
+                            color: root.stateBgColor(agentStatus)
 
                             Text {
                                 id: stateLabel
                                 anchors.centerIn: parent
-                                text: session.state
-                                color: root.stateColor(session.state)
+                                text: agentStatus
+                                color: root.stateColor(agentStatus)
                                 font.pixelSize: 10
                                 font.family: "SauceCodePro Nerd Font"
                             }

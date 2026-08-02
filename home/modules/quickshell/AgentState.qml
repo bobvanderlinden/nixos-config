@@ -11,7 +11,7 @@ import QtQuick
 //   statebus-sub.sock  — subscribers receive a full state replay on connect, then live updates
 //
 // Each message is a newline-delimited JSON object:
-//   { type: "update", key, windowAddress, state, title, todos }
+//   { type: "update", key, windowAddress, state, agentStatus, title, sessionStatus, sessionDescription, todos }
 //   { type: "remove", key }
 //
 // One entry per key is exposed in `sessions`.
@@ -20,10 +20,10 @@ Singleton {
     id: root
 
     // One entry per published key:
-    // [{ windowAddress, state, title, todos }, ...]
+    // [{ windowAddress, agentStatus, title, sessionStatus, sessionDescription, todos }, ...]
     property var sessions: []
 
-    // Internal: key → { windowAddress, state, title, todos }
+    // Internal: key → { windowAddress, agentStatus, title, sessionStatus, sessionDescription, todos }
     property var sessionMap: ({})
 
     Socket {
@@ -50,10 +50,16 @@ Singleton {
                         delete root.sessionMap[obj.key];
                     } else if (obj.type === "update") {
                         root.sessionMap[obj.key] = {
-                            windowAddress: obj.windowAddress ?? null,
-                            state:         obj.state ?? "idle",
-                            title:         obj.title ?? "",
-                            todos:         obj.todos ?? [],
+                            windowAddress:      obj.windowAddress ?? null,
+                            agentStatus:        obj.agentStatus ?? obj.agentState ?? obj.state ?? "idle",
+                            agentState:         obj.agentStatus ?? obj.agentState ?? obj.state ?? "idle",
+                            state:              obj.agentStatus ?? obj.agentState ?? obj.state ?? "idle",
+                            title:              obj.title ?? "",
+                            sessionStatus:      obj.sessionStatus ?? obj.sessionState ?? null,
+                            sessionState:       obj.sessionStatus ?? obj.sessionState ?? null,
+                            sessionDescription: obj.sessionDescription ?? obj.description ?? "",
+                            description:        obj.sessionDescription ?? obj.description ?? "",
+                            todos:              obj.todos ?? [],
                         };
                     }
 

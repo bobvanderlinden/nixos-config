@@ -1,18 +1,54 @@
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent"
-import { StringEnum } from "@earendil-works/pi-ai"
 import { spawn } from "node:child_process"
 import { basename } from "node:path"
-import { Type } from "typebox"
 
 const NOTIFY_TIMEOUT_MS = 2_000
 const FALLBACK_NOTIFY_ID = 42424242
-const MAX_BODY_LENGTH = 240
+const MAX_DESCRIPTION_LENGTH = 240
+const STORE_SYMBOL = Symbol.for("bobvanderlinden.pi.sessionStatusStore")
 
-type NotificationState = "working" | "waiting" | "done" | "error" | "idle"
+type SessionStatusName = "working" | "waiting" | "done" | "error" | "idle"
 
-type SessionNotification = {
-  state: NotificationState
+type SessionStatusInfo = {
+  status: SessionStatusName
   description: string
+}
+
+type SessionStatusStore = {
+  get(): SessionStatusInfo | null
+}
+
+type GlobalWithSessionStatusStore = typeof globalThis & {
+  [STORE_SYMBOL]?: SessionStatusStore
+}
+
+function getSessionStatusInfo(): SessionStatusInfo | null {
+  return ((globalThis as GlobalWithSessionStatusStore)[STORE_SYMBOL]?.get() ?? null)
+}
+
+function statusLabel(status: SessionStatusName): string {
+  switch (status) {
+    case "working":
+      return "Working"
+    case "waiting":
+      return "Waiting"
+    case "done":
+      return "Done"
+    case "error":
+      return "Error"
+    case "idle":
+      return "Idle"
+  }
+}
+
+function truncateText(text: string, maxLength = MAX_DESCRIPTION_LENGTH): string {
+  const normalizedText = text.replace(/\s+/g, " ").trim()
+  if (normalizedText.length <= maxLength) return normalizedText
+  return `${normalizedText.slice(0, maxLength - 1).trimEnd()}…`
+}
+
+function formatStatusInfo(statusInfo: SessionStatusInfo): string {
+  return `${statusLabel(statusInfo.status)} — ${statusInfo.description}`
 }
 
 function deriveNotifyId(text: string): number {
@@ -29,27 +65,6 @@ function sessionKey(context: ExtensionContext): string {
 
 function sessionTitle(pi: ExtensionAPI, context: ExtensionContext): string {
   return pi.getSessionName() ?? basename(context.cwd) ?? ""
-}
-
-function stateLabel(state: NotificationState): string {
-  switch (state) {
-    case "working":
-      return "Working"
-    case "waiting":
-      return "Waiting"
-    case "done":
-      return "Done"
-    case "error":
-      return "Error"
-    case "idle":
-      return "Idle"
-  }
-}
-
-function truncateText(text: string, maxLength = MAX_BODY_LENGTH): string {
-  const normalizedText = text.replace(/\s+/g, " ").trim()
-  if (normalizedText.length <= maxLength) return normalizedText
-  return `${normalizedText.slice(0, maxLength - 1).trimEnd()}…`
 }
 
 function textFromContent(content: unknown): string {
@@ -82,14 +97,11 @@ function fallbackDescription(pi: ExtensionAPI, context: ExtensionContext): strin
   return sessionTitle(pi, context) || latestUserPrompt(context) || "Session is idle"
 }
 
-function notificationBody(
-  pi: ExtensionAPI,
-  context: ExtensionContext,
-  notification: SessionNotification | null,
-): string {
-  const state = notification?.state ?? "idle"
-  const description = notification?.description || fallbackDescription(pi, context)
-  return truncateText(`${stateLabel(state)} — ${description}`)
+function notificationBody(pi: ExtensionAPI, context: ExtensionContext): string {
+  const statusInfo = getSessionStatusInfo()
+  if (statusInfo) return truncateText(formatStatusInfo(statusInfo))
+
+  return truncateText(`${statusLabel("idle")} — ${fallbackDescription(pi, context)}`)
 }
 
 async function isWindowFocused(pi: ExtensionAPI): Promise<boolean> {
@@ -138,57 +150,6 @@ async function sendDesktopNotification(
 }
 
 export default function (pi: ExtensionAPI) {
-  let notification: SessionNotification | null = null
-
-  pi.registerTool({
-    name: "set_session_notification",
-    label: "Set Session Notification",
-    description:
-      "Set a short human-readable description of the current Pi session state for desktop notifications.",
-    promptSnippet:
-      "Set the current session state and a short description for desktop notifications.",
-    promptGuidelines: [
-      "Use set_session_notification before finishing a user request when a concise state description would make Pi desktop notifications more useful.",
-      "The set_session_notification description should be written for the user and summarize what the session is doing, waiting for, or just completed in one short sentence.",
-    ],
-    parameters: Type.Object({
-      state: StringEnum(["working", "waiting", "done", "error", "idle"] as const, {
-        description: "Current state of the session.",
-      }),
-      description: Type.String({
-        description: "Short user-facing description of the current session state.",
-        maxLength: MAX_BODY_LENGTH,
-      }),
-    }),
-    async execute(_toolCallId, parameters) {
-      notification = {
-        state: parameters.state,
-        description: truncateText(parameters.description),
-      }
-      return {
-        content: [
-          {
-            type: "text",
-            text: `Session notification set to ${stateLabel(notification.state)} — ${notification.description}`,
-          },
-        ],
-        details: notification,
-      }
-    },
-  })
-
-  pi.on("agent_start", async () => {
-    notification = null
-  })
-
-  pi.on("tool_result", async (event) => {
-    if (!event.isError) return
-    notification = {
-      state: "error",
-      description: `Tool ${event.toolName} failed`,
-    }
-  })
-
   pi.on("agent_end", async (_event, context) => {
     if (await isWindowFocused(pi)) return
 
@@ -196,8 +157,8 @@ export default function (pi: ExtensionAPI) {
     await sendDesktopNotification(
       pi,
       deriveNotifyId(key),
-      "Pi session state",
-      notificationBody(pi, context, notification),
+      "Pi session status",
+      notificationBody(pi, context),
       true,
     )
   })
