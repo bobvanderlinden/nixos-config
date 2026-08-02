@@ -326,6 +326,17 @@ in
       };
     };
 
+    systemd.user.services.hypridle-suspend = {
+      Unit.Description = "Suspend after hypridle timeout once inhibitors clear";
+      Service = {
+        Type = "exec";
+        ExecStart = pkgs.writeShellScript "hypridle-suspend" ''
+          ${lib.getExe' pkgs.systemctl-wait "systemctl-wait"} suspend-then-hibernate --interval 10 \
+            || ${lib.getExe' pkgs.systemctl-wait "systemctl-wait"} suspend --interval 10
+        '';
+      };
+    };
+
     services.hypridle = {
       enable = true;
       settings = {
@@ -336,11 +347,18 @@ in
           on_unlock_cmd = "${lib.getExe pkgs.session-time} --reset";
         };
 
-        listener = {
-          timeout = 150;
-          on-timeout = "brightnessctl -s set 10";
-          on-resume = "brightnessctl -r";
-        };
+        listener = [
+          {
+            timeout = 150;
+            on-timeout = "brightnessctl -s set 10";
+            on-resume = "brightnessctl -r";
+          }
+          {
+            timeout = 30 * 60;
+            on-timeout = "systemctl --user start hypridle-suspend.service";
+            on-resume = "systemctl --user stop hypridle-suspend.service";
+          }
+        ];
       };
     };
     # swaync replaced by quickshell notification center

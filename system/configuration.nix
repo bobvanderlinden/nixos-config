@@ -30,13 +30,22 @@
   # Prefer keeping inactive pages in RAM/zram over writing them to disk swap.
   boot.kernel.sysctl."vm.swappiness" = 10;
   swapDevices = lib.mkForce [
-    { device = "/swapfile"; }
+    { device = "/dev/disk/by-uuid/4d13ef58-33bb-4e0f-95ea-dcfec3371911"; }
   ];
+  boot.resumeDevice = "/dev/disk/by-uuid/4d13ef58-33bb-4e0f-95ea-dcfec3371911";
   zramSwap = {
     enable = true;
     algorithm = "zstd";
     memoryPercent = 50;
     priority = 100;
+  };
+
+  # Prefer suspend-then-hibernate for idle sleep once hibernation is configured.
+  # The enlarged LVM swap partition is the resume device. HibernateDelaySec only
+  # starts counting after AC power is disconnected.
+  systemd.sleep.settings.Sleep = {
+    HibernateDelaySec = "30m";
+    HibernateOnACPower = "no";
   };
 
   programs.nix-ld.enable = true;
@@ -179,9 +188,6 @@
     };
   };
   security.polkit.enable = true;
-  # Suspend after the default idle timeout (30 minutes). opencode holds a sleep
-  # inhibitor while an agent is running, so this won't fire mid-task.
-  services.logind.settings.Login.IdleAction = "suspend";
   services.upower = {
     enable = true;
     timeAction = 15 * 60;
