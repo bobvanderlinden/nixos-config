@@ -1,5 +1,6 @@
 {
   config,
+  impurity,
   lib,
   pkgs,
   ...
@@ -13,7 +14,7 @@ let
   extensionFileLinks = lib.mapAttrs' (
     name: _:
     lib.nameValuePair "${piConfigDir}/extensions/${name}" {
-      source = ./extensions + "/${name}";
+      source = impurity.link (./extensions + "/${name}");
     }
   ) extensionFiles;
 in
@@ -29,6 +30,7 @@ in
     extraPackages = [
       pkgs.nodejs
       pkgs.git
+      pkgs.ripgrep
       pkgs.direnv
       pkgs.systemd
       pkgs.hyprland
@@ -50,23 +52,13 @@ in
         "npm:pi-subagents"
         "npm:pi-web-access"
         "npm:@ayulab/pi-rewind"
+        "npm:pi-direnv"
         "pi-lens"
       ];
     };
 
-    context = ''
-      - Use fixup commits when fixing earlier commits in the same PR (using `git commit --fixup <commit-hash>`)
-      - Look for existing commits to know how to format commit messages
+    context = impurity.link ./AGENTS.md;
 
-      - Nix is available. If you cannot find a package, use `nix run nixpkgs#{packagename} -- ...` or `export PATH="$(nix build nixpkgs#{packagename})/bin:$PATH"`
-      - If you are not able to find a Nix package for a command, use `nix-locate --minimal --at-root /bin/{command}`
-
-      - Prefer long-form arguments over short-hands (--argument vs -a)
-      - Avoid uncommon abbreviations in code and text; prefer full words (for example: "notification" over "notif", "ServiceDaemon" over "sd"). Single-letter names are never acceptable.
-
-      - Read all skills that are related, instead of just one
-      - When you have multiple tasks, read the related skill before each task
-    '';
   };
 
   home.packages = [ pkgs.nodejs ];
