@@ -226,7 +226,7 @@ in
       # Security & Privacy
       bitwarden-desktop
       bitwarden-cli
-      bitwarden-cli-bio
+      # bitwarden-cli-bio
       keepassxc
       gnupg
       seahorse
@@ -724,6 +724,7 @@ in
         # Always ignore devenv.sh temporary files.
         ".devenv"
         ".devenv.flake.nix"
+        ".pi-subagents"
       ];
       settings = {
         user = {

@@ -1,11 +1,11 @@
 {
   writeShellApplication,
-  pi-coding-agent,
+  pi,
 }:
 writeShellApplication {
   name = "agent";
   text = builtins.readFile ./agent.sh;
   runtimeInputs = [
-    pi-coding-agent
+    pi
   ];
 }

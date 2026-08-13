@@ -25,7 +25,7 @@ in
     enable = true;
     enableMcpIntegration = lib.mkDefault true;
     mcp.enable = lib.mkDefault true;
-    package = pkgs.pi-coding-agent;
+    package = pkgs.pi;
 
     extraPackages = [
       pkgs.nodejs
@@ -60,8 +60,4 @@ in
     context = impurity.link ./AGENTS.md;
 
   };
-
-  home.packages = [ pkgs.nodejs ];
-
-  home.file = extensionFileLinks;
 }

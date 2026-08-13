@@ -40,14 +40,20 @@
       inputs.uv2nix.follows = "uv2nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    llm-agents = {
+      url = "github:numtide/llm-agents.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   nixConfig = {
     extra-substituters = [
       "https://install.determinate.systems"
+      "https://cache.numtide.com"
     ];
     extra-trusted-public-keys = [
       "cache.flakehub.com-3:hJuILl5sVK4iKm86JzgdXW12Y2Hwd5G07qKtHTOcDCM="
+      "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
     ];
   };
 
@@ -86,6 +92,7 @@
 
       username = "bob.vanderlinden";
       defaultOverlays = [
+        self.overlays.llm-agents
         self.overlays.default
         self.overlays.workarounds
         self.overlays.pyproject
@@ -105,6 +112,15 @@
       nixosSystem = import (patchedNixpkgs + "/nixos/lib/eval-config.nix");
     in
     {
+      overlays.llm-agents =
+        final: _prev:
+        let
+          packages = inputs.llm-agents.packages.${final.stdenv.hostPlatform.system};
+        in
+        {
+          inherit (packages) pi semble;
+        };
+
       overlays.default =
         final: prev:
         (prev.lib.packagesFromDirectoryRecursive {
