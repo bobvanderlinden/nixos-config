@@ -44,7 +44,10 @@
   # The enlarged LVM swap partition is the resume device. HibernateDelaySec only
   # starts counting after AC power is disconnected.
   systemd.sleep.settings.Sleep = {
-    HibernateDelaySec = "30m";
+    AllowHibernation = true;
+    AllowSuspendThenHibernate = true;
+    AllowHybridSleep = true;
+    HibernateDelaySec = "2h";
     HibernateOnACPower = "no";
   };
 
@@ -190,8 +193,10 @@
   security.polkit.enable = true;
   services.upower = {
     enable = true;
-    timeAction = 15 * 60;
+    criticalPowerAction = "Hibernate";
+    percentageAction = 5;
     percentageCritical = 10;
+    timeAction = 15 * 60;
   };
   services.tlp = {
     enable = true;
@@ -297,13 +302,13 @@
   programs.hyprland = {
     enable = true;
   };
-  programs.regreet.enable = true;
+  services.displayManager.regreet.enable = true;
 
   services.greetd = {
     enable = true;
     settings = {
       default_session = {
-        command = "${pkgs.dbus}/bin/dbus-run-session ${lib.getExe pkgs.cage} -s -d -- ${lib.getExe config.programs.regreet.package}";
+        command = "${pkgs.dbus}/bin/dbus-run-session ${lib.getExe pkgs.cage} -s -d -- ${lib.getExe config.services.displayManager.regreet.package}";
         user = "greeter";
       };
       initial_session = {

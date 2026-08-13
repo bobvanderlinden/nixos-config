@@ -145,20 +145,6 @@
             '';
           });
 
-          nix-output-monitor = prev.nix-output-monitor.overrideAttrs (_oldAttrs: {
-            src = prev.fetchFromGitHub {
-              owner = "maralorn";
-              repo = "nix-output-monitor";
-              rev = "f0cad3e5";
-              hash = "sha256-BMqecXbHZkG8Avl4Qkn5ncLA0URPPlXM4pXydXdzoaw=";
-            };
-            sourceRoot = "source/nix-output-monitor";
-            buildInputs = (_oldAttrs.buildInputs or [ ]) ++ [
-              prev.haskellPackages.doctest-parallel
-              prev.haskellPackages.fsnotify
-            ];
-          });
-
         };
 
       overlays.quickshell = final: _prev: {

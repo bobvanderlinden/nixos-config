@@ -44,8 +44,8 @@ in
       enableAnalytics = false;
       enableInstallTelemetry = false;
       quietStartup = true;
-      defaultProvider = "github-copilot";
-      defaultModel = "gpt-5.5";
+      defaultProvider = "openai-codex";
+      defaultModel = "gpt-5.6-terra";
       defaultThinkingLevel = "medium";
       npmCommand = [ "${pkgs.nodejs}/bin/npm" ];
       packages = [

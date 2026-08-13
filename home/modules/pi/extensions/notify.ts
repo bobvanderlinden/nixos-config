@@ -150,7 +150,7 @@ async function sendDesktopNotification(
 }
 
 export default function (pi: ExtensionAPI) {
-  pi.on("agent_end", async (_event, context) => {
+  pi.on("agent_settled", async (_event, context) => {
     if (await isWindowFocused(pi)) return
 
     const key = sessionKey(context)

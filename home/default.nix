@@ -151,6 +151,7 @@ in
       # Version Control
       hub
       gh
+      gh-batch-merge
       git-cola
       git-absorb
       git-revise

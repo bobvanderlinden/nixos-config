@@ -116,6 +116,14 @@ export default function (pi: ExtensionAPI) {
     return pi.getSessionName() ?? basename(context.cwd) ?? ""
   }
 
+  function updateTerminalTitle(context: ExtensionContext) {
+    if (context.mode !== "tui") return
+
+    const titleParts = ["pi", sessionTitle(context)]
+    if (currentStatusInfo) titleParts.push(formatSessionStatusInfo(currentStatusInfo))
+    context.ui.setTitle(titleParts.filter(Boolean).join(" — "))
+  }
+
   function writeMessage(message: unknown) {
     if (!socket?.writable) return
     socket.write(`${JSON.stringify(message)}\n`)
@@ -152,6 +160,7 @@ export default function (pi: ExtensionAPI) {
       sessionDescription: currentStatusInfo ? formatSessionStatusInfo(currentStatusInfo) : "",
       todos: currentSession?.todos ?? [],
     }
+    updateTerminalTitle(context)
     publishCurrentSession()
   }
 
@@ -169,6 +178,7 @@ export default function (pi: ExtensionAPI) {
       sessionStatus: currentStatusInfo?.status ?? null,
       sessionDescription: currentStatusInfo ? formatSessionStatusInfo(currentStatusInfo) : "",
     }
+    updateTerminalTitle(context)
     publishCurrentSession()
   }
 
@@ -276,18 +286,6 @@ export default function (pi: ExtensionAPI) {
 
   pi.on("agent_end", async (_event, context) => {
     updateSession(context, "idle")
-  })
-
-  pi.on("tool_result", async (event, context) => {
-    if (!event.isError) return
-    statusStore.set(
-      {
-        status: "error",
-        description: `Tool ${event.toolName} failed`,
-      },
-      context,
-    )
-    updateSession(context, "error")
   })
 
   pi.on("session_shutdown", async () => {
