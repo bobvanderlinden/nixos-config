@@ -1,8 +1,3 @@
-- You're on a NixOS system
-- Never search files/content recursively on /nix/store, /nix/store is just too big to search
-- If you want to find a package for a specific file, use nix-locate
-- If you cannot find a package, use `nix run nixpkgs#{packagename} -- ...` or `export PATH="$(nix build nixpkgs#{packagename})/bin:$PATH"`
-- If you want to find a package for a command, use `nix-locate --minimal --at-root /bin/{command}`
 - The following commands are available:
   - rg
   - fd
