@@ -4,10 +4,7 @@
   ...
 }:
 {
-  home.packages = with pkgs; [
-    jq
-    wl-screenrecord
-  ];
+  home.packages = with pkgs; [ jq ];
 
   systemd.user.targets.hyprland-session = {
     Unit = {

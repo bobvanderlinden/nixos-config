@@ -226,11 +226,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1786630952,
-        "narHash": "sha256-a952+jEQ1I6sMd6yzi2GIsO/EFNtEFvzwbJ+oOG9Cg0=",
+        "lastModified": 1786656209,
+        "narHash": "sha256-ybGtuwGKTUCefKYsplzvw4xcCqznto0c7BaiQhgILtA=",
         "owner": "nix-community",
         "repo": "home-manager",
-        "rev": "2d1bac51b2513914ace47797765c3265164de78e",
+        "rev": "c554d3441f725537854e877519f01cbd60680174",
         "type": "github"
       },
       "original": {
@@ -286,11 +286,11 @@
         "treefmt-nix": "treefmt-nix"
       },
       "locked": {
-        "lastModified": 1786646125,
-        "narHash": "sha256-64HSzyrpFzlMbUDMtPcTo/TbXwE2QRruDcvMzxsMGpQ=",
+        "lastModified": 1786704638,
+        "narHash": "sha256-/fVVDevImdj8PFczYgd9WFm0k8nxESbfWVgmy4pFR/k=",
         "owner": "numtide",
         "repo": "llm-agents.nix",
-        "rev": "6af2c20d9e304036be362cac535bfdbd6e86b99b",
+        "rev": "901c200318d2b06ce3c31e667fd63e979a22ec42",
         "type": "github"
       },
       "original": {
@@ -569,6 +569,7 @@
         "pyproject-nix": "pyproject-nix",
         "quickshell": "quickshell",
         "sops-nix": "sops-nix",
+        "unisic": "unisic",
         "uv2nix": "uv2nix"
       }
     },
@@ -661,6 +662,44 @@
       "original": {
         "owner": "numtide",
         "repo": "treefmt-nix",
+        "type": "github"
+      }
+    },
+    "unisic": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "unisic-kit": "unisic-kit"
+      },
+      "locked": {
+        "lastModified": 1786573476,
+        "narHash": "sha256-nWSUh4n/VuAivRDK+Dpdn+P692YqtSRVq6Elf9OaBD4=",
+        "owner": "unisic",
+        "repo": "unisic",
+        "rev": "f112decd681a4c08aeb2209dd98c30da98153205",
+        "type": "github"
+      },
+      "original": {
+        "owner": "unisic",
+        "repo": "unisic",
+        "type": "github"
+      }
+    },
+    "unisic-kit": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1786134858,
+        "narHash": "sha256-RYkeWeWLWYSI1rLaXfIZETrc/e9/Z3pmnDZsbfxs5Qk=",
+        "owner": "unisic",
+        "repo": "unisic-kit",
+        "rev": "a7eeb9406082bc7b26d0a7d23f38c2539313a6b7",
+        "type": "github"
+      },
+      "original": {
+        "owner": "unisic",
+        "repo": "unisic-kit",
+        "rev": "a7eeb9406082bc7b26d0a7d23f38c2539313a6b7",
         "type": "github"
       }
     },

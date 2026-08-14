@@ -173,6 +173,7 @@ in
       q-text-as-data
       delta
       ast-grep
+      xan
 
       # System Tools
       brightnessctl
