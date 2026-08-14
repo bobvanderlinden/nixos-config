@@ -193,6 +193,7 @@ in
       nmap
       httpie
       xh
+      nix-search-cli
       docker-compose
 
       # File Management
