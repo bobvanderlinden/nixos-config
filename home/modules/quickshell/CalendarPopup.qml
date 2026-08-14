@@ -2,7 +2,7 @@ import Quickshell
 import QtQuick
 import QtQuick.Layouts
 
-// A minimal calendar popup anchored above the clock widget.
+// A minimal calendar popup anchored below the clock widget.
 // Shows the current month with day-of-week headers and today highlighted.
 //
 // Usage: set anchorWindow (the bar PanelWindow) and anchorItem (the clock Item).
@@ -12,17 +12,19 @@ PopupWindow {
 
     // The bar PanelWindow this popup belongs to
     property var anchorWindow
-    // The Item in the bar to position above (the clock widget)
+    // The Item in the bar to position below (the clock widget)
     property Item anchorItem
 
     anchor.window: root.anchorWindow
     anchor.rect: {
         if (!root.anchorItem || !root.anchorWindow) return Qt.rect(0, 0, 0, 0);
-        const mapped = root.anchorItem.mapToItem(null, 0, 0);
-        return Qt.rect(mapped.x, 0, root.anchorItem.width, 0);
+        // Match PopupWidget: anchor the popup's top-left corner below the pill.
+        // `Edges.Top` alone omits the horizontal anchor and can place it at x = 0.
+        void(root.anchorItem.x);
+        const mapped = root.anchorItem.mapToItem(root.anchorWindow.contentItem, 0, 0);
+        return Qt.rect(mapped.x, root.anchorWindow.implicitHeight + 4, 1, 1);
     }
     anchor.adjustment: PopupAdjustment.Flip
-    anchor.edges: Edges.Top
 
     color: "transparent"
     implicitWidth: calBox.implicitWidth + 24

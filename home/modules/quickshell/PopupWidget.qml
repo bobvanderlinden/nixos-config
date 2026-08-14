@@ -103,11 +103,15 @@ Rectangle {
         visible: false
 
         anchor.window: root.barWindow
+        anchor.adjustment: PopupAdjustment.Flip
         anchor.rect: {
-            // Reference root.x to ensure binding re-evaluates when widget position changes
+            // Track both the pill and its immediate layout container. GitHub pills
+            // are nested in GithubWidget, so their own x does not change when the
+            // enclosing status-bar layout moves.
             void(root.x);
+            void(root.parent.x);
             const mapped = root.mapToItem(root.barWindow.contentItem, 0, 0);
-            return Qt.rect(mapped.x, -popup.implicitHeight - 4, 1, 1);
+            return Qt.rect(mapped.x, root.barWindow.implicitHeight + 4, 1, 1);
         }
 
         implicitWidth: root.popupWidth

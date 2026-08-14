@@ -14,6 +14,7 @@ RowLayout {
     required property var barWindow
 
     spacing: 4
+    visible: reviewPrs.length > 0 || approvedPrs.length > 0
 
     property var reviewPrs: []
     property var approvedPrs: []

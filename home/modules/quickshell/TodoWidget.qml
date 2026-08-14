@@ -143,11 +143,12 @@ Rectangle {
         visible: root.popupVisible
 
         anchor.window: root.barWindow
+        anchor.adjustment: PopupAdjustment.Flip
         anchor.rect: {
             // Reference root.x to ensure binding re-evaluates when widget position changes
             void(root.x);
             const mapped = root.mapToItem(root.barWindow.contentItem, 0, 0);
-            return Qt.rect(mapped.x, -popup.implicitHeight - 4, 1, 1);
+            return Qt.rect(mapped.x, root.barWindow.implicitHeight + 4, 1, 1);
         }
 
         implicitWidth: root.popupWidth

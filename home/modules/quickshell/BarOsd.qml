@@ -3,7 +3,7 @@ import Quickshell.Wayland
 import QtQuick
 import QtQuick.Layouts
 
-// Reusable OSD pill that animates in/out above the bar.
+// Reusable OSD pill that animates in/out below the bar.
 //
 // Usage:
 //   BarOsd {
@@ -36,10 +36,10 @@ Scope {
     PanelWindow {
         screen: root.screen
 
-        anchors.bottom: true
+        anchors.top: true
         anchors.left: true
         anchors.right: true
-        margins.bottom: 44
+        margins.top: 44
 
         exclusiveZone: 0
         WlrLayershell.layer: WlrLayer.Overlay
