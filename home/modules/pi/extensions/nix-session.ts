@@ -4,6 +4,7 @@ import {
   createLocalBashOperations,
 } from "@earendil-works/pi-coding-agent"
 import { StringEnum } from "@earendil-works/pi-ai"
+import { Text } from "@earendil-works/pi-tui"
 import { spawn } from "node:child_process"
 import { Type, type Static } from "typebox"
 
@@ -176,6 +177,18 @@ function formatPackageList(packages: Set<string>): string {
   return packages.size === 0 ? "none" : [...packages].sort().join(", ")
 }
 
+function formatAction(input: NixSessionInput): string {
+  const action = {
+    add: "Adding",
+    remove: "Removing",
+    list: "Listing",
+    clear: "Clearing",
+  }[input.action]
+  const packages = input.packages?.join(", ")
+
+  return packages ? `${action} ${packages}` : action
+}
+
 function updateStatus(context: ExtensionContext, packages: Set<string>) {
   if (!context.hasUI) return
   context.ui.setStatus(
@@ -309,6 +322,13 @@ export default function (pi: ExtensionAPI) {
       "Use nix_session when a needed command is missing and can be provided by a Nix package; pass package names without the nixpkgs# prefix.",
     ],
     parameters: nixSessionSchema,
+    renderCall(input, theme) {
+      return new Text(
+        `${theme.fg("toolTitle", theme.bold("Nix Session"))} ${theme.fg("muted", formatAction(input))}`,
+        0,
+        0,
+      )
+    },
     async execute(_toolCallId, params, signal, _onUpdate, context) {
       const message = await applyAction(params, signal)
       updateStatus(context, activePackages)
