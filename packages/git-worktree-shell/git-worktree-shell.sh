@@ -4,6 +4,32 @@ fail()
   exit 1
 }
 
+report_current_directory()
+{
+  local directory="$1"
+  local character
+  local encoded_directory=""
+  local index
+
+  [[ -t 1 ]] || return
+
+  # OSC 7 uses a file URI. Percent-encode the path so a repository name with
+  # whitespace or control characters cannot invalidate or inject terminal data.
+  local LC_ALL=C
+  for ((index = 0; index < ${#directory}; index++)); do
+    character="${directory:index:1}"
+    case "$character" in
+      [a-zA-Z0-9.~_/-]) encoded_directory+="$character" ;;
+      *)
+        printf -v character '%%%02X' "'$character"
+        encoded_directory+="$character"
+        ;;
+    esac
+  done
+
+  printf '%b' "\033]7;file://${encoded_directory}\033\\"
+}
+
 REVISION="HEAD"
 OPTION_INDEX="1"
 ARGS=()
@@ -87,6 +113,8 @@ if [ -f "$WORKTREE_DIR/.envrc" ] && command -v direnv > /dev/null; then
 fi
 
 cd "$WORKTREE_DIR" || fail "Failed to cd to worktree directory"
+report_current_directory "$PWD"
+
 if [ "${#ARGS[@]}" -gt 0 ]
 then
   "${ARGS[@]}" || true
