@@ -17,8 +17,20 @@ let
       source = impurity.link (./extensions + "/${name}");
     }
   ) extensionFiles;
+
+  skillFiles = lib.filterAttrs (name: type: type == "regular" && lib.hasSuffix ".md" name) (
+    builtins.readDir ./skills
+  );
+  skillFileLinks = lib.mapAttrs' (
+    name: _:
+    lib.nameValuePair "${piConfigDir}/skills/${name}" {
+      source = impurity.link (./skills + "/${name}");
+    }
+  ) skillFiles;
 in
 {
+  home.file = extensionFileLinks // skillFileLinks;
+
   imports = [ ./mcp.nix ];
 
   programs.pi-coding-agent = {
@@ -52,7 +64,6 @@ in
         "npm:pi-subagents"
         "npm:pi-web-access"
         "npm:@ayulab/pi-rewind"
-        "npm:pi-direnv"
         "pi-lens"
       ];
     };
