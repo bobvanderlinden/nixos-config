@@ -9,6 +9,7 @@ let
   inherit (lib) mapAttrsToList;
 
   backgroundColor = "1a1b26";
+  unisic = inputs.unisic.packages.${pkgs.stdenv.hostPlatform.system}.unisic;
   wallpaperSvg = pkgs.fetchurl {
     url = "https://raw.githubusercontent.com/NixOS/nixos-artwork/4ad062cee62116f6055e2876e9638e7bb399d219/logo/nix-snowflake-colours.svg";
     hash = "sha256-43taHBHoFJbp1GrwSQiVGtprq6pBbWcKquSTTM6RLrI=";
@@ -129,7 +130,6 @@ in
     home.packages = with pkgs; [
       darkman
       gnome-keyring
-      grim
 
       # Development Tools
       nixfmt
@@ -192,6 +192,7 @@ in
       # Network Tools
       nmap
       httpie
+      xh
       docker-compose
 
       # File Management
@@ -211,7 +212,6 @@ in
       ffmpegthumbnailer
       audacity
       inkscape
-      peek
 
       # Desktop Environment
       pavucontrol
@@ -219,8 +219,7 @@ in
       networkmanagerapplet
       dconf
       wl-clipboard-rs
-      wl-screenrecord
-      wl-screenshot
+      unisic
       hypr-notify
 
       # Security & Privacy
@@ -589,30 +588,21 @@ in
     services.blueman-applet.enable = true;
     services.statebus.enable = true;
     services.mpris-proxy.enable = true;
-    services.flameshot = {
-      enable = true;
-      # package = pkgs.flameshot.overrideAttrs (old: {
-      #   src = pkgs.fetchFromGitHub {
-      #     owner = "flameshot-org";
-      #     repo = "flameshot";
-      #     rev = "f7a049ee78531b7dfa36ead4945ce9c721d90bfe";
-      #     hash = "sha256-teAvx50AvMjKcW44pdWxThTuJvUBeK4YI5fUmBQD9lI=";
-      #   };
-      #   patches = [ ];
-      #   postFixup = ''
-      #     wrapProgram $out/bin/flameshot \
-      #       --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.grim ]} \
-      #       ''${qtWrapperArgs[@]}
-      #   '';
-      # });
-      settings = {
-        General = {
-          showDesktopNotification = false;
-          showStartupLaunchMessage = false;
-          # useGrimAdapter = true;
-          # disabledGrimWarning = true;
-        };
+    # The upstream package bundles Tesseract language data (English, Polish,
+    # and script detection) and configures TESSDATA_PREFIX for OCR.
+    systemd.user.services.unisic = {
+      Unit = {
+        Description = "Unisic screenshot and recording service";
+        PartOf = [ "hyprland-session.target" ];
+        After = [ "hyprland-session.target" ];
+        ConditionEnvironment = "WAYLAND_DISPLAY";
       };
+      Service = {
+        ExecStart = "${lib.getExe unisic} --tray-only";
+        Restart = "on-failure";
+        Slice = "session.slice";
+      };
+      Install.WantedBy = [ "hyprland-session.target" ];
     };
 
     services.darkman = {
