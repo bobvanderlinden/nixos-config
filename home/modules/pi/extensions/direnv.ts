@@ -28,10 +28,6 @@ function isEnvDiff(value: unknown): value is EnvDiff {
   )
 }
 
-function debug(message: string) {
-  console.log(`[direnv] ${message}`)
-}
-
 function applyEnvDiff(envDiff: EnvDiff) {
   for (const [key, value] of Object.entries(envDiff)) {
     if (value === null) {
@@ -117,14 +113,8 @@ async function exportDirenv(envrcPath: string, signal?: AbortSignal): Promise<Ex
   let autoAllowed = false
 
   while (true) {
-    const startTime = performance.now()
-    debug(`running direnv export json in ${envrcDir}`)
     const exportResult = await runCommand("direnv", ["export", "json"], envrcDir, signal)
-    const duration = Math.round(performance.now() - startTime)
     const stdout = exportResult.stdout.trim()
-    debug(
-      `direnv export json finished in ${duration}ms (exit ${exportResult.code ?? "unknown"}, ${stdout.length} bytes stdout, ${exportResult.stderr.length} bytes stderr)`,
-    )
 
     if (exportResult.code === 0) {
       if (!stdout) {
@@ -133,7 +123,6 @@ async function exportDirenv(envrcPath: string, signal?: AbortSignal): Promise<Ex
 
       const parsed: unknown = JSON.parse(stdout)
       if (!isEnvDiff(parsed)) {
-        debug("direnv export json returned an invalid environment diff")
         return { envDiff: null, envrcPath, autoAllowed, failed: true }
       }
 
@@ -141,13 +130,10 @@ async function exportDirenv(envrcPath: string, signal?: AbortSignal): Promise<Ex
     }
 
     if (autoAllowed || !exportResult.stderr.includes("is blocked")) {
-      debug("direnv export json failed without an automatic allow retry")
       return { envDiff: null, envrcPath, autoAllowed, failed: true }
     }
 
-    debug("direnv export json is blocked; running direnv allow")
     const allowResult = await runCommand("direnv", ["allow"], envrcDir, signal)
-    debug(`direnv allow finished (exit ${allowResult.code ?? "unknown"})`)
     if (allowResult.code !== 0) {
       return { envDiff: null, envrcPath, autoAllowed, failed: true }
     }
@@ -164,34 +150,27 @@ async function syncDirenv(
 ): Promise<ExportResult> {
   const existingSyncPromise = getSyncPromise()
   if (existingSyncPromise) {
-    debug("waiting for an in-progress direnv sync")
     return existingSyncPromise
   }
 
   const nextSyncPromise = (async () => {
-    const startTime = performance.now()
     try {
       const gitRoot = await findGitRoot(cwd, signal)
       const envrcPath = findEnvrc(cwd, gitRoot)
 
       if (!envrcPath) {
-        debug(`no .envrc found between ${cwd} and ${gitRoot ?? "/"}`)
         return { envDiff: null, envrcPath: null, autoAllowed: false, failed: false }
       }
 
-      debug(`found .envrc at ${envrcPath}`)
       const result = await exportDirenv(envrcPath, signal)
       if (result.envDiff) {
         applyEnvDiff(result.envDiff)
-        debug(`applied environment diff with ${Object.keys(result.envDiff).length} entries`)
       }
 
       return result
     } catch {
-      debug("direnv sync failed with an unexpected error")
       return { envDiff: null, envrcPath: null, autoAllowed: false, failed: true }
     } finally {
-      debug(`direnv sync finished in ${Math.round(performance.now() - startTime)}ms`)
       setSyncPromise(null)
     }
   })()
@@ -206,15 +185,12 @@ async function loadDirenv(
   setLoaded: (loaded: boolean) => void,
   getSyncPromise: () => Promise<ExportResult> | null,
   setSyncPromise: (promise: Promise<ExportResult> | null) => void,
-  trigger: string,
   force = false,
 ) {
   if (isLoaded() && !force) {
-    debug(`${trigger}: skipped; environment is already loaded`)
     return
   }
 
-  debug(`${trigger}: synchronizing direnv${force ? " (forced)" : ""}`)
   setLoaded(true)
 
   const result = await syncDirenv(
@@ -262,7 +238,6 @@ export default function (pi: ExtensionAPI) {
       setLoaded,
       getSyncPromise,
       setSyncPromise,
-      "session_start",
     )
   })
 
@@ -273,7 +248,6 @@ export default function (pi: ExtensionAPI) {
       setLoaded,
       getSyncPromise,
       setSyncPromise,
-      "tool_call",
     )
   })
 
@@ -284,7 +258,6 @@ export default function (pi: ExtensionAPI) {
       setLoaded,
       getSyncPromise,
       setSyncPromise,
-      "user_bash",
     )
   })
 
@@ -298,7 +271,6 @@ export default function (pi: ExtensionAPI) {
       setLoaded,
       getSyncPromise,
       setSyncPromise,
-      "agent_settled",
       true,
     )
   })
