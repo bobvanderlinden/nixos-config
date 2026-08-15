@@ -146,6 +146,7 @@ in
       k9s
       postgresql
       oauth2c
+      datadog-pup
       # azure-cli
 
       # Version Control
@@ -587,7 +588,6 @@ in
 
     services.gpg-agent.enable = true;
 
-    services.blueman-applet.enable = true;
     services.statebus.enable = true;
     services.mpris-proxy.enable = true;
     # The upstream package bundles Tesseract language data (English, Polish,

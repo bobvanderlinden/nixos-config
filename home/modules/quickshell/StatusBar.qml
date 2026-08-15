@@ -70,6 +70,10 @@ PanelWindow {
             barWindow: bar
         }
 
+        BluetoothWidget {
+            barWindow: bar
+        }
+
         BatteryWidget {
             barWindow: bar
         }
