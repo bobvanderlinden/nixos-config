@@ -13,6 +13,14 @@
 
   suites.single-user.enable = true;
 
+  # Show the content difference for unmanaged files that block Home Manager,
+  # but leave them untouched and keep activation failed.
+  home-manager.backupCommand = pkgs.writeShellScript "home-manager-show-collision-diff" ''
+    echo "Home Manager would replace $1 with $2:" >&2
+    diff --unified --label "existing:$1" --label "managed:$2" "$1" "$2" || true
+    exit 1
+  '';
+
   boot.initrd.systemd.enable = true;
   boot.loader.systemd-boot.configurationLimit = 5;
   boot.plymouth.enable = true;
@@ -104,10 +112,8 @@
   };
   services.blueman.enable = true;
 
-  hardware.logitech.wireless = {
-    enable = true;
-    enableGraphical = true;
-  };
+  hardware.logitech.wireless.enable = true;
+  programs.solaar.enable = true;
 
   hardware.graphics.enable = true;
 
