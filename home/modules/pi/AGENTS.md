@@ -2,6 +2,7 @@
   - rg
   - fd
   - jq
+  - python3
   - node
   - deno
   - yq
@@ -12,6 +13,9 @@
   - docker
   - psql
   - devenv
+  - direnv
+
+- Most projects use direnv and have a .envrc file. You do not need to load this, because these files are loaded into your environment automatically.
 
 - Prefer using fixup commits when a change clearly needed to be in an earlier commit you made (using
  `git commit --fixup <commit-hash>`)
@@ -24,3 +28,5 @@
 
 - Read all skills that are related, instead of just one
 - When you have multiple tasks, read the related skill before each task
+
+- Always refer to GitHub issues or PRs using links: [#123](https://github.com/{owner}/{repo}/pull/123)

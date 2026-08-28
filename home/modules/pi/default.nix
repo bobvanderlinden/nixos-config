@@ -40,6 +40,7 @@ in
     package = pkgs.pi;
 
     extraPackages = [
+      pkgs.python3
       pkgs.nodejs
       pkgs.git
       pkgs.ripgrep
@@ -61,8 +62,9 @@ in
       defaultThinkingLevel = "medium";
       npmCommand = [ "${pkgs.nodejs}/bin/npm" ];
       packages = [
-        "npm:pi-subagents"
+        "git:github.com/nicobailon/pi-subagents@main"
         "npm:pi-web-access"
+        "npm:remote-pi"
         "npm:@ayulab/pi-rewind"
         "pi-lens"
       ];

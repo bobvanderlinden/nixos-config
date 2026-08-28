@@ -79,7 +79,6 @@ in
     ./modules/statebus.nix
     ./modules/xssproxy.nix
     ./modules/nushell.nix
-    ./modules/rtk
     ./modules/swaybg.nix
     ./modules/xdg-desktop-portal.nix
     ./modules/xdg-desktop-portal-hyprland.nix
@@ -87,16 +86,8 @@ in
     ./modules/hyprwhspr-rs/default.nix
     ./modules/quickshell
     ./modules/pi
-    ./modules/semble
   ];
   config = {
-    programs.rtk = {
-      enable = true;
-      settings = {
-        telemetry.enabled = false;
-      };
-    };
-
     hyprwhspr-rs = {
       enable = true;
       settings = {
@@ -747,7 +738,6 @@ in
           pr-diff = "diff upstream/HEAD...HEAD";
           pr-log = "l upstream/HEAD..";
           pr-edit = "rebase --interactive --autosquash --rerere-autoupdate --rebase-merges --fork-point upstream/HEAD";
-          pr-clean = "rebase --autosquash --rerere-autoupdate --empty drop --no-keep-empty --rebase-merges --fork-point upstream/HEAD";
           pr-update = "pull --rebase=merges upstream HEAD";
           pr-bisect = "!git bisect start && git bisect bad HEAD; git bisect good $(git merge-base --fork-point upstream/HEAD HEAD)";
         };
