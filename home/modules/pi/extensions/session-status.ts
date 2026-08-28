@@ -119,9 +119,7 @@ export default function (pi: ExtensionAPI) {
   function updateTerminalTitle(context: ExtensionContext) {
     if (context.mode !== "tui") return
 
-    const titleParts = ["pi", sessionTitle(context)]
-    if (currentStatusInfo) titleParts.push(formatSessionStatusInfo(currentStatusInfo))
-    context.ui.setTitle(titleParts.filter(Boolean).join(" — "))
+    context.ui.setTitle(["pi", sessionTitle(context)].filter(Boolean).join(" — "))
   }
 
   function writeMessage(message: unknown) {

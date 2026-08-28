@@ -14,14 +14,53 @@ PopupWidget {
     popupWidth: 320
     visible: AgentState.sessions.length > 0
 
+    function isKnownState(state) {
+        switch (state) {
+            case "error":
+            case "permission":
+            case "question":
+            case "waiting":
+            case "busy":
+            case "retry":
+            case "working":
+            case "done":
+            case "idle":
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    // Show the most specific status verbatim, even if a publisher introduces a
+    // new value. Color selection must instead use a state it understands.
+    function displayStatus(session) {
+        return session.sessionStatus ?? session.sessionState ?? session.agentStatus
+            ?? session.agentState ?? session.state ?? "idle";
+    }
+
+    function colorState(session) {
+        for (const state of [
+            session.sessionStatus,
+            session.sessionState,
+            session.agentStatus,
+            session.agentState,
+            session.state,
+        ]) {
+            if (isKnownState(state)) return state;
+        }
+        return "idle";
+    }
+
     function stateColor(state) {
         switch (state) {
             case "error":      return "#ff5555";
             case "permission": return "#f1fa8c";
-            case "question":   return "#8be9fd";
+            case "question":
+            case "waiting":    return "#8be9fd";
             case "busy":
-            case "retry":      return "#fab283";
-            default:           return "#6272a4";
+            case "retry":
+            case "working":    return "#fab283";
+            default:             return "#6272a4";
         }
     }
 
@@ -29,10 +68,12 @@ PopupWidget {
         switch (state) {
             case "error":      return "#3d1a1a";
             case "permission": return "#3d3a1a";
-            case "question":   return "#1a2d3a";
+            case "question":
+            case "waiting":    return "#1a2d3a";
             case "busy":
-            case "retry":      return "#3d2a1a";
-            default:           return "#2d2d3f";
+            case "retry":
+            case "working":    return "#3d2a1a";
+            default:             return "#2d2d3f";
         }
     }
 
@@ -65,7 +106,7 @@ PopupWidget {
                     required property var modelData
                     width: 8; height: 8; radius: 4
                     Layout.alignment: Qt.AlignVCenter
-                    color: root.stateColor(modelData.agentStatus ?? modelData.agentState ?? modelData.state)
+                    color: root.stateColor(root.colorState(modelData))
                 }
             }
         }
@@ -95,7 +136,8 @@ PopupWidget {
                     property string statusSummary: session.sessionDescription ?? session.description ?? ""
                     property string displayText: statusSummary !== "" ? statusSummary
                         : (session.title !== "" ? session.title : "(unknown)")
-                    property string agentStatus: session.agentStatus ?? session.agentState ?? session.state ?? "idle"
+                    property string currentDisplayStatus: root.displayStatus(session)
+                    property string currentColorState: root.colorState(session)
 
                     Layout.fillWidth: true
                     implicitHeight: rowLayout.implicitHeight + 8
@@ -112,7 +154,7 @@ PopupWidget {
 
                         Rectangle {
                             width: 8; height: 8; radius: 4
-                            color: root.stateColor(agentStatus)
+                            color: root.stateColor(currentColorState)
                             Layout.alignment: Qt.AlignVCenter
                         }
 
@@ -153,13 +195,13 @@ PopupWidget {
                             implicitWidth: stateLabel.implicitWidth + 8
                             implicitHeight: 16
                             radius: 3
-                            color: root.stateBgColor(agentStatus)
+                            color: root.stateBgColor(currentColorState)
 
                             Text {
                                 id: stateLabel
                                 anchors.centerIn: parent
-                                text: agentStatus
-                                color: root.stateColor(agentStatus)
+                                text: currentDisplayStatus
+                                color: root.stateColor(currentColorState)
                                 font.pixelSize: 10
                                 font.family: "SauceCodePro Nerd Font"
                             }

@@ -51,14 +51,16 @@ Singleton {
                     } else if (obj.type === "update") {
                         root.sessionMap[obj.key] = {
                             windowAddress:      obj.windowAddress ?? null,
-                            agentStatus:        obj.agentStatus ?? obj.agentState ?? obj.state ?? "idle",
-                            agentState:         obj.agentStatus ?? obj.agentState ?? obj.state ?? "idle",
-                            state:              obj.agentStatus ?? obj.agentState ?? obj.state ?? "idle",
+                            // Preserve each schema version so consumers can select a
+                            // supported state rather than stopping at an unknown value.
+                            agentStatus:        obj.agentStatus ?? null,
+                            agentState:         obj.agentState ?? null,
+                            state:              obj.state ?? null,
                             title:              obj.title ?? "",
-                            sessionStatus:      obj.sessionStatus ?? obj.sessionState ?? null,
-                            sessionState:       obj.sessionStatus ?? obj.sessionState ?? null,
+                            sessionStatus:      obj.sessionStatus ?? null,
+                            sessionState:       obj.sessionState ?? null,
                             sessionDescription: obj.sessionDescription ?? obj.description ?? "",
-                            description:        obj.sessionDescription ?? obj.description ?? "",
+                            description:        obj.description ?? "",
                             todos:              obj.todos ?? [],
                         };
                     }
