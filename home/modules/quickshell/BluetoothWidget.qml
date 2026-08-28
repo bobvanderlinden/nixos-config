@@ -157,6 +157,19 @@ PopupWidget {
                         onClicked: root.runAction(["power", root.powered ? "off" : "on"])
                     }
                 }
+
+                Text {
+                    text: "󰒓"
+                    color: "#cdd6f4"
+                    font.pixelSize: 14
+                    font.family: "SauceCodePro Nerd Font"
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: settingsProcess.startDetached()
+                    }
+                }
             }
 
             Rectangle { Layout.fillWidth: true; height: 1; color: "#44475a" }
@@ -241,21 +254,6 @@ PopupWidget {
                 Layout.alignment: Qt.AlignHCenter
             }
 
-            Rectangle { Layout.fillWidth: true; height: 1; color: "#44475a" }
-
-            Text {
-                text: "Open Bluetooth settings"
-                color: "#cdd6f4"
-                font.pixelSize: 11
-                font.family: "SauceCodePro Nerd Font"
-                Layout.alignment: Qt.AlignRight
-
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: settingsProcess.startDetached()
-                }
-            }
         }
     }
 
