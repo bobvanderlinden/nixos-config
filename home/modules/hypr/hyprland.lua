@@ -56,6 +56,12 @@ hl.config({
   },
 })
 
+-- The bottom 220 physical pixels of the laptop display are corrupted; reserve 110 logical pixels at scale 2.
+hl.monitor({
+  output = "eDP-1",
+  reserved_area = { bottom = 110 },
+})
+
 hl.env("BROWSER", "chromium")
 hl.env("EDITOR", "code --wait")
 hl.env("ELECTRON_OZONE_PLATFORM_HINT", "wayland")
@@ -88,6 +94,11 @@ hl.window_rule({
   no_screen_share = true,
   workspace = "special:vault silent",
   rounding = 12,
+})
+-- Bitwarden's Chromium extension opens its own window with a profile-specific suffix.
+hl.window_rule({
+  match = { class = "chrome-nngceckbapebfimnlniiiahkandclblb-.*" },
+  float = true,
 })
 hl.window_rule({
   match = { class = "1password" },
@@ -172,7 +183,7 @@ bind_mod("CTRL + Up", hl.dsp.window.resize({ x = 0, y = -20, relative = true }))
 bind_mod("CTRL + Right", hl.dsp.window.resize({ x = 20, y = 0, relative = true }))
 
 bind_mod("G", hl.dsp.group.toggle())
-bind_mod("F", hl.dsp.window.fullscreen({ mode = "maximized" }))
+bind_mod("F", hl.dsp.window.fullscreen({ mode = "maximized", layout_aware = false }))
 bind_mod("SHIFT + F", hl.dsp.window.float({ action = "toggle" }))
 bind_mod("S", run([[sh -lc 'active_workspace_json=$(hyprctl -j activeworkspace); ws_id=$(printf %s "$active_workspace_json" | jq --raw-output .id); current_layout=$(printf %s "$active_workspace_json" | jq --raw-output .tiledLayout); if [ "$current_layout" = scrolling ]; then exec hyprctl keyword workspace "$ws_id, layout:dwindle, gapsin:0, gapsout:0"; else exec hyprctl keyword workspace "$ws_id, layout:scrolling, layoutopt:direction:right, gapsin:8, gapsout:28"; fi']]))
 bind_mod("comma", hl.dsp.layout("focus l"))
@@ -192,8 +203,8 @@ bind_mod("SHIFT + CTRL + 0", run("reassign-workspace 10"))
 
 bind_mod("grave", hl.dsp.workspace.toggle_special("vault"))
 bind_mod("SHIFT + grave", hl.dsp.window.move({ workspace = "special:vault" }))
-bind_mod("SHIFT + CTRL + ALT + Left", hl.dsp.workspace.move({ monitor = "l" }))
-bind_mod("SHIFT + CTRL + ALT + Right", hl.dsp.workspace.move({ monitor = "r" }))
+bind_mod("CTRL + ALT + Left", hl.dsp.workspace.move({ monitor = "l" }))
+bind_mod("CTRL + ALT + Right", hl.dsp.workspace.move({ monitor = "r" }))
 bind_mod("SHIFT + R", run("hyprctl reload"))
 
 hl.bind("XF86AudioRaiseVolume", run("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+"))
