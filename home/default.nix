@@ -134,7 +134,7 @@ in
       # Development Tools
       nixfmt
       gdb
-      # nodejs  # Use direnv for projects
+      nodejs
       clang
       jdk
       maven
@@ -161,6 +161,7 @@ in
       agent
       agents-idle
       git-xargs
+      git-pr-clean
       tig
       mergiraf
       jujutsu
