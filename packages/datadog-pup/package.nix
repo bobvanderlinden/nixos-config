@@ -34,7 +34,7 @@ pup.overrideAttrs (oldAttrs: {
   patches = (oldAttrs.patches or [ ]) ++ [
     (fetchpatch {
       url = "https://github.com/DataDog/pup/pull/724.patch";
-      hash = "sha256-hYiAvvi67XTRajeDSCuocqJOumRtVy4Xzl0M6erJhEo=";
+      hash = "sha256-zfpFd5cEi8sTjvJOHHw4K3T/b4g5egWkA/zSvL251yo=";
     })
   ];
 })
