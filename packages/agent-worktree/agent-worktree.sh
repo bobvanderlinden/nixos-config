@@ -85,22 +85,7 @@ else
   REVISION=upstream/HEAD
 fi
 
-WORKTREE_ARGS=(
-  --copy devenv.nix
-  --copy .envrc.local
-  --copy devenv.yaml
-  --copy devenv.lock
-  --copy flake.nix
-  --copy flake.lock
-  --copy .nix
-  --link .claude
-  --link .pi
-  --link .agents
-  --link .vscode
-  --link CLAUDE.md
-  --link AGENTS.md
-  --revision "$REVISION"
-)
+WORKTREE_ARGS=(--revision "$REVISION")
 
 # Build context instructions for the agent session
 CONTEXT_PARTS=()

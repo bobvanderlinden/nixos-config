@@ -33,9 +33,6 @@ report_current_directory()
 REVISION="HEAD"
 OPTION_INDEX="1"
 ARGS=()
-LINKS=()
-COPY=()
-
 while [[ $# -gt 0 ]]; do
   case $1 in
     --)
@@ -49,16 +46,6 @@ while [[ $# -gt 0 ]]; do
       ;;
     --index)
       OPTION_INDEX="1"
-      shift
-      ;;
-    --link)
-      shift
-      LINKS+=("$1")
-      shift
-      ;;
-    --copy)
-      shift
-      COPY+=("$1")
       shift
       ;;
     --revision)
@@ -96,17 +83,6 @@ then
   # Apply the index of the original worktree to the new one.
   git diff-index -p --cached HEAD | (cd "$WORKTREE_DIR" && git apply --index --allow-empty)
 fi
-
-for link in "${LINKS[@]}"; do
-  if [ -e "$PWD/$link" ] && [ ! -e "$WORKTREE_DIR/$link" ]
-  then
-    ln -s "$PWD/$link" "$WORKTREE_DIR/$link"
-  fi
-done
-
-for copy in "${COPY[@]}"; do
-  [ -e "$WORKTREE_DIR/$copy" ] || [ -e "$PWD/$copy" ] && cp -r "$PWD/$copy" "$WORKTREE_DIR/$copy"
-done
 
 if [ -f "$WORKTREE_DIR/.envrc" ] && command -v direnv > /dev/null; then
   direnv allow "$WORKTREE_DIR"

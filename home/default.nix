@@ -675,6 +675,7 @@ in
     programs.git = {
       enable = true;
       package = pkgs.gitFull;
+      hooks.post-checkout = ./git-hooks/post-checkout;
 
       # Use specific configuration for work projects.
       includes =

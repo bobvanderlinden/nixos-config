@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+
+# Git calls this hook after `git worktree add` with a null old HEAD. Do not run
+# during ordinary branch switches in an existing linked worktree.
+if [[ "$1" != "0000000000000000000000000000000000000000" || "$3" != "1" ]]; then
+  exit 0
+fi
+
+original_worktree=""
+while IFS= read -r -d '' line; do
+  case "$line" in
+    "worktree "*)
+      original_worktree="${line#worktree }"
+      break
+      ;;
+  esac
+done < <(git worktree list --porcelain -z)
+
+[[ -n "$original_worktree" ]] || exit 0
+
+# The main worktree is listed first. Its local configuration is intentionally
+# shared with each new linked worktree.
+if [[ ! -e devenv.nix && ! -L devenv.nix && -e "$original_worktree/devenv.nix" ]]; then
+  cp --recursive -- "$original_worktree/devenv.nix" devenv.nix
+fi
+if [[ ! -e .envrc.local && ! -L .envrc.local && -e "$original_worktree/.envrc.local" ]]; then
+  cp --recursive -- "$original_worktree/.envrc.local" .envrc.local
+fi
+if [[ ! -e devenv.yaml && ! -L devenv.yaml && -e "$original_worktree/devenv.yaml" ]]; then
+  cp --recursive -- "$original_worktree/devenv.yaml" devenv.yaml
+fi
+if [[ ! -e devenv.lock && ! -L devenv.lock && -e "$original_worktree/devenv.lock" ]]; then
+  cp --recursive -- "$original_worktree/devenv.lock" devenv.lock
+fi
+if [[ ! -e flake.nix && ! -L flake.nix && -e "$original_worktree/flake.nix" ]]; then
+  cp --recursive -- "$original_worktree/flake.nix" flake.nix
+fi
+if [[ ! -e flake.lock && ! -L flake.lock && -e "$original_worktree/flake.lock" ]]; then
+  cp --recursive -- "$original_worktree/flake.lock" flake.lock
+fi
+if [[ ! -e .nix && ! -L .nix && -e "$original_worktree/.nix" ]]; then
+  cp --recursive -- "$original_worktree/.nix" .nix
+fi
+if [[ ! -e .claude && ! -L .claude && -e "$original_worktree/.claude" ]]; then
+  ln --symbolic -- "$original_worktree/.claude" .claude
+fi
+if [[ ! -e .pi && ! -L .pi && -e "$original_worktree/.pi" ]]; then
+  ln --symbolic -- "$original_worktree/.pi" .pi
+fi
+if [[ ! -e .agents && ! -L .agents && -e "$original_worktree/.agents" ]]; then
+  ln --symbolic -- "$original_worktree/.agents" .agents
+fi
+if [[ ! -e .vscode && ! -L .vscode && -e "$original_worktree/.vscode" ]]; then
+  ln --symbolic -- "$original_worktree/.vscode" .vscode
+fi
+if [[ ! -e CLAUDE.md && ! -L CLAUDE.md && -e "$original_worktree/CLAUDE.md" ]]; then
+  ln --symbolic -- "$original_worktree/CLAUDE.md" CLAUDE.md
+fi
+if [[ ! -e AGENTS.md && ! -L AGENTS.md && -e "$original_worktree/AGENTS.md" ]]; then
+  ln --symbolic -- "$original_worktree/AGENTS.md" AGENTS.md
+fi
