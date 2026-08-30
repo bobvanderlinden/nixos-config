@@ -1,6 +1,7 @@
 //@ pragma UseQApplication
 //@ pragma IconTheme Adwaita
 import Quickshell
+import Quickshell.Io
 import Quickshell.Services.Notifications
 import QtQuick
 
@@ -8,6 +9,26 @@ import QtQuick
 // Binary paths are substituted by Nix via sed on @placeholder@ tokens.
 ShellRoot {
     id: shellRoot
+
+    Launcher {
+        id: launcher
+    }
+
+    IpcHandler {
+        target: "launcher"
+
+        function open(): void {
+            launcher.open();
+        }
+
+        function close(): void {
+            launcher.close();
+        }
+
+        function toggle(): void {
+            launcher.toggle();
+        }
+    }
 
     // ── Notification daemon ───────────────────────────────────────────────────
     NotificationServer {
@@ -42,6 +63,7 @@ ShellRoot {
         delegate: NotificationPopup {
             required property var modelData
             targetScreen: modelData
+            notifications: NotificationService.notifications.filter(notification => notification.windowAddress === "")
         }
     }
 
