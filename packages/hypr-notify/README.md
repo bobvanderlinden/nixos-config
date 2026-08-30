@@ -17,6 +17,7 @@ When `--window-address` points to a Hyprland window:
 - The notification stays open until you dismiss it or switch back to that window.
 - Clicking the notification focuses the window.
 - Closing the window dismisses the notification automatically.
+- It includes the address in the `x-hyprland-window-address` notification hint. Quickshell uses it to mark the originating workspace.
 
 `--bell` writes the ASCII bell character (`\a`) to stderr. Terminal emulators
 such as Ghostty respond to this by marking their window as

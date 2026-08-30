@@ -11,7 +11,7 @@ import QtQuick
 //   statebus-sub.sock  — subscribers receive a full state replay on connect, then live updates
 //
 // Each message is a newline-delimited JSON object:
-//   { type: "update", key, windowAddress, state, agentStatus, title, sessionStatus, sessionDescription, todos }
+//   { type: "update", key, windowAddress, state, agentStatus, title, label, cwd, sessionStatus, sessionDescription, todos }
 //   { type: "remove", key }
 //
 // One entry per key is exposed in `sessions`.
@@ -20,11 +20,85 @@ Singleton {
     id: root
 
     // One entry per published key:
-    // [{ windowAddress, agentStatus, title, sessionStatus, sessionDescription, todos }, ...]
+    // [{ windowAddress, agentStatus, title, label, cwd, sessionStatus, sessionDescription, updatedAt, todos }, ...]
     property var sessions: []
 
-    // Internal: key → { windowAddress, agentStatus, title, sessionStatus, sessionDescription, todos }
+    // Internal: key → { windowAddress, agentStatus, title, label, cwd, sessionStatus, sessionDescription, updatedAt, todos }
     property var sessionMap: ({})
+
+    function isKnownState(state) {
+        switch (state) {
+            case "error":
+            case "permission":
+            case "question":
+            case "waiting":
+            case "busy":
+            case "retry":
+            case "working":
+            case "done":
+            case "idle":
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    function displayStatus(session) {
+        return session.sessionStatus ?? session.sessionState ?? session.agentStatus
+            ?? session.agentState ?? session.state ?? "idle";
+    }
+
+    function colorState(session) {
+        for (const state of [
+            session.sessionStatus,
+            session.sessionState,
+            session.agentStatus,
+            session.agentState,
+            session.state,
+        ]) {
+            if (isKnownState(state)) return state;
+        }
+        return "idle";
+    }
+
+    function stateColor(state) {
+        switch (state) {
+            case "error":      return "#ff5555";
+            case "permission": return "#f1fa8c";
+            case "question":
+            case "waiting":    return "#8be9fd";
+            case "busy":
+            case "retry":
+            case "working":    return "#fab283";
+            default:             return "#6272a4";
+        }
+    }
+
+    function stateBgColor(state) {
+        switch (state) {
+            case "error":      return "#3d1a1a";
+            case "permission": return "#3d3a1a";
+            case "question":
+            case "waiting":    return "#1a2d3a";
+            case "busy":
+            case "retry":
+            case "working":    return "#3d2a1a";
+            default:             return "#2d2d3f";
+        }
+    }
+
+    function statePriority(state) {
+        switch (state) {
+            case "error":                         return 4;
+            case "permission":
+            case "question":
+            case "waiting":                       return 3;
+            case "busy":
+            case "retry":
+            case "working":                       return 2;
+            default:                                return 1;
+        }
+    }
 
     Socket {
         id: socket
@@ -57,10 +131,15 @@ Singleton {
                             agentState:         obj.agentState ?? null,
                             state:              obj.state ?? null,
                             title:              obj.title ?? "",
+                            label:              obj.label ?? "",
+                            cwd:                obj.cwd ?? "",
                             sessionStatus:      obj.sessionStatus ?? null,
                             sessionState:       obj.sessionState ?? null,
                             sessionDescription: obj.sessionDescription ?? obj.description ?? "",
                             description:        obj.description ?? "",
+                            // A legacy publisher has no ordering data. Do not let its
+                            // replay time outrank a publisher that supplied one.
+                            updatedAt:          typeof obj.updatedAt === "number" ? obj.updatedAt : 0,
                             todos:              obj.todos ?? [],
                         };
                     }

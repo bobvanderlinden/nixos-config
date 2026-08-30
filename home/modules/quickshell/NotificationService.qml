@@ -55,6 +55,10 @@ Singleton {
         readonly property int urgency: notification?.urgency ?? 1
         readonly property int expireTimeout: notification?.expireTimeout ?? 0
         readonly property var actions: notification?.actions ?? []
+        readonly property string windowAddress: {
+            const address = notification?.hints?.["x-hyprland-window-address"] ?? "";
+            return address.toString().replace(/^0x/, "");
+        }
 
         function dismiss(): void {
             if (notification) notification.dismiss();

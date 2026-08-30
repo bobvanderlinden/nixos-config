@@ -31,7 +31,7 @@ PanelWindow {
         spacing: 6
 
         // ── Left: Workspaces ─────────────────────────────────────────────────
-        WorkspacesWidget { }
+        WorkspacesWidget { barWindow: bar }
 
         // ── Center: stretch ───────────────────────────────────────────────────
         Item { Layout.fillWidth: true }

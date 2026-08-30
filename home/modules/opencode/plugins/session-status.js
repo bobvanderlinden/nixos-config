@@ -4,6 +4,7 @@ export const SessionStatusPlugin = async ({ $ }) => {
   const uid = process.getuid?.() ?? (await $`id -u`.quiet().text()).trim();
   const socketPath = `/run/user/${uid}/statebus-pub.sock`;
   const windowAddress = process.env.HYPR_WINDOW_ADDRESS ?? null;
+  const cwd = process.cwd();
 
   // In-memory session state: sessionId -> { info, status, hasError, pendingPermissions, question, todos }
   // pendingPermissions is a Set of permission IDs waiting for a reply.
@@ -32,6 +33,8 @@ export const SessionStatusPlugin = async ({ $ }) => {
           windowAddress,
           state: deriveState(session),
           title: session.info?.title ?? "",
+          cwd,
+          updatedAt: session.updatedAt ?? Date.now(),
           todos: session.todos ?? [],
         }) + "\n");
       }
@@ -63,7 +66,7 @@ export const SessionStatusPlugin = async ({ $ }) => {
   }
 
   async function updateSession(sessionId, updates) {
-    const merged = { ...sessions.get(sessionId), ...updates };
+    const merged = { ...sessions.get(sessionId), ...updates, updatedAt: Date.now() };
     for (const key of Object.keys(merged)) {
       if (merged[key] === null) delete merged[key];
     }
@@ -75,6 +78,8 @@ export const SessionStatusPlugin = async ({ $ }) => {
       windowAddress,
       state: deriveState(session),
       title: session.info?.title ?? "",
+      cwd,
+      updatedAt: session.updatedAt,
       todos: session.todos ?? [],
     });
   }

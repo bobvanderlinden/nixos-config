@@ -11,6 +11,7 @@ PanelWindow {
 
     // Use a distinct name to avoid shadowing PanelWindow's built-in 'screen' property.
     required property var targetScreen
+    property var notifications: NotificationService.notifications
 
     screen: root.targetScreen
 
@@ -29,7 +30,7 @@ PanelWindow {
     implicitWidth: 360
     implicitHeight: Math.max(1, toastList.contentHeight)
     color: "transparent"
-    visible: NotificationService.notifications.length > 0
+    visible: root.notifications.length > 0
 
     ListView {
         id: toastList
@@ -39,7 +40,7 @@ PanelWindow {
             margins: 0
         }
         spacing: 8
-        model: NotificationService.notifications
+        model: root.notifications
         clip: false
         interactive: false
 

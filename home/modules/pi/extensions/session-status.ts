@@ -6,6 +6,7 @@ import { Type } from "typebox"
 
 const RECONNECT_DELAY_MS = 2_000
 const MAX_DESCRIPTION_LENGTH = 240
+const MAX_LABEL_LENGTH = 32
 const STORE_SYMBOL = Symbol.for("bobvanderlinden.pi.sessionStatusStore")
 
 type AgentStatus = "busy" | "idle" | "error"
@@ -14,6 +15,7 @@ export type SessionStatusName = "working" | "waiting" | "done" | "error" | "idle
 
 export type SessionStatusInfo = {
   status: SessionStatusName
+  label?: string
   description: string
 }
 
@@ -33,8 +35,11 @@ type PublishedSession = {
   windowAddress: string | null
   agentStatus: AgentStatus
   title: string
+  label: string
+  cwd: string
   sessionStatus: SessionStatusName | null
   sessionDescription: string
+  updatedAt: number
   todos: unknown[]
 }
 
@@ -106,6 +111,7 @@ export default function (pi: ExtensionAPI) {
   let reconnectTimer: NodeJS.Timeout | null = null
   let currentSession: PublishedSession | null = null
   let currentStatusInfo = statusStore.get()
+  let currentLabel = ""
   let shuttingDown = false
 
   function sessionKey(context: ExtensionContext): string {
@@ -114,6 +120,11 @@ export default function (pi: ExtensionAPI) {
 
   function sessionTitle(context: ExtensionContext): string {
     return pi.getSessionName() ?? basename(context.cwd) ?? ""
+  }
+
+  function sessionLabel(context: ExtensionContext): string {
+    if (!currentLabel) currentLabel = basename(context.cwd) ?? ""
+    return currentLabel
   }
 
   function updateTerminalTitle(context: ExtensionContext) {
@@ -138,10 +149,13 @@ export default function (pi: ExtensionAPI) {
       // Legacy name used by the previous quickshell integration.
       agentState: currentSession.agentStatus,
       title: currentSession.title,
+      label: currentSession.label,
+      cwd: currentSession.cwd,
       sessionStatus: currentSession.sessionStatus,
       // Legacy name used by the previous quickshell integration.
       sessionState: currentSession.sessionStatus,
       sessionDescription: currentSession.sessionDescription,
+      updatedAt: currentSession.updatedAt,
       // Legacy field for existing quickshell versions.
       description: currentSession.sessionDescription,
       todos: currentSession.todos,
@@ -154,8 +168,11 @@ export default function (pi: ExtensionAPI) {
       windowAddress,
       agentStatus,
       title: sessionTitle(context),
+      label: sessionLabel(context),
+      cwd: context.cwd,
       sessionStatus: currentStatusInfo?.status ?? null,
-      sessionDescription: currentStatusInfo ? formatSessionStatusInfo(currentStatusInfo) : "",
+      sessionDescription: currentStatusInfo?.description ?? "",
+      updatedAt: Date.now(),
       todos: currentSession?.todos ?? [],
     }
     updateTerminalTitle(context)
@@ -167,14 +184,18 @@ export default function (pi: ExtensionAPI) {
     statusInfo: SessionStatusInfo | null,
   ) {
     currentStatusInfo = statusInfo
+    if (statusInfo?.label) currentLabel = statusInfo.label
     if (!currentSession) return
 
     currentSession = {
       ...currentSession,
       key: sessionKey(context),
       title: sessionTitle(context),
+      label: sessionLabel(context),
+      cwd: context.cwd,
       sessionStatus: currentStatusInfo?.status ?? null,
-      sessionDescription: currentStatusInfo ? formatSessionStatusInfo(currentStatusInfo) : "",
+      sessionDescription: currentStatusInfo?.description ?? "",
+      updatedAt: Date.now(),
     }
     updateTerminalTitle(context)
     publishCurrentSession()
@@ -233,16 +254,21 @@ export default function (pi: ExtensionAPI) {
   pi.registerTool({
     name: "set_session_status",
     label: "Set Session Status",
-    description: "Set the user-facing status summary for this Pi session.",
+    description: "Set the current session status, compact label, and user-facing progress summary.",
     promptSnippet: "Set the current session status and a short user-facing summary.",
     promptGuidelines: [
       "Use set_session_status before finishing a user request when a concise user-facing status summary would be useful.",
+      "The label is optional. Use it for a short stable session name shown in compact UI.",
       "The set_session_status description should be written for the user and summarize what the session is doing, waiting for, or just completed in one short sentence.",
     ],
     parameters: Type.Object({
       status: StringEnum(["working", "waiting", "done", "error", "idle"] as const, {
         description: "Current user-facing status of the session.",
       }),
+      label: Type.Optional(Type.String({
+        description: "Short stable label for this session, used in compact UI. Omit it to keep the current label.",
+        maxLength: MAX_LABEL_LENGTH,
+      })),
       description: Type.String({
         description: "Short user-facing description of the current session status.",
         maxLength: MAX_DESCRIPTION_LENGTH,
@@ -251,6 +277,7 @@ export default function (pi: ExtensionAPI) {
     async execute(_toolCallId, parameters, _signal, _onUpdate, context) {
       const statusInfo: SessionStatusInfo = {
         status: parameters.status,
+        label: parameters.label?.trim() || undefined,
         description: truncateSessionStatusText(parameters.description),
       }
       statusStore.set(statusInfo, context)
@@ -268,6 +295,7 @@ export default function (pi: ExtensionAPI) {
   })
 
   pi.on("session_start", async (_event, context) => {
+    currentLabel = basename(context.cwd) ?? ""
     statusStore.set(null, context)
     connect()
     updateSession(context, "idle")
@@ -278,7 +306,6 @@ export default function (pi: ExtensionAPI) {
   })
 
   pi.on("agent_start", async (_event, context) => {
-    statusStore.set(null, context)
     updateSession(context, "busy")
   })
 

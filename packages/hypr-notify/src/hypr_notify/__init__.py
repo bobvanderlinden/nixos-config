@@ -14,7 +14,7 @@ import subprocess
 import sys
 
 from dbus_fast.aio import MessageBus
-from dbus_fast import BusType, Message, MessageType
+from dbus_fast import BusType, Message, MessageType, Variant
 
 
 class WindowEvent(enum.Enum):
@@ -35,6 +35,7 @@ async def send_notification(
     replaces_id: int,
     summary: str,
     body: str,
+    window_address: str,
 ) -> int:
     """Send a notification and return its ID."""
     reply = await bus.call(
@@ -51,7 +52,11 @@ async def send_notification(
                 summary,
                 body,
                 ["default", ""],  # actions: [key, label, ...] — empty label = no visible button
-                {},  # hints
+                (
+                    {"x-hyprland-window-address": Variant("s", window_address)}
+                    if window_address
+                    else {}
+                ),
                 0,  # expire_timeout: 0 = never expire
             ],
         )
@@ -206,6 +211,7 @@ async def _main() -> None:
         replaces_id=args.replace_id,
         summary=args.summary,
         body=args.body,
+        window_address=window_address,
     )
 
     if args.verbose:
