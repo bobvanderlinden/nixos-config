@@ -8,9 +8,9 @@
 let
   piConfigDir = config.programs.pi-coding-agent.configDir;
 
-  extensionFiles = lib.filterAttrs (name: type: type == "regular" && lib.hasSuffix ".ts" name) (
-    builtins.readDir ./extensions
-  );
+  extensionFiles = lib.filterAttrs (
+    name: type: (type == "regular" && lib.hasSuffix ".ts" name) || type == "directory"
+  ) (builtins.readDir ./extensions);
   extensionFileLinks = lib.mapAttrs' (
     name: _:
     lib.nameValuePair "${piConfigDir}/extensions/${name}" {
@@ -18,9 +18,9 @@ let
     }
   ) extensionFiles;
 
-  skillFiles = lib.filterAttrs (name: type: type == "regular" && lib.hasSuffix ".md" name) (
-    builtins.readDir ./skills
-  );
+  skillFiles = lib.filterAttrs (
+    name: type: (type == "regular" && lib.hasSuffix ".md" name) || type == "directory"
+  ) (builtins.readDir ./skills);
   skillFileLinks = lib.mapAttrs' (
     name: _:
     lib.nameValuePair "${piConfigDir}/skills/${name}" {
@@ -31,12 +31,37 @@ in
 {
   home.file = extensionFileLinks // skillFileLinks;
 
-  imports = [ ./mcp.nix ];
+  imports = [
+    ./lsp.nix
+    ./mcp.nix
+    ./subagent.nix
+  ];
 
   programs.pi-coding-agent = {
     enable = true;
     enableMcpIntegration = lib.mkDefault true;
+    lsp.settings = {
+      languages = {
+        typescript = {
+          command = "tsc";
+          args = [
+            "--lsp"
+            "--stdio"
+          ];
+        };
+        kotlin.command = "${pkgs.kmp-lsp}/bin/kmp-lsp";
+      };
+      extensions = {
+        ".ts" = "typescript";
+        ".tsx" = "typescript";
+        ".mts" = "typescript";
+        ".cts" = "typescript";
+        ".kt" = "kotlin";
+      };
+    };
+
     mcp.enable = lib.mkDefault true;
+    subagent.settings.scheduledRuns.storeRoot = "~/.local/share/pi/subagents/schedules";
     package = pkgs.pi;
 
     extraPackages = [
