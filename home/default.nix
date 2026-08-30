@@ -423,6 +423,7 @@ in
     dconf = {
       enable = true;
       settings = {
+        "org/gnome/desktop/interface".icon-theme = "Papirus-Dark";
         "org/gnome/desktop/sound" = {
           event-sounds = false;
           input-feedback-sounds = false;
@@ -485,8 +486,8 @@ in
         package = pkgs.noto-fonts;
       };
       iconTheme = {
-        name = "Adwaita";
-        package = pkgs.adwaita-icon-theme;
+        name = "Papirus-Dark";
+        package = pkgs.papirus-icon-theme;
       };
       theme = {
         name = "Adwaita-dark";
@@ -631,6 +632,7 @@ in
       enable = true;
       settings = {
         "Net/ThemeName" = "Adwaita-dark";
+        "Net/IconThemeName" = "Papirus-Dark";
         "Xft/Antialias" = true;
         "Xft/Hinting" = true;
         "Xft/RGBA" = "rgb";
