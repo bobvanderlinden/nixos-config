@@ -44,6 +44,10 @@
       url = "github:numtide/llm-agents.nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    pi-source = {
+      url = "github:bobvanderlinden/pi/fix/codex-sse-fallback-only-1009";
+      flake = false;
+    };
     unisic = {
       url = "github:unisic/unisic";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -133,6 +137,9 @@
         })
         // {
           "3dmmex" = final.callPackage ./packages/3dmmex/package.nix { };
+          pi = final.callPackage ./packages/pi-from-fork/package.nix {
+            pi = prev.pi;
+          };
         };
       overlays.pyproject = _final: _prev: {
         inherit pyproject-nix uv2nix pyproject-build-systems;
