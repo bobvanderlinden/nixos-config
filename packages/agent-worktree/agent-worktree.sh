@@ -7,16 +7,9 @@ fail() {
 
 usage() {
   cat <<EOF
-Usage: agent-worktree <target>
+Usage: agent-worktree <project-or-github-url> [command...]
 
-Creates a temporary git worktree for running AI agents.
-
-Target can be:
-  project-name                    Bare project name (searches ~/projects/ and ~/projects/meditools/)
-  /path/to/project                Direct path to a git repository
-  https://github.com/org/repo     GitHub repository URL
-  https://github.com/org/repo/pull/123   GitHub pull request URL
-  https://github.com/org/repo/issues/123 GitHub issue URL
+Creates a worktree, then starts an agent in it.
 
 Examples:
   agent-worktree MediKitRequest
@@ -30,93 +23,56 @@ EOF
 
 if [[ "$1" == "--run" ]]; then
   shift
-  COMMAND=("$@")
-  exec "${COMMAND[@]}"
-  exit 0
+  command=("$@")
+  exec "${command[@]}"
 fi
 
 [[ $# -eq 0 ]] && usage
 [[ "$1" == "-h" || "$1" == "--help" ]] && usage
 
-# Parse GitHub repo URL to extract owner, repo name, PR number, and issue number
-if [[ "$1" =~ github\.com[:/]([^/]+)/([^/.]+) ]]; then
-  GITHUB_OWNER_NAME="${BASH_REMATCH[1]}"
-  GITHUB_REPO_NAME="${BASH_REMATCH[2]}"
-  if [[ "$1" =~ /pull/([0-9]+) ]]; then
-    GITHUB_PR_NUMBER="${BASH_REMATCH[1]}"
-  elif [[ "$1" =~ /issues/([0-9]+) ]]; then
-    GITHUB_ISSUE_NUMBER="${BASH_REMATCH[1]}"
-  fi
-elif [[ -d "$1" ]]; then
-  PROJECT_PATH="$1"
-else
-  GITHUB_REPO_NAME="$1"
-fi
-
+project="$1"
 shift
 
-if [[ -z "${PROJECT_PATH-}" ]]; then
-  PROJECT_PATH="$(zoxide query "$GITHUB_REPO_NAME")"
+if [[ "$project" =~ github\.com[:/]([^/]+)/([^/.]+) ]]; then
+  github_owner_name="${BASH_REMATCH[1]}"
+  github_repository_name="${BASH_REMATCH[2]}"
+  if [[ "$project" =~ /pull/([0-9]+) ]]; then
+    github_pull_request_number="${BASH_REMATCH[1]}"
+  elif [[ "$project" =~ /issues/([0-9]+) ]]; then
+    github_issue_number="${BASH_REMATCH[1]}"
+  fi
 fi
 
+worktree_directory="$(worktree "$project")" || fail "Could not create worktree"
 
-echo "Using project: $PROJECT_PATH"
-
-# Change to the project directory
-cd "$PROJECT_PATH" || fail "Could not change to directory: $PROJECT_PATH"
-
-# Determine the base revision to use
-
-# Check if 'upstream' exists as a remote
-if ! git remote get-url upstream > /dev/null 2>&1; then
-  git remote add upstream "$(git remote get-url origin)"
-  git remote set-head upstream --auto
+context_parts=()
+if [[ -n "${github_pull_request_number-}" ]]; then
+  context_parts+=("The pull request you're working on is https://github.com/$github_owner_name/$github_repository_name/pull/$github_pull_request_number")
+fi
+if [[ -n "${github_issue_number-}" ]]; then
+  context_parts+=("The issue you're working on is https://github.com/$github_owner_name/$github_repository_name/issues/$github_issue_number")
 fi
 
-# Always fetch upstream HEAD to update the reference
-git fetch upstream HEAD
-
-if [[ -n "${GITHUB_PR_NUMBER-}" ]]; then
-  BRANCH_NAME="$(gh pr view "$GITHUB_PR_NUMBER" --json headRefName --jq '.headRefName')"
-  git fetch upstream pull/"$GITHUB_PR_NUMBER"/head
-  git branch --force "$BRANCH_NAME" FETCH_HEAD
-  REVISION="$BRANCH_NAME"
-else
-  REVISION=upstream/HEAD
+if [[ ${#context_parts[@]} -gt 0 ]]; then
+  context_file="$(mktemp --suffix=.md)"
+  printf '%s\n' "${context_parts[@]}" > "$context_file"
+  # The OS cleans up this temporary file after Pi reads it.
 fi
 
-WORKTREE_ARGS=(--revision "$REVISION")
-
-# Build context instructions for the agent session
-CONTEXT_PARTS=()
-if [[ -n "${GITHUB_PR_NUMBER-}" ]]; then
-  CONTEXT_PARTS+=("The pull request you're working on is https://github.com/$GITHUB_OWNER_NAME/$GITHUB_REPO_NAME/pull/$GITHUB_PR_NUMBER")
-fi
-if [[ -n "${GITHUB_ISSUE_NUMBER-}" ]]; then
-  CONTEXT_PARTS+=("The issue you're working on is https://github.com/$GITHUB_OWNER_NAME/$GITHUB_REPO_NAME/issues/$GITHUB_ISSUE_NUMBER")
-fi
-
-if [[ ${#CONTEXT_PARTS[@]} -gt 0 ]]; then
-  CONTEXT_FILE="$(mktemp --suffix=.md)"
-  printf '%s\n' "${CONTEXT_PARTS[@]}" > "$CONTEXT_FILE"
-  # The temp file is left in /tmp for the OS to clean up; exec replaces this
-  # process so a trap on EXIT would fire too early (before Pi reads it).
-fi
-
-# Determine the command to run (default: agent)
 if [[ $# -gt 0 ]]; then
-  COMMAND=("$@")
-elif [[ -n "${CONTEXT_FILE-}" ]]; then
-  COMMAND=(agent --append-system-prompt "$CONTEXT_FILE")
+  command=("$@")
+elif [[ -n "${context_file-}" ]]; then
+  command=(agent --append-system-prompt "$context_file")
 else
-  COMMAND=(agent)
+  command=(agent)
 fi
 
-if [[ -n "${GITHUB_PR_NUMBER-}" ]]; then
-  export GITHUB_PR_NUMBER
+if [[ -n "${github_pull_request_number-}" ]]; then
+  export GITHUB_PR_NUMBER="$github_pull_request_number"
 fi
-if [[ -n "${GITHUB_ISSUE_NUMBER-}" ]]; then
-  export GITHUB_ISSUE_NUMBER
+if [[ -n "${github_issue_number-}" ]]; then
+  export GITHUB_ISSUE_NUMBER="$github_issue_number"
 fi
 
-exec git-worktree-shell "${WORKTREE_ARGS[@]}" -- direnv exec . "${COMMAND[@]}"
+cd "$worktree_directory" || fail "Could not change to worktree: $worktree_directory"
+exec direnv exec . "${command[@]}"

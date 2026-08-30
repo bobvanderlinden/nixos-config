@@ -24,7 +24,16 @@ let
   '';
 
   terminal = pkgs.writeShellScriptBin "terminal" ''
-    ghostty --working-directory="$(pwd)" > /dev/null 2>&1 &
+    if [[ $# -eq 0 ]]; then
+      ghostty --working-directory="$PWD" > /dev/null 2>&1 &
+    else
+      command="shell:exec"
+      for argument in "$@"; do
+        printf -v quoted_argument ' %q' "$argument"
+        command+="$quoted_argument"
+      done
+      ghostty --working-directory="$PWD" --command="$command" > /dev/null 2>&1 &
+    fi
     disown
   '';
 
@@ -147,8 +156,10 @@ in
       git-cola
       git-absorb
       git-revise
-      git-worktree-shell
+      hypr-exec
+      worktree
       agent-worktree
+      new-agent
       agent
       agents-idle
       git-xargs

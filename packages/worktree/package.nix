@@ -2,14 +2,18 @@
   writeShellApplication,
   coreutils,
   direnv,
-  worktree,
+  gh,
+  git,
+  zoxide,
 }:
 writeShellApplication {
-  name = "agent-worktree";
-  text = builtins.readFile ./agent-worktree.sh;
+  name = "worktree";
+  text = builtins.readFile ./worktree.sh;
   runtimeInputs = [
     coreutils
     direnv
-    worktree
+    gh
+    git
+    zoxide
   ];
 }
