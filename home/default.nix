@@ -214,6 +214,7 @@ in
       vlc
       gimp3
       feh
+      grim
       # ffmpeg-full
       ffmpegthumbnailer
       audacity
