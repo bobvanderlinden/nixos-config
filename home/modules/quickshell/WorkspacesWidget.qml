@@ -160,7 +160,10 @@ Item {
                     Layout.fillWidth: true
                     visible: agentText !== ""
                     text: agentText
-                    color: AgentState.stateColor(mostRecentAgent ? AgentState.colorState(mostRecentAgent) : "idle")
+                    // A focused button owns the text color. The state dot still shows agent state.
+                    color: workspace.focused
+                        ? "#ffffff"
+                        : AgentState.stateColor(mostRecentAgent ? AgentState.colorState(mostRecentAgent) : "idle")
                     font.pixelSize: 11
                     elide: Text.ElideRight
                 }

@@ -105,9 +105,9 @@ Rectangle {
         anchor.window: root.barWindow
         anchor.adjustment: PopupAdjustment.Flip
         anchor.rect: {
-            // Track both the pill and its immediate layout container. GitHub pills
-            // are nested in GithubWidget, so their own x does not change when the
-            // enclosing status-bar layout moves.
+            // Track both the widget and its immediate layout container. The GitHub
+            // widget is nested in its status-bar layout, so its x does not change
+            // when that layout moves.
             void(root.x);
             void(root.parent.x);
             const mapped = root.mapToItem(root.barWindow.contentItem, 0, 0);
