@@ -224,6 +224,10 @@
 
       # CPU HWP dynamic boost
       CPU_HWP_DYN_BOOST_ON_AC = 0;
+
+      # Avoid iGPU clock ramp-up stutter when opening GPU-heavy overlays.
+      # https://wiki.hypr.land/Configuring/Advanced-and-Cool/Performance/#low-fpsstutterfps-drops-on-intel-igpu-with-tlp-mainly-laptops
+      INTEL_GPU_MIN_FREQ_ON_AC = 500;
       CPU_HWP_DYN_BOOST_ON_BAT = 0;
 
       # Platform profile
