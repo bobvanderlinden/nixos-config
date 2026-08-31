@@ -54,6 +54,19 @@ hl.config({
   scrolling = {
     direction = "right",
   },
+  plugin = {
+    scrolloverview = {
+      scale = 0.5,
+      workspace_gap = 50,
+      layout = "vertical",
+      wallpaper = 2,
+      blur = true,
+      input = {
+        -- Scroll vertically between workspaces. Scroll horizontally inside one.
+        scrolling_mode = 2,
+      },
+    },
+  },
 })
 
 -- The bottom 220 physical pixels of the laptop display are corrupted; reserve 110 logical pixels at scale 2.
@@ -156,7 +169,11 @@ end)
 bind_mod("T", run("ghostty --working-directory=$HOME"))
 bind_mod("W", run("chromium"))
 bind_mod("E", run("thunar"))
+bind_mod("ESCAPE", function()
+  hl.plugin.scrolloverview.overview("toggle all")
+end)
 bind_mod("N", hl.dsp.focus({ workspace = "empty" }))
+bind_mod("SHIFT + N", hl.dsp.window.move({ workspace = "empty", follow = true }))
 bind_mod("Q", run("qs ipc call launcher toggle"))
 bind_mod("Delete", run("loginctl lock-session"))
 bind_mod("Print", run("unisic --region"))
