@@ -24,15 +24,19 @@ let
   '';
 
   terminal = pkgs.writeShellScriptBin "terminal" ''
+    window_class="com.mitchellh.ghostty.$$.''${RANDOM}"
+
     if [[ $# -eq 0 ]]; then
-      ghostty --working-directory="$PWD" > /dev/null 2>&1 &
+      HYPR_WINDOW_CLASS="$window_class" \
+        ghostty --class="$window_class" --working-directory="$PWD" > /dev/null 2>&1 &
     else
       command="shell:exec"
       for argument in "$@"; do
         printf -v quoted_argument ' %q' "$argument"
         command+="$quoted_argument"
       done
-      ghostty --working-directory="$PWD" --command="$command" > /dev/null 2>&1 &
+      HYPR_WINDOW_CLASS="$window_class" \
+        ghostty --class="$window_class" --working-directory="$PWD" --command="$command" > /dev/null 2>&1 &
     fi
     disown
   '';
@@ -549,9 +553,23 @@ in
       interactiveShellInit = ''
         set fish_greeting
 
-        # Capture Hyprland window address for notifications (only in Ghostty)
+        # Capture the Hyprland window address for notifications (only in Ghostty).
+        # terminal gives new windows a unique class, so this also works when the
+        # window opens in the background and never becomes the active window.
         if test "$TERM_PROGRAM" = ghostty
-          set -gx HYPR_WINDOW_ADDRESS (hyprctl activewindow -j | ${pkgs.jq}/bin/jq -r '.address | ltrimstr("0x")')
+          if test -n "$HYPR_WINDOW_CLASS"
+            for attempt in (seq 1 50)
+              set window_address (hyprctl clients -j | ${pkgs.jq}/bin/jq -r --arg class "$HYPR_WINDOW_CLASS" \
+                '.[] | select(.class == $class) | .address | ltrimstr("0x")')
+              if test -n "$window_address"
+                set -gx HYPR_WINDOW_ADDRESS "$window_address"
+                break
+              end
+              sleep 0.1
+            end
+          else
+            set -gx HYPR_WINDOW_ADDRESS (hyprctl activewindow -j | ${pkgs.jq}/bin/jq -r '.address | ltrimstr("0x")')
+          end
         end
       '';
     };

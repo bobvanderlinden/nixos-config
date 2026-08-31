@@ -30,14 +30,24 @@ highlight in the taskbar or workspace indicator).
 `--window-address` defaults to the `HYPR_WINDOW_ADDRESS` environment variable.
 This variable should be set to the Hyprland address of the terminal window at
 shell startup, so any command run inside that terminal can send a notification
-that points back to it.
+that points back to it. Do not rely on `activewindow` if the launcher opens the
+terminal in the background. Give the terminal a unique class, pass that class
+through its environment, then query the matching client.
 
 Example (Fish shell, Ghostty only):
 
 ```fish
-# in interactiveShellInit
-if test "$TERM_PROGRAM" = ghostty
-    set -gx HYPR_WINDOW_ADDRESS (hyprctl activewindow -j | jq -r '.address')
+# The launcher starts Ghostty with --class="$HYPR_WINDOW_CLASS".
+if test "$TERM_PROGRAM" = ghostty; and test -n "$HYPR_WINDOW_CLASS"
+    for attempt in (seq 1 50)
+        set window_address (hyprctl clients -j | jq -r --arg class "$HYPR_WINDOW_CLASS" \
+            '.[] | select(.class == $class) | .address | ltrimstr("0x")')
+        if test -n "$window_address"
+            set -gx HYPR_WINDOW_ADDRESS "$window_address"
+            break
+        end
+        sleep 0.1
+    end
 end
 ```
 
