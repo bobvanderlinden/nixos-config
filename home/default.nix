@@ -89,6 +89,7 @@ in
     ./modules/xssproxy.nix
     ./modules/nushell.nix
     ./modules/swaybg.nix
+    ./modules/tapshow.nix
     ./modules/xdg-desktop-portal.nix
     ./modules/xdg-desktop-portal-hyprland.nix
     ./modules/hypr

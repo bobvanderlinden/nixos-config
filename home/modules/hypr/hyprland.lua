@@ -119,6 +119,15 @@ hl.window_rule({
   workspace = "special:slack silent",
 })
 hl.window_rule({
+  match = { class = "^ca[.]icewolf[.]tapshow$" },
+  float = true,
+  move = "20 monitor_h-180",
+  pin = true,
+  decorate = false,
+  no_anim = true,
+  no_initial_focus = true,
+})
+hl.window_rule({
   match = { group = true },
   no_anim = true,
 })
