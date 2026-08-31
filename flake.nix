@@ -21,10 +21,6 @@
     impurity = {
       url = "github:outfoxxed/impurity.nix";
     };
-    quickshell = {
-      url = "git+https://git.outfoxxed.me/quickshell/quickshell";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
     pyproject-nix = {
       url = "github:pyproject-nix/pyproject.nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -44,8 +40,8 @@
       url = "github:numtide/llm-agents.nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    pi-source = {
-      url = "github:bobvanderlinden/pi/fix/codex-sse-fallback-only-1009";
+    scrolloverview = {
+      url = "github:yayuuu/hyprland-scroll-overview";
       flake = false;
     };
     unisic = {
@@ -104,7 +100,6 @@
         self.overlays.default
         self.overlays.workarounds
         self.overlays.pyproject
-        self.overlays.quickshell
       ];
       mkPkgs =
         {
@@ -126,7 +121,7 @@
           packages = inputs.llm-agents.packages.${final.stdenv.hostPlatform.system};
         in
         {
-          inherit (packages) pi semble;
+          inherit (packages) semble;
         };
 
       overlays.default =
@@ -137,8 +132,9 @@
         })
         // {
           "3dmmex" = final.callPackage ./packages/3dmmex/package.nix { };
-          pi = final.callPackage ./packages/pi-from-fork/package.nix {
-            pi = prev.pi;
+          pi = final.callPackage ./packages/pi/package.nix { };
+          scrolloverview = final.callPackage ./packages/scrolloverview/package.nix {
+            src = inputs.scrolloverview;
           };
         };
       overlays.pyproject = _final: _prev: {
@@ -173,10 +169,6 @@
           });
 
         };
-
-      overlays.quickshell = final: _prev: {
-        quickshell = inputs.quickshell.packages.${final.stdenv.hostPlatform.system}.default;
-      };
 
       nixosModules = import ./system/modules // {
         overlays = {
