@@ -140,6 +140,7 @@ in
       maven
       deno
       devenv
+      devshell-init
       strace
       ltrace
       kubectl
