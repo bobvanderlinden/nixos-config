@@ -438,6 +438,10 @@
     };
   };
 
+  programs.nh = {
+    enable = true;
+  };
+
   system.autoUpgrade = {
     enable = false;
     flake = "/home/bob.vanderlinden/projects/bobvanderlinden/nixos-config";
