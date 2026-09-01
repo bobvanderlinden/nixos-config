@@ -193,12 +193,24 @@ async function loadDirenv(
 
   setLoaded(true)
 
-  const result = await syncDirenv(
-    context.cwd,
-    getSyncPromise,
-    setSyncPromise,
-    context.signal,
-  )
+  if (context.hasUI) {
+    context.ui.setStatus("direnv", "direnv: loading environment...")
+  }
+
+  let result: ExportResult
+  try {
+    result = await syncDirenv(
+      context.cwd,
+      getSyncPromise,
+      setSyncPromise,
+      context.signal,
+    )
+  } finally {
+    if (context.hasUI) {
+      context.ui.setStatus("direnv", undefined)
+    }
+  }
+
   if (result.failed) {
     if (result.envrcPath && context.hasUI) {
       context.ui.notify("direnv: failed to load environment", "error")
