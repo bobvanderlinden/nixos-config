@@ -9,124 +9,14 @@ PopupWidget {
 
     popupWidth: 520
 
-    property var reviewRequests: []
-    property var teamReviewRequests: []
-    property var drafts: []
-    property var waitingForReview: []
-    property var needsAction: []
-    property var readyToMerge: []
+    required property var githubProvider
 
-    readonly property int pullRequestCount: reviewRequests.length
-        + teamReviewRequests.length
-        + drafts.length
-        + waitingForReview.length
-        + needsAction.length
-        + readyToMerge.length
-
-    function parsePullRequests(output, destination) {
-        try {
-            const data = JSON.parse(output);
-            root[destination] = data.map(pullRequest => ({
-                number: pullRequest.number,
-                title: pullRequest.title,
-                repository: pullRequest.repository.name,
-                url: pullRequest.url
-            }));
-        } catch (error) {
-            console.warn("GithubWidget: failed to parse pull request search:", error);
-        }
-    }
-
-    function parseReviewRequests(output) {
-        try {
-            const result = JSON.parse(output).data;
-            const userReviewRequests = [];
-            const teamRequests = [];
-
-            for (const pullRequest of result.search.nodes) {
-                const reviewers = pullRequest.reviewRequests.nodes.map(request => request.requestedReviewer);
-                const request = {
-                    number: pullRequest.number,
-                    title: pullRequest.title,
-                    repository: pullRequest.repository.name,
-                    url: pullRequest.url
-                };
-
-                if (reviewers.some(reviewer => reviewer.__typename === "User" && reviewer.login === result.viewer.login))
-                    userReviewRequests.push(request);
-                if (reviewers.some(reviewer => reviewer.__typename === "Team"))
-                    teamRequests.push(request);
-            }
-
-            root.reviewRequests = userReviewRequests;
-            root.teamReviewRequests = teamRequests;
-        } catch (error) {
-            console.warn("GithubWidget: failed to parse review requests:", error);
-        }
-    }
-
-    function refresh() {
-        reviewRequestsProcess.running = true;
-        draftsProcess.running = true;
-        waitingForReviewProcess.running = true;
-        needsActionProcess.running = true;
-        readyToMergeProcess.running = true;
-    }
-
-    Process {
-        id: reviewRequestsProcess
-        command: [
-            "gh", "api", "graphql",
-            "-f", "query=query { viewer { login } search(query: \"is:open is:pr review-requested:@me\", type: ISSUE, first: 100) { nodes { ... on PullRequest { number title url repository { name } reviewRequests(first: 100) { nodes { requestedReviewer { __typename ... on User { login } ... on Team { slug } } } } } } } }"
-        ]
-        running: true
-        stdout: StdioCollector {
-            onStreamFinished: root.parseReviewRequests(this.text)
-        }
-    }
-
-    Process {
-        id: draftsProcess
-        command: ["gh", "search", "prs", "--author=@me", "--draft", "--state=open", "--json", "number,title,repository,url", "--limit", "50"]
-        running: true
-        stdout: StdioCollector {
-            onStreamFinished: root.parsePullRequests(this.text, "drafts")
-        }
-    }
-
-    Process {
-        id: waitingForReviewProcess
-        command: ["gh", "search", "prs", "--author=@me", "--review=required", "--state=open", "--json", "number,title,repository,url", "--limit", "50", "--", "draft:false"]
-        running: true
-        stdout: StdioCollector {
-            onStreamFinished: root.parsePullRequests(this.text, "waitingForReview")
-        }
-    }
-
-    Process {
-        id: needsActionProcess
-        command: ["gh", "search", "prs", "--author=@me", "--review=changes_requested", "--state=open", "--json", "number,title,repository,url", "--limit", "50", "--", "draft:false"]
-        running: true
-        stdout: StdioCollector {
-            onStreamFinished: root.parsePullRequests(this.text, "needsAction")
-        }
-    }
-
-    Process {
-        id: readyToMergeProcess
-        command: ["gh", "search", "prs", "--author=@me", "--review=approved", "--state=open", "--json", "number,title,repository,url", "--limit", "50", "--", "draft:false"]
-        running: true
-        stdout: StdioCollector {
-            onStreamFinished: root.parsePullRequests(this.text, "readyToMerge")
-        }
-    }
-
-    Timer {
-        interval: 5 * 60 * 1000
-        running: true
-        repeat: true
-        onTriggered: root.refresh()
-    }
+    readonly property int pullRequestCount: githubProvider.reviewRequests.length
+        + githubProvider.teamReviewRequests.length
+        + githubProvider.drafts.length
+        + githubProvider.waitingForReview.length
+        + githubProvider.needsAction.length
+        + githubProvider.readyToMerge.length
 
     Process {
         id: openProcess
@@ -182,44 +72,44 @@ PopupWidget {
                     MouseArea {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: root.refresh()
+                        onClicked: root.githubProvider.refresh()
                     }
                 }
             }
 
             InboxGroup {
                 title: "Needs your review"
-                pullRequests: root.reviewRequests
+                pullRequests: root.githubProvider.reviewRequests
                 accentColor: "#ffb86c"
             }
 
             InboxGroup {
                 title: "Needs your teams' review"
-                pullRequests: root.teamReviewRequests
+                pullRequests: root.githubProvider.teamReviewRequests
                 accentColor: "#bd93f9"
             }
 
             InboxGroup {
                 title: "Your drafts"
-                pullRequests: root.drafts
+                pullRequests: root.githubProvider.drafts
                 accentColor: "#6272a4"
             }
 
             InboxGroup {
                 title: "Waiting for review or checks"
-                pullRequests: root.waitingForReview
+                pullRequests: root.githubProvider.waitingForReview
                 accentColor: "#8be9fd"
             }
 
             InboxGroup {
                 title: "Needs action"
-                pullRequests: root.needsAction
+                pullRequests: root.githubProvider.needsAction
                 accentColor: "#ff5555"
             }
 
             InboxGroup {
                 title: "Ready to merge"
-                pullRequests: root.readyToMerge
+                pullRequests: root.githubProvider.readyToMerge
                 accentColor: "#50fa7b"
             }
         }

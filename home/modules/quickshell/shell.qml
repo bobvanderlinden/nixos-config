@@ -10,8 +10,13 @@ import QtQuick
 ShellRoot {
     id: shellRoot
 
+    GithubProvider {
+        id: githubData
+    }
+
     Launcher {
         id: launcher
+        githubProvider: githubData
     }
 
     IpcHandler {
@@ -74,6 +79,7 @@ ShellRoot {
         delegate: StatusBar {
             required property var modelData
             targetScreen: modelData
+            githubProvider: githubData
         }
     }
 

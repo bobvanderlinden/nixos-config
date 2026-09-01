@@ -11,6 +11,7 @@ PanelWindow {
     // Set by parent (shell.qml Variants loop).
     // Use a distinct name to avoid shadowing PanelWindow's built-in 'screen' property.
     required property var targetScreen
+    required property var githubProvider
 
     screen: bar.targetScreen
     anchors.top: true
@@ -50,6 +51,7 @@ PanelWindow {
 
         GithubWidget {
             barWindow: bar
+            githubProvider: bar.githubProvider
         }
 
         DockerWidget {

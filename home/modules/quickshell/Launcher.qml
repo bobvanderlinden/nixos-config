@@ -30,6 +30,7 @@ PanelWindow {
     property string query: ""
     property int currentIndex: 0
     property var items: []
+    required property var githubProvider
     property var providers: [workspaceProvider, desktopEntryProvider, shellCommandProvider]
 
     WorkspaceProvider {
@@ -67,14 +68,18 @@ PanelWindow {
 
     function updateItems() {
         const normalizedQuery = normalize(query);
+        const isGithubSearch = normalizedQuery === "gh" || normalizedQuery.startsWith("gh ");
+        const searchQuery = isGithubSearch ? normalizedQuery.slice(2).trim() : normalizedQuery;
+        const activeProviders = isGithubSearch ? [githubProvider] : providers;
         const providerItems = [];
-        for (const provider of providers)
-            providerItems.push(...provider.items(query));
+        for (const provider of activeProviders)
+            providerItems.push(...provider.items(searchQuery));
 
         items = providerItems
-            .map(item => ({ item, score: score(item, normalizedQuery) }))
+            .map((item, index) => ({ item, index, score: score(item, searchQuery) }))
             .filter(result => result.score >= 0)
-            .sort((first, second) => second.score - first.score || first.item.label.localeCompare(second.item.label))
+            .sort((first, second) => second.score - first.score
+                || (isGithubSearch ? first.index - second.index : first.item.label.localeCompare(second.item.label)))
             .map(result => result.item);
         currentIndex = 0;
     }
@@ -124,6 +129,16 @@ PanelWindow {
         }
     }
 
+    Connections {
+        target: githubProvider
+        function onReviewRequestsChanged() { root.updateItems(); }
+        function onTeamReviewRequestsChanged() { root.updateItems(); }
+        function onDraftsChanged() { root.updateItems(); }
+        function onWaitingForReviewChanged() { root.updateItems(); }
+        function onNeedsActionChanged() { root.updateItems(); }
+        function onReadyToMergeChanged() { root.updateItems(); }
+    }
+
     MouseArea {
         anchors.fill: parent
         onClicked: root.close()
@@ -154,7 +169,7 @@ PanelWindow {
             TextField {
                 id: searchInput
                 Layout.fillWidth: true
-                placeholderText: "Search applications or run a command"
+                placeholderText: "Search applications, GitHub with gh, or run a command"
                 placeholderTextColor: "#bac2de"
                 color: "#f8f8f2"
                 font.pixelSize: 18
