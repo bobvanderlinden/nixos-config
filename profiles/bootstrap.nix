@@ -33,7 +33,10 @@
     wantedBy = [ "multi-user.target" ];
     wants = [ "network-online.target" ];
     after = [ "network-online.target" ];
-    path = [ pkgs.nix ];
+    path = [
+      pkgs.nix
+      pkgs.nixos-rebuild
+    ];
     serviceConfig = {
       Type = "oneshot";
       Restart = "on-failure";
