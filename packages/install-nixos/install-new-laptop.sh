@@ -73,14 +73,14 @@ if [[ "$disk" != /* && -b "/dev/$disk" ]]; then
   disk="/dev/$disk"
 fi
 
-disk_type="$(lsblk --noheadings --output TYPE "$disk" | tr --delete '[:space:]')"
+disk_type="$(lsblk --noheadings --nodeps --output TYPE "$disk" | tr --delete '[:space:]')"
 if [[ ! -b "$disk" ]] || [[ "$disk_type" != 'disk' ]]; then
   echo "Not a whole disk: $disk" >&2
   exit 1
 fi
 
-disk_removable="$(lsblk --noheadings --output RM "$disk" | tr --delete '[:space:]')"
-disk_transport="$(lsblk --noheadings --output TRAN "$disk" | tr --delete '[:space:]')"
+disk_removable="$(lsblk --noheadings --nodeps --output RM "$disk" | tr --delete '[:space:]')"
+disk_transport="$(lsblk --noheadings --nodeps --output TRAN "$disk" | tr --delete '[:space:]')"
 if [[ "$disk_removable" == '1' ]] || [[ "$disk_transport" == 'usb' ]]; then
   echo "Refusing removable or USB disk: $disk" >&2
   exit 1
