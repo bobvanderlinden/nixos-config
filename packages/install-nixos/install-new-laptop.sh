@@ -179,7 +179,9 @@ sed --in-place \
   "$work_directory/source/systems/new-laptop.nix"
 
 echo 'Building the NixOS system configuration...'
-nom build "$work_directory/source#nixosConfigurations.$host.config.system.build.toplevel"
+nom build \
+  --extra-experimental-features "nix-command flakes" \
+  "$work_directory/source#nixosConfigurations.$host.config.system.build.toplevel"
 
 echo 'Partitioning, formatting, and installing the built configuration...'
 disko-install \
