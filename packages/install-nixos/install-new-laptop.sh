@@ -110,7 +110,7 @@ memory_gib=$(( (memory_kib + 1048575) / 1048576 ))
 swap_gib=$(( memory_gib + 2 ))
 root_minimum_gib=64
 required_gib=$(( 1 + 2 + swap_gib + root_minimum_gib ))
-disk_bytes="$(lsblk --bytes --noheadings --output SIZE "$canonical_disk" | tr --delete '[:space:]')"
+disk_bytes="$(lsblk --bytes --noheadings --nodeps --output SIZE "$canonical_disk" | tr --delete '[:space:]')"
 disk_gib=$(( disk_bytes / 1024 / 1024 / 1024 ))
 if (( disk_gib < required_gib )); then
   printf 'The selected disk has %s GiB, but the layout needs at least %s GiB.\n' "$disk_gib" "$required_gib" >&2
