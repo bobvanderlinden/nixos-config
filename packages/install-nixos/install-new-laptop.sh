@@ -6,21 +6,27 @@ bootstrap_host='new-laptop-bootstrap'
 
 usage() {
   cat <<'EOF'
-Usage: install-new-laptop [--disk DEVICE]
+Usage: install-new-laptop [--disk DEVICE] [--reuse-existing]
 
 Selects the only writable, non-USB disk when possible. Use --disk to choose a
-specific whole-disk device. The command always shows its plan and requires an
-explicit confirmation before it writes anything.
+specific whole-disk device. --reuse-existing mounts an existing NixOS layout
+instead of partitioning it again. The command always shows its plan and
+requires an explicit confirmation before it writes anything.
 EOF
 }
 
 disk=''
+reuse_existing=false
 while (( $# > 0 )); do
   case "$1" in
     --disk)
       (( $# >= 2 )) || { echo '--disk needs a device path' >&2; exit 2; }
       disk="$2"
       shift 2
+      ;;
+    --reuse-existing)
+      reuse_existing=true
+      shift
       ;;
     --help)
       usage
@@ -122,8 +128,20 @@ IFS=$'\t' read -r size model serial wwn < <(
     jq --raw-output '.blockdevices[0] | [.size, .model, .serial, .wwn] | map(. // "unknown") | @tsv'
 )
 
+if [[ "$reuse_existing" == true ]]; then
+  if ! lsblk --noheadings --output PARTLABEL "$canonical_disk" | grep --quiet --fixed-strings 'NIXOS-LUKS'; then
+    echo "No NIXOS-LUKS partition was found on $canonical_disk; refusing --reuse-existing." >&2
+    exit 1
+  fi
+  installation_action='reuse the existing encrypted layout'
+  confirmation_word='REUSE'
+else
+  installation_action='erase the selected disk and create a new encrypted layout'
+  confirmation_word='ERASE'
+fi
+
 cat <<EOF
-The following installation plan will erase the selected disk.
+The following installation plan will $installation_action.
 
 Final host:       $host
 Bootstrap host:   $bootstrap_host
@@ -148,8 +166,8 @@ Secure Boot keys will be generated after installation. The first boot is
 unsigned and enrolls the keys. Restart once enrollment has completed.
 EOF
 
-read -r -p 'Type ERASE to partition, encrypt, and install: ' confirmation
-if [[ "$confirmation" != 'ERASE' ]]; then
+read -r -p "Type $confirmation_word to continue: " confirmation
+if [[ "$confirmation" != "$confirmation_word" ]]; then
   echo 'Installation cancelled.'
   exit 0
 fi
@@ -184,7 +202,13 @@ sed --in-place \
 
 echo 'Partitioning, formatting, and installing the NixOS configuration...'
 # disko-install detects nom-build and uses it for its single system build.
+disko_install_mode=()
+if [[ "$reuse_existing" == true ]]; then
+  disko_install_mode=(--mode mount)
+fi
+
 disko-install \
+  "${disko_install_mode[@]}" \
   --flake "$work_directory/source#$bootstrap_host" \
   --disk main "$stable_disk" \
   --write-efi-boot-entries
