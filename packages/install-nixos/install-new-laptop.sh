@@ -178,12 +178,8 @@ sed --in-place \
   --expression "s|/tmp/nixos-luks-password|${password_file}|" \
   "$work_directory/source/systems/new-laptop.nix"
 
-echo 'Building the NixOS system configuration...'
-nom build \
-  --extra-experimental-features "nix-command flakes" \
-  "$work_directory/source#nixosConfigurations.$host.config.system.build.toplevel"
-
-echo 'Partitioning, formatting, and installing the built configuration...'
+echo 'Partitioning, formatting, and installing the NixOS configuration...'
+# disko-install detects nom-build and uses it for its single system build.
 disko-install \
   --flake "$work_directory/source#$host" \
   --disk main "$stable_disk" \
