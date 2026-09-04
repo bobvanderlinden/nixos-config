@@ -261,6 +261,7 @@
             gnused
             jq
             nix-output-monitor
+            shadow
             util-linux
           ];
           text = builtins.replaceStrings [ "@flakeSource@" ] [ "${self.outPath}" ] (

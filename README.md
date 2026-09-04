@@ -59,8 +59,9 @@ sudo nix run github:bobvanderlinden/nixos-config#install-new-laptop -- \
 ```
 
 It prints the selected disk path, model, serial, WWN, memory-derived swap size,
-and partition plan before accepting `ERASE`. It asks for a LUKS passphrase and
-then runs `disko-install`. The layout uses `NIXOS-ESP`, `NIXOS-BOOT`, and
+and partition plan before accepting `ERASE`. It asks for a LUKS passphrase,
+uses it as the initial password for `bob.vanderlinden`, and then runs
+`disko-install`. The layout uses `NIXOS-ESP`, `NIXOS-BOOT`, and
 `NIXOS-LUKS` GPT labels, with encrypted `nixos/swap` and `nixos/root` logical
 volumes.
 

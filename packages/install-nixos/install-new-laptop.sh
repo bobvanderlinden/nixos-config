@@ -156,12 +156,15 @@ fi
 
 password_file="$(mktemp /tmp/nixos-luks-password.XXXXXXXX)"
 work_directory="$(mktemp --directory /tmp/nixos-config.XXXXXXXX)"
+target_mount="$work_directory/target"
 cleanup() {
+  umount --recursive "$target_mount" 2>/dev/null || true
   rm --force "$password_file"
   rm --recursive --force "$work_directory"
 }
 trap cleanup EXIT
 chmod 600 "$password_file"
+mkdir "$target_mount"
 
 read -r -s -p 'LUKS passphrase: ' luks_password
 echo
@@ -172,7 +175,6 @@ if [[ "$luks_password" != "$luks_password_repeat" ]]; then
   exit 1
 fi
 printf '%s' "$luks_password" > "$password_file"
-unset luks_password luks_password_repeat
 
 cp --recursive --no-preserve=mode "$flake_source" "$work_directory/source"
 sed --in-place \
@@ -186,3 +188,9 @@ disko-install \
   --flake "$work_directory/source#$bootstrap_host" \
   --disk main "$stable_disk" \
   --write-efi-boot-entries
+
+# disko-install cleans up its mounts before returning, but leaves the encrypted
+# volume open. Set the initial account password directly in the target root.
+mount /dev/nixos/root "$target_mount"
+printf '%s:%s\n' 'bob.vanderlinden' "$luks_password" | chpasswd --root "$target_mount"
+unset luks_password luks_password_repeat
