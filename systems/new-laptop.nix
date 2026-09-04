@@ -13,14 +13,7 @@
     "usbhid"
     "sd_mod"
   ];
-  # Load the complete NVIDIA DRM stack before Plymouth starts. Without early
-  # KMS, firmware often leaves the panel blank until the display manager runs.
-  boot.initrd.kernelModules = [
-    "nvidia"
-    "nvidia_modeset"
-    "nvidia_uvm"
-    "nvidia_drm"
-  ];
+  boot.initrd.kernelModules = [ "nvidia" ];
   boot.kernelModules = [ "nvidia" ];
   boot.kernelParams = [ "nvidia-drm.modeset=1" ];
 
@@ -32,8 +25,8 @@
     package = config.boot.kernelPackages.nvidiaPackages.latest;
   };
 
-  hardware.enableAllFirmware = lib.mkForce false;
-  hardware.enableRedistributableFirmware = lib.mkForce true;
+  hardware.enableAllFirmware = true;
+  hardware.enableRedistributableFirmware = true;
   hardware.firmware = [ pkgs.linux-firmware ];
 
   # Lanzaboote generates keys after installation and enrolls them on the next
@@ -119,5 +112,6 @@
     };
   };
 
-  system.stateVersion = "25.11";
+  # This laptop is first installed with NixOS 26.05.
+  system.stateVersion = "26.05";
 }
