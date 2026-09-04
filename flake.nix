@@ -240,6 +240,7 @@
             findutils
             gnused
             jq
+            nix-output-monitor
             util-linux
           ];
           text = builtins.replaceStrings [ "@flakeSource@" ] [ "${self.outPath}" ] (
