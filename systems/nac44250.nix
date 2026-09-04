@@ -3,6 +3,7 @@
 # to /etc/nixos/configuration.nix instead.
 {
   lib,
+  pkgs,
   ...
 }:
 {
@@ -28,9 +29,6 @@
   boot.kernelParams = [ "i915.enable_fbc=1" ];
 
   boot.extraModulePackages = [ ];
-  hardware.enableAllFirmware = true;
-  hardware.enableRedistributableFirmware = true;
-
   # Disable systemd-boot, as it is replaced by lanzaboote.
   # boot.loader.systemd-boot.enable = true;
   # boot.loader.systemd-boot.netbootxyz.enable = true;
@@ -67,10 +65,26 @@
       "dmask=077"
     ];
   };
-  swapDevices = [
+  networking.hostName = "nac44250";
+
+  # Preserve the existing hibernation setup for this laptop only.
+  boot.resumeDevice = "/dev/disk/by-uuid/4d13ef58-33bb-4e0f-95ea-dcfec3371911";
+  swapDevices = lib.mkForce [
     { device = "/dev/disk/by-uuid/4d13ef58-33bb-4e0f-95ea-dcfec3371911"; }
-    { device = "/swapfile"; }
+  ];
+
+  # This HP laptop uses the Intel AX211 Wi-Fi/Bluetooth, Intel iGPU, Intel SOF
+  # audio, and Cirrus speaker amplifier firmware.
+  hardware.enableAllFirmware = lib.mkForce false;
+  hardware.enableRedistributableFirmware = lib.mkForce false;
+  hardware.firmware = with pkgs; [
+    linux-firmware
+    sof-firmware
+    wireless-regdb
   ];
 
   powerManagement.cpuFreqGovernor = lib.mkDefault "powersave";
+
+  # This system was first installed with NixOS 21.03.
+  system.stateVersion = "21.03";
 }

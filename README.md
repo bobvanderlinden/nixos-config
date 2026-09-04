@@ -40,3 +40,33 @@ To update nixpkgs and others I usually do:
 ```sh
 nix flake update
 ```
+
+## Installing `new-laptop`
+
+Boot a NixOS USB stick in UEFI mode. Secure Boot must be disabled or in Setup
+Mode for the first installed boot. Then run:
+
+```sh
+sudo nix run github:bobvanderlinden/nixos-config#install-new-laptop
+```
+
+The installer selects the only writable non-USB disk. If it finds more than
+one, use a stable device path yourself:
+
+```sh
+sudo nix run github:bobvanderlinden/nixos-config#install-new-laptop -- \
+  --disk /dev/disk/by-id/nvme-eui.0123456789abcdef
+```
+
+It prints the selected disk path, model, serial, WWN, memory-derived swap size,
+and partition plan before accepting `ERASE`. It asks for a LUKS passphrase and
+then runs `disko-install`. The layout uses `NIXOS-ESP`, `NIXOS-BOOT`, and
+`NIXOS-LUKS` GPT labels, with encrypted `nixos/swap` and `nixos/root` logical
+volumes.
+
+Lanzaboote creates and enrolls Secure Boot keys during the first installed boot.
+That boot is unsigned. Restart after enrollment to boot with Secure Boot.
+
+`systems/new-laptop.nix` has a generic NVMe/NVIDIA baseline. After the first
+boot, replace its kernel-module list with the result of
+`nixos-generate-config` and set the final hostname before using `switch`.

@@ -8,6 +8,10 @@
     };
     flake-utils.url = "github:numtide/flake-utils";
     lanzaboote.url = "github:nix-community/lanzaboote";
+    disko = {
+      url = "github:nix-community/disko";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     nix-index-database.url = "github:nix-community/nix-index-database";
     determinate.url = "https://flakehub.com/f/DeterminateSystems/determinate/*";
     sops-nix = {
@@ -113,6 +117,19 @@
         }@options:
         import nixpkgs (options // { inherit system config overlays; });
       nixosSystem = import (patchedNixpkgs + "/nixos/lib/eval-config.nix");
+      mkLaptop =
+        hostModule: extraModules:
+        nixosSystem {
+          inherit system;
+          specialArgs = { inherit inputs; };
+          modules =
+            (builtins.attrValues self.nixosModules)
+            ++ [
+              ./profiles/laptop.nix
+              hostModule
+            ]
+            ++ extraModules;
+        };
     in
     {
       overlays.llm-agents =
@@ -174,8 +191,6 @@
         overlays = {
           nixpkgs.overlays = defaultOverlays;
         };
-        hardware-configuration = import ./system/hardware-configuration.nix;
-        system-configuration = import ./system/configuration.nix;
         single-user = {
           suites.single-user.user = username;
         };
@@ -198,20 +213,19 @@
         networkmanager-openvpn3 = inputs.networkmanager-openvpn3.nixosModules.default;
       };
 
-      # System configuration for laptop.
-      nixosConfigurations.nac44250 = nixosSystem {
-        inherit system;
-        specialArgs = {
-          inherit inputs;
-        };
-        modules = builtins.attrValues self.nixosModules;
+      nixosConfigurations = {
+        nac44250 = mkLaptop ./systems/nac44250.nix [ ];
+        new-laptop = mkLaptop ./systems/new-laptop.nix [ inputs.disko.nixosModules.disko ];
       };
 
-      homeConfigurations."${username}@nac44250" =
-        self.nixosConfigurations.nac44250.config.home-manager.users.${username}.home
-        // {
-          config = self.nixosConfigurations.nac44250.config.home-manager.users.${username};
-        };
+      homeConfigurations = builtins.listToAttrs (
+        builtins.map (hostname: {
+          name = "${username}@${hostname}";
+          value = self.nixosConfigurations.${hostname}.config.home-manager.users.${username}.home // {
+            config = self.nixosConfigurations.${hostname}.config.home-manager.users.${username};
+          };
+        }) (builtins.attrNames self.nixosConfigurations)
+      );
     }
     # Define outputs that allow multiple systems with for all default systems.
     # This is to support OSX and RPI.
@@ -219,6 +233,19 @@
       system:
       let
         pkgs = mkPkgs { inherit system; };
+        newLaptopInstaller = pkgs.writeShellApplication {
+          name = "install-new-laptop";
+          runtimeInputs = with pkgs; [
+            disko
+            findutils
+            gnused
+            jq
+            util-linux
+          ];
+          text = builtins.replaceStrings [ "@flakeSource@" ] [ "${self.outPath}" ] (
+            builtins.readFile ./packages/install-nixos/install-new-laptop.sh
+          );
+        };
       in
       {
         checks = pkgs.lib.optionalAttrs (system == "x86_64-linux") {
@@ -253,7 +280,12 @@
               (package ? meta) -> (package.meta ? platforms) -> builtins.elem system package.meta.platforms
             ) finalPackages;
           in
-          compatiblePackages;
+          compatiblePackages // { install-new-laptop = newLaptopInstaller; };
+
+        apps.install-new-laptop = {
+          type = "app";
+          program = "${newLaptopInstaller}/bin/install-new-laptop";
+        };
 
         apps.switch-home = {
           type = "app";
