@@ -13,7 +13,14 @@
     "usbhid"
     "sd_mod"
   ];
-  boot.initrd.kernelModules = [ "nvidia" ];
+  # Load the complete NVIDIA DRM stack before Plymouth starts. Without early
+  # KMS, firmware often leaves the panel blank until the display manager runs.
+  boot.initrd.kernelModules = [
+    "nvidia"
+    "nvidia_modeset"
+    "nvidia_uvm"
+    "nvidia_drm"
+  ];
   boot.kernelModules = [ "nvidia" ];
   boot.kernelParams = [ "nvidia-drm.modeset=1" ];
 

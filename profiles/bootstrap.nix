@@ -9,6 +9,12 @@
   boot.initrd.systemd.enable = true;
   boot.plymouth.enable = true;
   boot.consoleLogLevel = 3;
+  boot.kernelParams = [
+    "quiet"
+    "udev.log_priority=3"
+    "plymouth.use-simpledrm"
+    "plymouth.boot-log=/dev/null"
+  ];
 
   suites.single-user.enable = true;
   users.defaultUserShell = pkgs.bashInteractive;
