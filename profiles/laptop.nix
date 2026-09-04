@@ -37,10 +37,6 @@
 
   # Prefer keeping inactive pages in RAM/zram over writing them to disk swap.
   boot.kernel.sysctl."vm.swappiness" = 10;
-  swapDevices = lib.mkForce [
-    { device = "/dev/disk/by-uuid/4d13ef58-33bb-4e0f-95ea-dcfec3371911"; }
-  ];
-  boot.resumeDevice = "/dev/disk/by-uuid/4d13ef58-33bb-4e0f-95ea-dcfec3371911";
   zramSwap = {
     enable = true;
     algorithm = "zstd";
@@ -126,8 +122,6 @@
   };
 
   networking = {
-    hostName = "nac44250";
-
     firewall.enable = true;
 
     networkmanager = {
@@ -373,19 +367,6 @@
     "electron-39.8.10"
   ];
 
-  # hardware-configuration.nix enables the broad firmware bundles, but on this
-  # HP laptop we only observed firmware usage for the Intel AX211 Wi-Fi and
-  # Bluetooth, Intel iGPU, Intel SOF audio, and Cirrus speaker amp firmware.
-  # Keep the firmware list explicit so nixpkgs updates do not pull in unrelated
-  # bundles like the duplicate b43 variants that caused build warnings.
-  hardware.enableAllFirmware = lib.mkForce false;
-  hardware.enableRedistributableFirmware = lib.mkForce false;
-  hardware.firmware = with pkgs; [
-    linux-firmware
-    sof-firmware
-    wireless-regdb
-  ];
-
   documentation.man.cache.enable = false;
   documentation.nixos.enable = false;
 
@@ -452,14 +433,6 @@
     ];
     dates = "17:30";
   };
-
-  # This value determines the NixOS release from which the default
-  # settings for stateful data, like file locations and database versions
-  # on your system were taken. It‘s perfectly fine and recommended to leave
-  # this value at the release version of the first install of this system.
-  # Before changing this value read the documentation for this option
-  # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
-  system.stateVersion = "21.03"; # Did you read the comment?
 
   programs.localsend = {
     enable = true;
