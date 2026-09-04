@@ -64,9 +64,18 @@ then runs `disko-install`. The layout uses `NIXOS-ESP`, `NIXOS-BOOT`, and
 `NIXOS-LUKS` GPT labels, with encrypted `nixos/swap` and `nixos/root` logical
 volumes.
 
+The installer first installs a small bootstrap system. This keeps the large
+Home Manager closure out of the installer USB's temporary `/nix/store`. On its
+first boot, the bootstrap system waits for network access and rebuilds the full
+`new-laptop` configuration on the encrypted disk. Inspect progress with:
+
+```sh
+journalctl --unit install-full-system --follow
+```
+
 Lanzaboote creates and enrolls Secure Boot keys during the first installed boot.
 That boot is unsigned. Restart after enrollment to boot with Secure Boot.
 
 `systems/new-laptop.nix` has a generic NVMe/NVIDIA baseline. After the first
 boot, replace its kernel-module list with the result of
-`nixos-generate-config` and set the final hostname before using `switch`.
+`nixos-generate-config` and set the final hostname.

@@ -2,6 +2,7 @@ set -euo pipefail
 
 flake_source='@flakeSource@'
 host='new-laptop'
+bootstrap_host='new-laptop-bootstrap'
 
 usage() {
   cat <<'EOF'
@@ -124,7 +125,8 @@ IFS=$'\t' read -r size model serial wwn < <(
 cat <<EOF
 The following installation plan will erase the selected disk.
 
-Host:             $host
+Final host:       $host
+Bootstrap host:   $bootstrap_host
 Selected disk:    $canonical_disk
 Persistent path:  $stable_disk
 Size:             $size
@@ -181,6 +183,6 @@ sed --in-place \
 echo 'Partitioning, formatting, and installing the NixOS configuration...'
 # disko-install detects nom-build and uses it for its single system build.
 disko-install \
-  --flake "$work_directory/source#$host" \
+  --flake "$work_directory/source#$bootstrap_host" \
   --disk main "$stable_disk" \
   --write-efi-boot-entries
