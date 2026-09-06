@@ -130,19 +130,6 @@
             ]
             ++ extraModules;
         };
-      mkBootstrap = nixosSystem {
-        inherit system;
-        specialArgs = { inherit inputs; };
-        modules = [
-          self.nixosModules.overlays
-          self.nixosModules.suite-single-user
-          self.nixosModules.single-user
-          self.nixosModules.lanzaboote
-          inputs.disko.nixosModules.disko
-          ./profiles/bootstrap.nix
-          ./systems/new-laptop.nix
-        ];
-      };
     in
     {
       overlays.llm-agents =
@@ -229,22 +216,15 @@
       nixosConfigurations = {
         nac44250 = mkLaptop ./systems/nac44250.nix [ ];
         new-laptop = mkLaptop ./systems/new-laptop.nix [ inputs.disko.nixosModules.disko ];
-        new-laptop-bootstrap = mkBootstrap;
       };
 
       homeConfigurations = builtins.listToAttrs (
-        builtins.map
-          (hostname: {
-            name = "${username}@${hostname}";
-            value = self.nixosConfigurations.${hostname}.config.home-manager.users.${username}.home // {
-              config = self.nixosConfigurations.${hostname}.config.home-manager.users.${username};
-            };
-          })
-          (
-            builtins.filter (hostname: hostname != "new-laptop-bootstrap") (
-              builtins.attrNames self.nixosConfigurations
-            )
-          )
+        builtins.map (hostname: {
+          name = "${username}@${hostname}";
+          value = self.nixosConfigurations.${hostname}.config.home-manager.users.${username}.home // {
+            config = self.nixosConfigurations.${hostname}.config.home-manager.users.${username};
+          };
+        }) (builtins.attrNames self.nixosConfigurations)
       );
     }
     # Define outputs that allow multiple systems with for all default systems.

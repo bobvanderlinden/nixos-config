@@ -65,14 +65,8 @@ uses it as the initial password for `bob.vanderlinden`, and then runs
 `NIXOS-LUKS` GPT labels, with encrypted `nixos/swap` and `nixos/root` logical
 volumes.
 
-The installer first installs a small bootstrap system. This keeps the large
-Home Manager closure out of the installer USB's temporary `/nix/store`. On its
-first boot, the bootstrap system waits for network access and rebuilds the full
-`new-laptop` configuration on the encrypted disk. Inspect progress with:
-
-```sh
-journalctl --unit install-full-system --follow
-```
+The installer creates and mounts the encrypted layout first, then builds the
+full system and Home Manager closure in the target disk's `/nix/store`.
 
 Lanzaboote creates and enrolls Secure Boot keys during the first installed boot.
 That boot is unsigned. Restart after enrollment to boot with Secure Boot.

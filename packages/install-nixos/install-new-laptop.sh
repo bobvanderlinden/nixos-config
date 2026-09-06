@@ -2,7 +2,6 @@ set -euo pipefail
 
 flake_source='@flakeSource@'
 host='new-laptop'
-bootstrap_host='new-laptop-bootstrap'
 
 usage() {
   cat <<'EOF'
@@ -143,8 +142,7 @@ fi
 cat <<EOF
 The following installation plan will $installation_action.
 
-Final host:       $host
-Bootstrap host:   $bootstrap_host
+Host:             $host
 Selected disk:    $canonical_disk
 Persistent path:  $stable_disk
 Size:             $size
@@ -198,23 +196,35 @@ cp --recursive --no-preserve=mode "$flake_source" "$work_directory/source"
 sed --in-place \
   --expression "s|SWAP_SIZE|${swap_gib}G|" \
   --expression "s|/tmp/nixos-luks-password|${password_file}|" \
+  --expression "s|/dev/disk/by-id/REPLACE-WITH-INSTALLER-DISK|${stable_disk}|" \
   "$work_directory/source/systems/new-laptop.nix"
 
-echo 'Partitioning, formatting, and installing the NixOS configuration...'
-# disko-install detects nom-build and uses it for its single system build.
-disko_install_mode=()
 if [[ "$reuse_existing" == true ]]; then
-  disko_install_mode=(--mode mount)
+  disko_mode='mount'
+else
+  disko_mode='destroy,format,mount'
 fi
 
-disko-install \
-  "${disko_install_mode[@]}" \
-  --flake "$work_directory/source#$bootstrap_host" \
-  --disk main "$stable_disk" \
-  --write-efi-boot-entries
+echo 'Creating and mounting the encrypted target layout...'
+disko \
+  --mode "$disko_mode" \
+  --root-mountpoint "$target_mount" \
+  --flake "$work_directory/source#$host"
 
-# disko-install cleans up its mounts before returning, but leaves the encrypted
-# volume open. Set the initial account password directly in the target root.
-mount /dev/nixos/root "$target_mount"
+mkdir "$target_mount/tmp"
+echo 'Building the full NixOS configuration in the target disk store...'
+nom build \
+  --store "$target_mount" \
+  --extra-experimental-features "nix-command flakes" \
+  --out-link "$target_mount/tmp/system" \
+  "$work_directory/source#nixosConfigurations.$host.config.system.build.toplevel"
+system_path="$(readlink "$target_mount/tmp/system")"
+
+echo 'Installing the built configuration and boot loader...'
+nixos-install \
+  --root "$target_mount" \
+  --system "$system_path" \
+  --no-root-password
+
 printf '%s:%s\n' 'bob.vanderlinden' "$luks_password" | chpasswd --root "$target_mount"
 unset luks_password luks_password_repeat
