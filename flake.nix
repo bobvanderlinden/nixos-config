@@ -244,9 +244,10 @@
             shadow
             util-linux
           ];
-          text = builtins.replaceStrings [ "@flakeSource@" ] [ "${self.outPath}" ] (
-            builtins.readFile ./packages/install-nixos/install-new-laptop.sh
-          );
+          text = builtins.replaceStrings
+            [ "@flakeSource@" "@flakeRevision@" ]
+            [ "${self.outPath}" (self.rev or "unknown") ]
+            (builtins.readFile ./packages/install-nixos/install-new-laptop.sh);
         };
       in
       {

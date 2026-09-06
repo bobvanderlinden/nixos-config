@@ -46,7 +46,7 @@
   disko.devices = {
     disk.main = {
       type = "disk";
-      # install-new-laptop replaces this through disko-install --disk.
+      # install-new-laptop replaces this with the selected stable disk path.
       device = "/dev/disk/by-id/REPLACE-WITH-INSTALLER-DISK";
       content = {
         type = "gpt";

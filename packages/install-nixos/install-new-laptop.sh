@@ -1,8 +1,11 @@
 set -euo pipefail
 
 flake_source='@flakeSource@'
+flake_revision='@flakeRevision@'
 host='new-laptop'
 target_mount='/mnt'
+
+printf 'nixos-config revision: %s\n' "$flake_revision"
 
 usage() {
   cat <<'EOF'
