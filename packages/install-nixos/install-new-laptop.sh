@@ -221,7 +221,7 @@ disko \
   --root-mountpoint "$target_mount" \
   --flake "$work_directory/source#$host"
 
-mkdir --mode=1777 "$target_mount/tmp"
+install --directory --mode=1777 "$target_mount/tmp"
 echo 'Building the full NixOS configuration in the target disk store...'
 nom build \
   --store "$target_mount" \
