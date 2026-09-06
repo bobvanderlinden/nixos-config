@@ -2,6 +2,7 @@ set -euo pipefail
 
 flake_source='@flakeSource@'
 host='new-laptop'
+target_mount='/mnt'
 
 usage() {
   cat <<'EOF'
@@ -46,6 +47,11 @@ fi
 
 if [[ ! -d /sys/firmware/efi ]]; then
   echo 'Boot the NixOS installer in UEFI mode. Secure Boot installation needs EFI variables.' >&2
+  exit 1
+fi
+
+if mountpoint --quiet "$target_mount"; then
+  echo "$target_mount is already mounted; unmount it before running the installer." >&2
   exit 1
 fi
 
@@ -172,7 +178,6 @@ fi
 
 password_file="$(mktemp /tmp/nixos-luks-password.XXXXXXXX)"
 work_directory="$(mktemp --directory /tmp/nixos-config.XXXXXXXX)"
-target_mount="$work_directory/target"
 cleanup() {
   umount --recursive "$target_mount" 2>/dev/null || true
   rm --force "$password_file"
@@ -180,7 +185,7 @@ cleanup() {
 }
 trap cleanup EXIT
 chmod 600 "$password_file"
-mkdir "$target_mount"
+mkdir --parents --mode=755 "$target_mount"
 
 read -r -s -p 'LUKS passphrase: ' luks_password
 echo
