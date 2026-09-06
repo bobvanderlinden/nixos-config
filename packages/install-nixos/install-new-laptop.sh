@@ -185,7 +185,9 @@ cleanup() {
 }
 trap cleanup EXIT
 chmod 600 "$password_file"
-mkdir --parents --mode=755 "$target_mount"
+if [[ ! -d "$target_mount" ]]; then
+  mkdir --mode=755 "$target_mount"
+fi
 
 read -r -s -p 'LUKS passphrase: ' luks_password
 echo
