@@ -77,10 +77,10 @@ hl.config({
   },
 })
 
--- The bottom 220 physical pixels of the laptop display are corrupted; reserve 110 logical pixels at scale 2.
+-- Use native pixel scaling. Automatic scaling selected 1.5 and made the desktop too large.
 hl.monitor({
   output = "eDP-1",
-  reserved_area = { bottom = 110 },
+  scale = 1,
 })
 
 hl.env("BROWSER", "chromium")
