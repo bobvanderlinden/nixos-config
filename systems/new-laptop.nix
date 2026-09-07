@@ -15,7 +15,12 @@
   ];
   boot.initrd.kernelModules = [ "nvidia" ];
   boot.kernelModules = [ "nvidia" ];
-  boot.kernelParams = [ "nvidia-drm.modeset=1" ];
+  # Firmware incorrectly reports that the PS/2 auxiliary port is disabled.
+  # The touchpad is connected to that port.
+  boot.kernelParams = [
+    "nvidia-drm.modeset=1"
+    "i8042.nopnp"
+  ];
 
   services.xserver.videoDrivers = [ "nvidia" ];
   hardware.nvidia = {
