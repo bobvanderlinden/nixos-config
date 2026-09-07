@@ -4,7 +4,7 @@ import Quickshell.Hyprland
 import QtQuick
 import QtQuick.Layouts
 
-// Todo widget — shows open Vikunja tasks.
+// Todo widget — shows open todo.txt tasks.
 //
 // Pill: checkmark icon + count of open tasks
 // Popup (click to open):
@@ -31,20 +31,25 @@ Rectangle {
 
     Process {
         id: fetchProc
-        command: ["vja", "ls", "--jsonvja"]
+        command: ["todo.sh", "ls"]
         running: true
         stdout: StdioCollector {
             onStreamFinished: {
-                // Skip parsing if output is empty or looks like an error message
-                if (!this.text || this.text.trim() === "" || this.text.startsWith("Error:")) {
-                    return;
+                const tasks = [];
+                const lines = this.text.replace(/\x1B\[[0-?]*[ -\/]*[@-~]/g, "").split("\n");
+
+                for (const line of lines) {
+                    const match = line.match(/^\s*(\d+)\s+(?:\(([A-Z])\)\s+)?(.*)$/);
+                    if (match) {
+                        tasks.push({
+                            id: Number(match[1]),
+                            priority: match[2] ?? "",
+                            title: match[3],
+                        });
+                    }
                 }
-                try {
-                    var parsed = JSON.parse(this.text);
-                    root.tasks = parsed.filter(t => !t.done);
-                } catch (e) {
-                    // Silently ignore parse errors (e.g., server unreachable)
-                }
+
+                root.tasks = tasks;
             }
         }
     }
@@ -61,7 +66,7 @@ Rectangle {
     Process {
         id: addProc
         property string taskTitle: ""
-        command: ["vja", "add", "--quiet", taskTitle]
+        command: ["todo.sh", "add", taskTitle]
         running: false
         onRunningChanged: {
             if (!running && taskTitle !== "") {
@@ -76,7 +81,7 @@ Rectangle {
     Process {
         id: toggleProc
         property int taskId: 0
-        command: ["vja", "toggle", "--quiet", taskId.toString()]
+        command: ["todo.sh", "do", taskId.toString()]
         running: false
         onRunningChanged: {
             if (!running && taskId !== 0) {
@@ -306,9 +311,9 @@ Rectangle {
 
                                 // Priority indicator
                                 Text {
-                                    visible: task.priority > 0
-                                    text: "!" + task.priority
-                                    color: task.priority >= 3 ? "#ff5555" : (task.priority >= 2 ? "#ffb86c" : "#f1fa8c")
+                                    visible: task.priority !== ""
+                                    text: "(" + task.priority + ")"
+                                    color: task.priority === "A" ? "#ff5555" : (task.priority === "B" ? "#ffb86c" : "#f1fa8c")
                                     font.pixelSize: 10
                                     font.family: "SauceCodePro Nerd Font"
                                 }

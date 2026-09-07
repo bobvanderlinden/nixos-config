@@ -32,8 +32,14 @@
   home.packages = [
     pkgs.session-time
     pkgs.inotify-tools
-    pkgs.vja
+    pkgs.todo-txt-cli
   ];
+
+  home.file.".todo/config".text = ''
+    TODO_DIR="$HOME/.todo"
+    TODO_FILE="$TODO_DIR/todo.txt"
+    DONE_FILE="$TODO_DIR/done.txt"
+  '';
 
   # Symlink the entire quickshell source directory directly into XDG config.
   # Any edit to a .qml file is picked up by QuickShell's hot-reload immediately
