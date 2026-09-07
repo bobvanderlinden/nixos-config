@@ -5,7 +5,7 @@
   ...
 }:
 {
-  networking.hostName = "new-laptop";
+  networking.hostName = "nac54003";
 
   boot.initrd.availableKernelModules = [
     "nvme"
@@ -51,7 +51,7 @@
   disko.devices = {
     disk.main = {
       type = "disk";
-      # install-new-laptop replaces this with the selected stable disk path.
+      # install-nac54003 replaces this with the selected stable disk path.
       device = "/dev/disk/by-id/REPLACE-WITH-INSTALLER-DISK";
       content = {
         type = "gpt";

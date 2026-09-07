@@ -41,20 +41,20 @@ To update nixpkgs and others I usually do:
 nix flake update
 ```
 
-## Installing `new-laptop`
+## Installing `nac54003`
 
 Boot a NixOS USB stick in UEFI mode. Secure Boot must be disabled or in Setup
 Mode for the first installed boot. Then run:
 
 ```sh
-sudo nix run github:bobvanderlinden/nixos-config#install-new-laptop
+sudo nix run github:bobvanderlinden/nixos-config#install-nac54003
 ```
 
 The installer selects the only writable non-USB disk. If it finds more than
 one, use a stable device path yourself:
 
 ```sh
-sudo nix run github:bobvanderlinden/nixos-config#install-new-laptop -- \
+sudo nix run github:bobvanderlinden/nixos-config#install-nac54003 -- \
   --disk /dev/disk/by-id/nvme-eui.0123456789abcdef
 ```
 
@@ -71,6 +71,6 @@ full system and Home Manager closure in the target disk's `/nix/store`.
 Lanzaboote creates and enrolls Secure Boot keys during the first installed boot.
 That boot is unsigned. Restart after enrollment to boot with Secure Boot.
 
-`systems/new-laptop.nix` has a generic NVMe/NVIDIA baseline. After the first
+`systems/nac54003.nix` has a generic NVMe/NVIDIA baseline. After the first
 boot, replace its kernel-module list with the result of
-`nixos-generate-config` and set the final hostname.
+`nixos-generate-config`.

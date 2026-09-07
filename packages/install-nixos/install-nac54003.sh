@@ -2,14 +2,14 @@ set -euo pipefail
 
 flake_source='@flakeSource@'
 flake_revision='@flakeRevision@'
-host='new-laptop'
+host='nac54003'
 target_mount='/mnt'
 
 printf 'nixos-config revision: %s\n' "$flake_revision"
 
 usage() {
   cat <<'EOF'
-Usage: install-new-laptop [--disk DEVICE] [--reuse-existing]
+Usage: install-nac54003 [--disk DEVICE] [--reuse-existing]
 
 Selects the only writable, non-USB disk when possible. Use --disk to choose a
 specific whole-disk device. --reuse-existing mounts an existing NixOS layout
@@ -207,7 +207,7 @@ sed --in-place \
   --expression "s|SWAP_SIZE|${swap_gib}G|" \
   --expression "s|/tmp/nixos-luks-password|${password_file}|" \
   --expression "s|/dev/disk/by-id/REPLACE-WITH-INSTALLER-DISK|${stable_disk}|" \
-  "$work_directory/source/systems/new-laptop.nix"
+  "$work_directory/source/systems/nac54003.nix"
 
 if [[ "$reuse_existing" == true ]]; then
   disko_mode='mount'

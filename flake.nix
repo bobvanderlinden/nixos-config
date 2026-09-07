@@ -215,7 +215,7 @@
 
       nixosConfigurations = {
         nac44250 = mkLaptop ./systems/nac44250.nix [ ];
-        new-laptop = mkLaptop ./systems/new-laptop.nix [ inputs.disko.nixosModules.disko ];
+        nac54003 = mkLaptop ./systems/nac54003.nix [ inputs.disko.nixosModules.disko ];
       };
 
       homeConfigurations = builtins.listToAttrs (
@@ -233,8 +233,8 @@
       system:
       let
         pkgs = mkPkgs { inherit system; };
-        newLaptopInstaller = pkgs.writeShellApplication {
-          name = "install-new-laptop";
+        nac54003Installer = pkgs.writeShellApplication {
+          name = "install-nac54003";
           runtimeInputs = with pkgs; [
             disko
             findutils
@@ -247,7 +247,7 @@
           text = builtins.replaceStrings
             [ "@flakeSource@" "@flakeRevision@" ]
             [ "${self.outPath}" (self.rev or "unknown") ]
-            (builtins.readFile ./packages/install-nixos/install-new-laptop.sh);
+            (builtins.readFile ./packages/install-nixos/install-nac54003.sh);
         };
       in
       {
@@ -283,11 +283,11 @@
               (package ? meta) -> (package.meta ? platforms) -> builtins.elem system package.meta.platforms
             ) finalPackages;
           in
-          compatiblePackages // { install-new-laptop = newLaptopInstaller; };
+          compatiblePackages // { install-nac54003 = nac54003Installer; };
 
-        apps.install-new-laptop = {
+        apps.install-nac54003 = {
           type = "app";
-          program = "${newLaptopInstaller}/bin/install-new-laptop";
+          program = "${nac54003Installer}/bin/install-nac54003";
         };
 
         apps.switch-home = {
