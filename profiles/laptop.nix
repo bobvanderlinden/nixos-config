@@ -419,6 +419,13 @@
     };
   };
 
+  # Keep the mutable credential file available on fresh installations. Nix reads
+  # it for authenticated fetches, while the credentials themselves stay outside
+  # the Nix store.
+  systemd.tmpfiles.rules = [
+    "f /etc/nix/netrc 0600 root root -"
+  ];
+
   programs.nh = {
     enable = true;
   };
