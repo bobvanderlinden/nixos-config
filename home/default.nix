@@ -131,6 +131,9 @@ in
       };
     };
 
+    systemd.user.services.hyprwhspr-rs.Unit.ConditionPathExists =
+      "${config.home.homeDirectory}/.local/share/hyprwhspr-rs/models/ggml-base.bin";
+
     home.packages = with pkgs; [
       darkman
       gnome-keyring
