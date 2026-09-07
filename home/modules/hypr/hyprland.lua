@@ -46,6 +46,14 @@ hl.config({
     layout = "scrolling",
     no_focus_fallback = false,
   },
+  decoration = {
+    blur = {
+      enabled = false,
+    },
+    shadow = {
+      enabled = false,
+    },
+  },
   misc = {
     disable_hyprland_logo = true,
     disable_splash_rendering = true,
