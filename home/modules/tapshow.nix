@@ -6,7 +6,7 @@
 let
   settings = {
     display = {
-      position = "bottom-left";
+      position = "bottom";
       margin_x = 20;
       margin_y = 180;
       timeout_ms = 2000;
@@ -66,6 +66,5 @@ in
       RestartSec = 2;
     };
 
-    Install.WantedBy = [ "hyprland-session.target" ];
   };
 }
