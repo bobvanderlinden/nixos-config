@@ -11,13 +11,6 @@ PopupWidget {
 
     required property var githubProvider
 
-    readonly property int pullRequestCount: githubProvider.reviewRequests.length
-        + githubProvider.teamReviewRequests.length
-        + githubProvider.drafts.length
-        + githubProvider.waitingForReview.length
-        + githubProvider.needsAction.length
-        + githubProvider.readyToMerge.length
-
     Process {
         id: openProcess
         property string url: ""
@@ -37,7 +30,9 @@ PopupWidget {
             }
 
             Text {
-                text: root.pullRequestCount.toString()
+                text: root.githubProvider.reviewRequests.length.toString()
+                    + " / " + root.githubProvider.teamReviewRequests.length.toString()
+                    + " / " + root.githubProvider.readyToMerge.length.toString()
                 color: "#f8f8f2"
                 font.family: "SauceCodePro Nerd Font"
                 font.pixelSize: 11
