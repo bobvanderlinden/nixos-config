@@ -261,6 +261,7 @@ in
       libreoffice
       speedcrunch
       chatgpt-cli
+      tuxedo
       vja
       # CLI Utilities
       entr
