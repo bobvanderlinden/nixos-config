@@ -24,7 +24,7 @@ let
   '';
 
   terminal = pkgs.writeShellScriptBin "terminal" ''
-    window_class="com.mitchellh.ghostty.$$.''${RANDOM}"
+    window_class="com.mitchellh.ghostty.w$$_r''${RANDOM}"
 
     if [[ $# -eq 0 ]]; then
       HYPR_WINDOW_CLASS="$window_class" \
