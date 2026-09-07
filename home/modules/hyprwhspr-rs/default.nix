@@ -9,6 +9,7 @@ let
   jsonFormat = pkgs.formats.json { };
   runtimeInputs = [
     cfg.package
+    pkgs.whisper-cpp
     pkgs.coreutils
     pkgs.ffmpeg
     pkgs.findutils
