@@ -1,15 +1,13 @@
 {
   writeShellApplication,
-  agent,
+  agent-worktree,
   hypr-exec,
-  worktree,
 }:
 writeShellApplication {
   name = "new-agent";
   text = builtins.readFile ./new-agent.sh;
   runtimeInputs = [
-    agent
+    agent-worktree
     hypr-exec
-    worktree
   ];
 }

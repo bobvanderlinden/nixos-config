@@ -7,7 +7,7 @@ fail() {
 
 usage() {
   cat <<EOF
-Usage: agent-worktree <project-or-github-url> [command...]
+Usage: agent-worktree [--prompt <prompt>] <project-or-github-url> [command...]
 
 Creates a worktree, then starts an agent in it.
 
@@ -21,10 +21,17 @@ EOF
   exit 1
 }
 
-if [[ "$1" == "--run" ]]; then
+if [[ "${1:-}" == "--run" ]]; then
   shift
   command=("$@")
   exec "${command[@]}"
+fi
+
+prompt=""
+if [[ "${1:-}" == "--prompt" ]]; then
+  [[ $# -ge 3 && -n "${2:-}" ]] || usage
+  prompt="$2"
+  shift 2
 fi
 
 [[ $# -eq 0 ]] && usage
@@ -43,7 +50,7 @@ if [[ "$project" =~ github\.com[:/]([^/]+)/([^/.]+) ]]; then
   fi
 fi
 
-worktree_directory="$(worktree "$project")" || fail "Could not create worktree"
+worktree_directory="$(worktree --reuse-existing "$project")" || fail "Could not create worktree"
 
 context_parts=()
 if [[ -n "${github_pull_request_number-}" ]]; then
@@ -61,10 +68,14 @@ fi
 
 if [[ $# -gt 0 ]]; then
   command=("$@")
-elif [[ -n "${context_file-}" ]]; then
-  command=(agent --append-system-prompt "$context_file")
 else
   command=(agent)
+  if [[ -n "${context_file-}" ]]; then
+    command+=(--append-system-prompt "$context_file")
+  fi
+  if [[ -n "$prompt" ]]; then
+    command+=("$prompt")
+  fi
 fi
 
 if [[ -n "${github_pull_request_number-}" ]]; then

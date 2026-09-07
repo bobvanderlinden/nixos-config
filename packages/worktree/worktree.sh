@@ -7,15 +7,22 @@ fail() {
 
 usage() {
   cat >&2 <<'EOF'
-Usage: worktree <project-or-github-url>
+Usage: worktree [--reuse-existing] <project-or-github-url>
 
-Creates a Git worktree and prints its directory.
+Creates a Git worktree and prints its directory. With --reuse-existing, a pull
+request branch already checked out in a worktree is reused.
 
 The argument may be a project name known to zoxide, a repository directory, a
 GitHub repository URL, pull request URL, or issue URL.
 EOF
   exit 1
 }
+
+reuse_existing=false
+if [[ "${1:-}" == "--reuse-existing" ]]; then
+  reuse_existing=true
+  shift
+fi
 
 [[ $# -eq 1 ]] || usage
 [[ "$1" == "--help" || "$1" == "-h" ]] && usage
@@ -52,6 +59,30 @@ git -C "$project_path" remote set-head upstream --auto >&2 || true
 
 if [[ -n "${github_pull_request_number-}" ]]; then
   branch_name="$(gh pr view "$github_pull_request_number" --repo "$github_owner_name/$github_repository_name" --json headRefName --jq '.headRefName')"
+
+  if [[ "$reuse_existing" == true ]]; then
+    expected_branch="branch refs/heads/$branch_name"
+    existing_worktree_directory="$(
+      git -C "$project_path" worktree list --porcelain | {
+        worktree_directory=""
+        while IFS= read -r line; do
+          case "$line" in
+            "worktree "*) worktree_directory="${line#worktree }" ;;
+            "$expected_branch")
+              printf '%s\n' "$worktree_directory"
+              exit 0
+              ;;
+          esac
+        done
+      }
+    )"
+
+    if [[ -n "$existing_worktree_directory" ]]; then
+      printf '%s\n' "$existing_worktree_directory"
+      exit 0
+    fi
+  fi
+
   git -C "$project_path" fetch upstream "pull/$github_pull_request_number/head" >&2
   git -C "$project_path" branch --force "$branch_name" FETCH_HEAD >&2
   revision="$branch_name"
