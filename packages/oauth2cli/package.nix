@@ -2,55 +2,39 @@
   lib,
   deno,
   fetchFromGitHub,
-  makeWrapper,
   stdenvNoCC,
 }:
-let
+stdenvNoCC.mkDerivation (finalAttrs: {
   pname = "oauth2cli";
   version = "0.1.0";
 
   src = fetchFromGitHub {
     owner = "bobvanderlinden";
-    repo = pname;
-    rev = "4fc8ca0db7944db3fd21f95156bfce2a59a1e2c8";
-    hash = "sha256-VmSe/7P5ZWonKzjrpC8ur69Nd7Gy/bSimjaRnrCPU6o=";
+    repo = finalAttrs.pname;
+    rev = "1880fc21fa6717b25e0f7c1f104ebc7409418572";
+    hash = "sha256-q2ET74ERO7oVbkui/ClCVWkIyjiEmBxdnLtEifAwavg=";
   };
 
-  denoDeps = stdenvNoCC.mkDerivation {
-    pname = "${pname}-deps";
-    inherit version src;
+  nativeBuildInputs = [ deno ];
 
-    nativeBuildInputs = [ deno ];
+  outputHashMode = "recursive";
+  outputHash = "sha256-rjs7gtN0bI3I8kTVCgrAmz6+n9rVVBvznZsZAxHPw24=";
+  outputHashAlgo = "sha256";
 
-    outputHashMode = "recursive";
-    outputHash = "sha256-ReHOMzfQQOJQAznx3vXB09iEhTx01C9hMLHDAYdsjIw=";
-    outputHashAlgo = "sha256";
-
-    buildPhase = ''
-      export DENO_DIR="$out"
-      deno cache --frozen --lock=deno.lock main.ts
-    '';
-
-    installPhase = "true";
-  };
-in
-stdenvNoCC.mkDerivation {
-  inherit pname version src;
-
-  nativeBuildInputs = [ makeWrapper ];
-
-  dontUnpack = true;
-
-  installPhase = ''
-    makeWrapper ${deno}/bin/deno "$out/bin/oauth2cli" \
-      --set DENO_DIR ${denoDeps} \
-      --add-flags "run --cached-only --no-code-cache --frozen --lock=${src}/deno.lock --allow-net --allow-read --allow-write --allow-run ${src}/main.ts"
+  buildPhase = ''
+    export DENO_DIR="$TMPDIR/deno"
+    deno compile --frozen --lock=deno.lock \
+      --allow-net --allow-read --allow-write --allow-run --allow-env --allow-ffi --allow-sys \
+      --output "$out/bin/oauth2cli" \
+      main.ts
   '';
+
+  installPhase = "true";
 
   meta = {
     description = "CLI for handling OAuth2 for curl";
     homepage = "https://github.com/bobvanderlinden/oauth2cli";
     license = lib.licenses.mit;
-    mainProgram = pname;
+    mainProgram = finalAttrs.pname;
   };
-}
+})
