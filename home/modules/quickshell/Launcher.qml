@@ -110,8 +110,17 @@ PanelWindow {
         if (currentIndex < 0 || currentIndex >= items.length)
             return;
         const item = items[currentIndex];
-        close();
+        if (!item.keepOpen)
+            close();
         item.activate();
+    }
+
+    function applyCompletion(value) {
+        const lastWhitespace = query.search(/\s[^\s]*$/);
+        const prefix = lastWhitespace === -1 ? "" : query.slice(0, lastWhitespace + 1);
+        searchInput.text = prefix + value;
+        searchInput.cursorPosition = searchInput.text.length;
+        searchInput.forceActiveFocus();
     }
 
     onVisibleChanged: {
@@ -127,6 +136,12 @@ PanelWindow {
         function onApplicationsChanged() {
             root.updateItems();
         }
+    }
+
+    Connections {
+        target: shellCommandProvider
+        function onCompletionsChanged() { root.updateItems(); }
+        function onCompletionSelected(value) { root.applyCompletion(value); }
     }
 
     Connections {
