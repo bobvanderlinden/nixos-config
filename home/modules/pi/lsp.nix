@@ -21,7 +21,6 @@ in
   };
 
   config = lib.mkIf piConfig.enable {
-    home.file."${piConfig.configDir}/lsp.json".source =
-      json.generate "pi-lsp-config.json" cfg.settings;
+    home.file."${piConfig.configDir}/lsp.json".source = json.generate "pi-lsp-config.json" cfg.settings;
   };
 }

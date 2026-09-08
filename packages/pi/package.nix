@@ -84,7 +84,12 @@ buildNpmPackage rec {
       "$packageDirectory/node_modules/@mariozechner/clipboard/"
 
     makeWrapper "$packageDirectory/pi" "$out/bin/pi" \
-      --prefix PATH : ${lib.makeBinPath [ fd ripgrep ]} \
+      --prefix PATH : ${
+        lib.makeBinPath [
+          fd
+          ripgrep
+        ]
+      } \
       --set PI_PACKAGE_DIR "$packageDirectory" \
       --set PI_SKIP_VERSION_CHECK 1 \
       --set PI_TELEMETRY 0

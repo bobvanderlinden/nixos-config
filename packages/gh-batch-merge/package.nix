@@ -26,7 +26,12 @@ stdenvNoCC.mkDerivation {
     patchShebangs $out/bin/gh-batch-merge
     wrapProgram $out/bin/gh-batch-merge \
       --argv0 gh-batch-merge \
-      --prefix PATH : ${lib.makeBinPath [ git gh ]}
+      --prefix PATH : ${
+        lib.makeBinPath [
+          git
+          gh
+        ]
+      }
 
     runHook postInstall
   '';
