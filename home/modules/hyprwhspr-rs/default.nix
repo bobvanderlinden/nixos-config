@@ -79,8 +79,8 @@ in
     systemd.user.services.hyprwhspr-rs = {
       Unit = {
         Description = "Hyprland desktop dictation service";
-        PartOf = [ "hyprland-session.target" ];
-        After = [ "hyprland-session.target" ];
+        PartOf = [ "graphical-session.target" ];
+        After = [ "graphical-session.target" ];
         ConditionEnvironment = "WAYLAND_DISPLAY";
       };
 
@@ -90,7 +90,7 @@ in
         Slice = "session.slice";
       };
 
-      Install.WantedBy = [ "hyprland-session.target" ];
+      Install.WantedBy = [ "graphical-session.target" ];
     };
 
     wayland.windowManager.hyprland.settings.bind = lib.mkIf cfg.hyprland.enable (

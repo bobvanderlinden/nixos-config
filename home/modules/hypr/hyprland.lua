@@ -1,6 +1,10 @@
 local mod = "SUPER"
 local background_color = "rgb(1a1b26)"
 
+-- Hyprland watches this directory and reloads when a module changes.
+-- Other Home Manager modules can add files with xdg.configFile."hypr/conf.d/<name>.lua".
+pcall(require, "./conf.d/*.lua")
+
 local function bind_mod(suffix, action, opts)
   hl.bind(mod .. " + " .. suffix, action, opts)
 end
@@ -83,17 +87,6 @@ hl.monitor({
   scale = 1,
 })
 
-hl.env("BROWSER", "chromium")
-hl.env("EDITOR", "code --wait")
-hl.env("ELECTRON_OZONE_PLATFORM_HINT", "wayland")
-hl.env("SDL_VIDEODRIVER", "wayland")
-hl.env("QT_QPA_PLATFORM", "wayland")
-hl.env("QT_WAYLAND_DISABLE_WINDOWDECORATION", "1")
-hl.env("_JAVA_AWT_WM_NONREPARENTING", "1")
-hl.env("CLUTTER_BACKEND", "wayland")
-hl.env("MOZ_DISABLE_RDD_SANDBOX", "1")
-hl.env("NIXOS_OZONE_WL", "1")
-
 hl.window_rule({
   match = { class = "jetbrains-.*", title = "^win(.*)" },
   no_initial_focus = true,
@@ -165,14 +158,6 @@ hl.workspace_rule({
   gaps_out = 60,
   on_created_empty = "slack",
 })
-
-hl.on("hyprland.start", function()
-  hl.exec_cmd("systemctl --user start hyprland-session.target")
-end)
-
-hl.on("hyprland.shutdown", function()
-  os.execute("systemctl --user stop hyprland-session.target && sleep 0.1")
-end)
 
 bind_mod("T", run("ghostty --working-directory=$HOME"))
 bind_mod("W", run("chromium"))

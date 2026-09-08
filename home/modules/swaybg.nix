@@ -108,8 +108,8 @@ in
     systemd.user.services.swaybg = {
       Unit = {
         Description = "Wallpaper daemon";
-        PartOf = [ "hyprland-session.target" ];
-        After = [ "hyprland-session.target" ];
+        PartOf = [ "graphical-session.target" ];
+        After = [ "graphical-session.target" ];
         ConditionEnvironment = "WAYLAND_DISPLAY";
       };
 
@@ -119,7 +119,7 @@ in
         Slice = "session.slice";
       };
 
-      Install.WantedBy = [ "hyprland-session.target" ];
+      Install.WantedBy = [ "graphical-session.target" ];
     };
   };
 }

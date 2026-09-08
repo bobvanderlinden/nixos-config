@@ -55,9 +55,9 @@ in
   systemd.user.services.tapshow = {
     Unit = {
       Description = "Display pressed keys on screen";
-      After = [ "hyprland-session.target" ];
+      After = [ "graphical-session.target" ];
       ConditionEnvironment = "WAYLAND_DISPLAY";
-      PartOf = [ "hyprland-session.target" ];
+      PartOf = [ "graphical-session.target" ];
     };
 
     Service = {

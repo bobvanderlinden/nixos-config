@@ -141,8 +141,10 @@ in
       };
     };
 
-    systemd.user.services.hyprwhspr-rs.Unit.ConditionPathExists =
-      "${config.home.homeDirectory}/.local/share/hyprwhspr-rs/models/ggml-base.bin";
+    # UWSM owns the graphical session targets and Hyprland lifecycle.
+    wayland.windowManager.hyprland.systemd.enable = false;
+
+    systemd.user.services.hyprwhspr-rs.Unit.ConditionPathExists = hyprwhsprWhisperModel;
 
     home.packages = with pkgs; [
       darkman
@@ -392,7 +394,7 @@ in
 
     services.cliphist = {
       enable = true;
-      systemdTargets = [ "hyprland-session.target" ];
+      systemdTargets = [ "graphical-session.target" ];
     };
 
     programs.swaybg = {
@@ -409,7 +411,7 @@ in
 
     services.xdg-desktop-portal = {
       enable = true;
-      target = "hyprland-session.target";
+      target = "graphical-session.target";
       verbose = true;
       portals = with pkgs; [
         darkman
@@ -420,7 +422,7 @@ in
 
     services.xdg-desktop-portal-hyprland = {
       enable = true;
-      target = "hyprland-session.target";
+      target = "graphical-session.target";
       settings = {
         # Skip the interactive screencopy picker and pick the current monitor non-interactively.
         screencopy.custom_picker_binary =
@@ -633,8 +635,8 @@ in
     systemd.user.services.unisic = {
       Unit = {
         Description = "Unisic screenshot and recording service";
-        PartOf = [ "hyprland-session.target" ];
-        After = [ "hyprland-session.target" ];
+        PartOf = [ "graphical-session.target" ];
+        After = [ "graphical-session.target" ];
         ConditionEnvironment = "WAYLAND_DISPLAY";
       };
       Service = {
@@ -642,7 +644,7 @@ in
         Restart = "on-failure";
         Slice = "session.slice";
       };
-      Install.WantedBy = [ "hyprland-session.target" ];
+      Install.WantedBy = [ "graphical-session.target" ];
     };
 
     services.darkman = {
@@ -674,10 +676,10 @@ in
     };
     systemd.user.services.xsettingsd = {
       Unit = {
-        PartOf = [ "hyprland-session.target" ];
-        After = [ "hyprland-session.target" ];
+        PartOf = [ "graphical-session.target" ];
+        After = [ "graphical-session.target" ];
       };
-      Install.WantedBy = lib.mkForce [ "hyprland-session.target" ];
+      Install.WantedBy = lib.mkForce [ "graphical-session.target" ];
     };
 
     programs.ghostty = {

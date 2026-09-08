@@ -14,8 +14,8 @@
   systemd.user.services.quickshell = {
     Unit = {
       Description = "Quickshell desktop shell";
-      PartOf = [ "hyprland-session.target" ];
-      After = [ "hyprland-session.target" ];
+      PartOf = [ "graphical-session.target" ];
+      After = [ "graphical-session.target" ];
       ConditionEnvironment = "WAYLAND_DISPLAY";
     };
 
@@ -25,7 +25,7 @@
       Slice = "session.slice";
     };
 
-    Install.WantedBy = [ "hyprland-session.target" ];
+    Install.WantedBy = [ "graphical-session.target" ];
   };
 
   # Additional binaries that the QML widgets call by name.

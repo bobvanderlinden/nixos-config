@@ -50,7 +50,7 @@ in
     target = lib.mkOption {
       type = lib.types.str;
       default = "graphical-session.target";
-      example = "hyprland-session.target";
+      example = "graphical-session.target";
       description = "The systemd target to bind to.";
     };
 

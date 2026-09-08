@@ -305,6 +305,7 @@
 
   programs.hyprland = {
     enable = true;
+    withUWSM = true;
   };
   services.displayManager.regreet.enable = true;
 
@@ -316,7 +317,7 @@
         user = "greeter";
       };
       initial_session = {
-        command = "${lib.getExe' config.programs.hyprland.package "start-hyprland"}";
+        command = "${lib.getExe config.programs.uwsm.package} start -e -D Hyprland hyprland.desktop";
         user = config.suites.single-user.user;
       };
     };
