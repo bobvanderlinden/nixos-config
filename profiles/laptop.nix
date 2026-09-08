@@ -55,6 +55,8 @@
     HibernateOnACPower = "no";
   };
 
+  services.logind.settings.Login.HandlePowerKey = "suspend";
+
   programs.nix-ld.enable = true;
   programs.ydotool = {
     enable = true;
@@ -73,6 +75,7 @@
   services.pcscd.enable = true;
 
   security.wrappers.pkexec = {
+    enable = lib.mkForce true;
     source = "${pkgs.polkit}/bin/pkexec";
     owner = "root";
     group = "root";
@@ -111,7 +114,10 @@
   hardware.logitech.wireless.enable = true;
   programs.solaar.enable = true;
 
-  hardware.graphics.enable = true;
+  hardware.graphics = {
+    enable = true;
+    extraPackages = with pkgs; [ nvidia-vaapi-driver ];
+  };
 
   security.rtkit.enable = true;
   services.pipewire = {
