@@ -299,7 +299,8 @@
                 text = ''
                   IMPURITY_PATH="$(pwd)"
                   export IMPURITY_PATH
-                  nom build --impure --keep-going --out-link home-result ${self}#nixosConfigurations."$(hostname)".config.home-manager.users.\""$USER"\".home.activationPackage
+                  HOSTNAME="''${HOSTNAME-$(hostname)}"
+                  nom build --impure --keep-going --out-link home-result ${self}#nixosConfigurations."$HOSTNAME".config.home-manager.users.\""$USER"\".home.activationPackage
                   ./home-result/activate
                 '';
                 runtimeInputs = [ pkgs.nix-output-monitor ];
@@ -317,8 +318,9 @@
                 text = ''
                   IMPURITY_PATH="$(pwd)"
                   export IMPURITY_PATH
-                  nom build --impure --keep-going --out-link system-result ${self}#nixosConfigurations."$(hostname)".config.system.build.toplevel
-                  nom build --impure --keep-going --out-link home-result ${self}#nixosConfigurations."$(hostname)".config.home-manager.users.\""$USER"\".home.activationPackage
+                  HOSTNAME="''${HOSTNAME-$(hostname)}"
+                  nom build --impure --keep-going --out-link system-result ${self}#nixosConfigurations."$HOSTNAME".config.system.build.toplevel
+                  nom build --impure --keep-going --out-link home-result ${self}#nixosConfigurations."$HOSTNAME".config.home-manager.users.\""$USER"\".home.activationPackage
                   if [[ "$(readlink --canonicalize system-result)" != "$(readlink --canonicalize /nix/var/nix/profiles/system)" ]]
                   then
                     ${pkgs.coin}/bin/coin
