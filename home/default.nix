@@ -166,6 +166,7 @@ in
       k9s
       postgresql
       oauth2c
+      oauth2cli
       datadog-pup
       # azure-cli
 
@@ -173,10 +174,12 @@ in
       hub
       gh
       gh-batch-merge
+      gh-org-clone
       git-cola
       git-absorb
       git-revise
       hypr-exec
+      hypr-monitor-place
       worktree
       agent-worktree
       new-agent
