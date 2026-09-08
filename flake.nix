@@ -244,10 +244,14 @@
             shadow
             util-linux
           ];
-          text = builtins.replaceStrings
-            [ "@flakeSource@" "@flakeRevision@" ]
-            [ "${self.outPath}" (self.rev or "unknown") ]
-            (builtins.readFile ./packages/install-nixos/install-nac54003.sh);
+          text =
+            builtins.replaceStrings
+              [ "@flakeSource@" "@flakeRevision@" ]
+              [
+                "${self.outPath}"
+                (self.rev or "unknown")
+              ]
+              (builtins.readFile ./packages/install-nixos/install-nac54003.sh);
         };
       in
       {
