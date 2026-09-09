@@ -64,7 +64,10 @@ PanelWindow {
 
     // Add providers here. Each can supply a separate item source without
     // changing matching, navigation, or the result panel.
-    onQueryChanged: updateItems()
+    onQueryChanged: {
+        shellCommandProvider.hideCompletions();
+        updateItems();
+    }
 
     function updateItems() {
         const normalizedQuery = normalize(query);
@@ -78,7 +81,8 @@ PanelWindow {
         items = providerItems
             .map((item, index) => ({ item, index, score: score(item, searchQuery) }))
             .filter(result => result.score >= 0)
-            .sort((first, second) => second.score - first.score
+            .sort((first, second) => (second.item.priority || 0) - (first.item.priority || 0)
+                || second.score - first.score
                 || (isGithubSearch ? first.index - second.index : first.item.label.localeCompare(second.item.label)))
             .map(result => result.item);
         currentIndex = 0;
@@ -115,6 +119,23 @@ PanelWindow {
         item.activate();
     }
 
+    function executeCommand() {
+        if (query.trim().length === 0)
+            return;
+        close();
+        shellCommandProvider.execute(query);
+    }
+
+    function showCompletions() {
+        shellCommandProvider.showCompletions(query);
+    }
+
+    function applySelectedCompletion() {
+        const item = items[currentIndex];
+        if (item && item.completionValue !== undefined)
+            applyCompletion(item.completionValue);
+    }
+
     function applyCompletion(value) {
         const lastWhitespace = query.search(/\s[^\s]*$/);
         const prefix = lastWhitespace === -1 ? "" : query.slice(0, lastWhitespace + 1);
@@ -141,6 +162,7 @@ PanelWindow {
     Connections {
         target: shellCommandProvider
         function onCompletionsChanged() { root.updateItems(); }
+        function onCompletionsVisibleChanged() { root.updateItems(); }
         function onCompletionSelected(value) { root.applyCompletion(value); }
     }
 
@@ -198,10 +220,16 @@ PanelWindow {
                 }
 
                 onTextChanged: root.query = text
-                onAccepted: root.activateCurrent()
+                onAccepted: root.executeCommand()
 
                 Keys.onPressed: event => {
-                    if (event.key === Qt.Key_Escape) {
+                    if (event.key === Qt.Key_Tab) {
+                        if (shellCommandProvider.completionsVisible)
+                            root.applySelectedCompletion();
+                        else
+                            root.showCompletions();
+                        event.accepted = true;
+                    } else if (event.key === Qt.Key_Escape) {
                         root.close();
                         event.accepted = true;
                     } else if (event.key === Qt.Key_Down) {

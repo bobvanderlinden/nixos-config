@@ -6,15 +6,32 @@ QtObject {
     id: root
 
     property string completionQuery: ""
+    property string completedQuery: ""
+    property bool completionsVisible: false
     property var completions: []
 
     signal completionSelected(string value)
+
+    function showCompletions(query) {
+        if (query.trim().length === 0)
+            return;
+        completionsVisible = true;
+        requestCompletions(query);
+    }
+
+    function hideCompletions() {
+        completionsVisible = false;
+    }
 
     function requestCompletions(query) {
         if (query === completionQuery)
             return;
         completionQuery = query;
         completionTimer.restart();
+    }
+
+    function execute(query) {
+        Quickshell.execDetached(["sh", "-lc", query]);
     }
 
     function replacementPrefix(query) {
@@ -31,7 +48,18 @@ QtObject {
         if (query.trim().length === 0)
             return [];
 
-        requestCompletions(query);
+        const commandItem = {
+            label: `Run command: ${query}`,
+            detail: "Run with sh -lc",
+            icon: "",
+            glyph: ">_",
+            keywords: [],
+            priority: 1,
+            activate: () => root.execute(query),
+        };
+        if (!completionsVisible || completedQuery !== query)
+            return [commandItem];
+
         const prefix = replacementPrefix(query);
         const completionItems = completions.map(completion => ({
             label: prefix + completion.value,
@@ -39,18 +67,12 @@ QtObject {
             icon: "",
             glyph: "⇥",
             keywords: [completion.value],
+            completionValue: completion.value,
             keepOpen: true,
             activate: () => root.completionSelected(completion.value),
         }));
 
-        return [...completionItems, {
-            label: `Run command: ${query}`,
-            detail: "Run with sh -lc",
-            icon: "",
-            glyph: ">_",
-            keywords: [],
-            activate: () => Quickshell.execDetached(["sh", "-lc", query]),
-        }];
+        return [commandItem, ...completionItems];
     }
 
     property var completionTimer: Timer {
@@ -88,6 +110,7 @@ QtObject {
                         seen.add(completion.value);
                         return true;
                     });
+                root.completedQuery = completionProcess.query;
             }
         }
     }
