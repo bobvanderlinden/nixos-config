@@ -62,6 +62,11 @@ def detect_packages(project_root: Path) -> list[str]:
         add("cargo", "rustc")
     if (project_root / "package.json").is_file():
         add("nodejs")
+    if any(
+        (project_root / filename).is_file()
+        for filename in ("pnpm-lock.yaml", "pnpm-workspace.yaml")
+    ):
+        add("pnpm")
     if (project_root / "uv.lock").is_file() or "[tool.uv]" in pyproject_contents:
         add("uv", "python3")
     if (project_root / "poetry.lock").is_file() or "[tool.poetry]" in pyproject_contents:
