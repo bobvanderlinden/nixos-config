@@ -99,6 +99,31 @@
         };
 
       username = "bob.vanderlinden";
+      collectNixModules =
+        directory:
+        let
+          entries = builtins.readDir directory;
+        in
+        builtins.concatMap (
+          name:
+          let
+            type = entries.${name};
+            defaultModule = directory + "/${name}/default.nix";
+          in
+          if type == "regular" && builtins.match ".*\\.nix" name != null then
+            [ (directory + "/${name}") ]
+          else if type == "directory" && builtins.pathExists defaultModule then
+            [ (directory + "/${name}") ]
+          else
+            [ ]
+        ) (builtins.attrNames entries);
+      systemModulePaths = collectNixModules ./system/modules;
+      systemNixosModules = builtins.listToAttrs (
+        builtins.map (modulePath: {
+          name = inputs.nixpkgs.lib.removeSuffix ".nix" (builtins.baseNameOf modulePath);
+          value = import modulePath;
+        }) systemModulePaths
+      );
       defaultOverlays = [
         self.overlays.llm-agents
         self.overlays.default
@@ -121,11 +146,11 @@
         hostModule: extraModules:
         nixosSystem {
           inherit system;
-          specialArgs = { inherit inputs; };
+          specialArgs = { inherit inputs collectNixModules; };
           modules =
             (builtins.attrValues self.nixosModules)
             ++ [
-              ./profiles/laptop.nix
+              ./system/profiles/laptop.nix
               hostModule
             ]
             ++ extraModules;
@@ -187,7 +212,7 @@
 
         };
 
-      nixosModules = import ./system/modules // {
+      nixosModules = systemNixosModules // {
         overlays = {
           nixpkgs.overlays = defaultOverlays;
         };
@@ -214,8 +239,8 @@
       };
 
       nixosConfigurations = {
-        nac44250 = mkLaptop ./systems/nac44250.nix [ ];
-        nac54003 = mkLaptop ./systems/nac54003.nix [ inputs.disko.nixosModules.disko ];
+        nac44250 = mkLaptop ./system/nac44250.nix [ ];
+        nac54003 = mkLaptop ./system/nac54003.nix [ inputs.disko.nixosModules.disko ];
       };
 
       homeConfigurations = builtins.listToAttrs (

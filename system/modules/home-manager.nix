@@ -2,6 +2,7 @@
   pkgs,
   config,
   inputs,
+  collectNixModules,
   ...
 }:
 let
@@ -13,7 +14,7 @@ in
   home-manager.verbose = true;
   home-manager.useGlobalPkgs = true;
   home-manager.backupFileExtension = "backup";
-  home-manager.extraSpecialArgs = { inherit inputs; };
+  home-manager.extraSpecialArgs = { inherit inputs collectNixModules; };
   environment.pathsToLink = [
     "/share/applications"
     "/share/wayland-sessions"

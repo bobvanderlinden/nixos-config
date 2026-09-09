@@ -3,6 +3,7 @@
   config,
   lib,
   inputs,
+  collectNixModules,
   ...
 }:
 let
@@ -96,19 +97,11 @@ let
 
 in
 {
-  imports = [
-    # ./modules/blueberry.nix
-    ./modules/statebus.nix
-    ./modules/xssproxy.nix
-    ./modules/nushell.nix
-    ./modules/swaybg.nix
-    ./modules/tapshow.nix
-    ./modules/xdg-desktop-portal.nix
-    ./modules/xdg-desktop-portal-hyprland.nix
-    ./modules/hypr
-    ./modules/hyprwhspr-rs/default.nix
-    ./modules/quickshell
-    ./modules/pi
+  imports = collectNixModules ./modules ++ [
+    ./profiles/tapshow.nix
+    ./profiles/hypr
+    ./profiles/quickshell
+    ./profiles/pi
   ];
   config = {
     hyprwhspr-rs = {
@@ -409,7 +402,7 @@ in
       };
     };
 
-    # Waybar replaced by quickshell bar (see home/modules/quickshell/)
+    # Waybar replaced by quickshell bar (see home/profiles/quickshell/)
     programs.waybar.enable = false;
 
     services.xdg-desktop-portal = {
