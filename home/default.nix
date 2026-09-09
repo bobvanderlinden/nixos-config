@@ -761,6 +761,7 @@ in
         # Always ignore devenv.sh temporary files.
         ".devenv"
         ".devenv.flake.nix"
+        ".nix/"
         ".pi-subagents"
       ];
       settings = {
