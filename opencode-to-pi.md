@@ -366,8 +366,8 @@ find . -path ./.git -prune -o \( -iname '*opencode*' -o -name '.opencode' \) -pr
 
 Current findings:
 
-- Tracked OpenCode module files exist under `home/modules/opencode/`.
-- `home/default.nix` imports `./modules/opencode`.
+- Tracked OpenCode module files exist under `home/profiles/opencode/`.
+- `home/default.nix` imports `./profiles/opencode`.
 - `packages/agent` wraps `opencode` directly.
 - `packages/agent-worktree` still links OpenCode project config and injects context through `OPENCODE_CONFIG_CONTENT`.
 - Several comments, docs, and helper packages mention OpenCode-specific plugins/behavior.
@@ -380,38 +380,38 @@ Files:
 
 ```text
 home/default.nix
-home/modules/opencode/default.nix
-home/modules/opencode/direnv.nix
-home/modules/opencode/secrets.nix
-home/modules/opencode/plugins/direnv.ts
-home/modules/opencode/plugins/notify.js
-home/modules/opencode/plugins/secret-filter.ts
-home/modules/opencode/plugins/session-status.js
-home/modules/opencode/plugins/systemd-inhibit.js
-home/modules/opencode/tools/skills.ts
+home/profiles/opencode/default.nix
+home/profiles/opencode/direnv.nix
+home/profiles/opencode/secrets.nix
+home/profiles/opencode/plugins/direnv.ts
+home/profiles/opencode/plugins/notify.js
+home/profiles/opencode/plugins/secret-filter.ts
+home/profiles/opencode/plugins/session-status.js
+home/profiles/opencode/plugins/systemd-inhibit.js
+home/profiles/opencode/tools/skills.ts
 ```
 
 Needed changes:
 
-1. Decide whether to remove `home/modules/opencode/` outright or replace it with `home/modules/pi/`.
+1. Decide whether to remove `home/profiles/opencode/` outright or replace it with `home/profiles/pi/`.
 2. Change `home/default.nix` import from:
 
    ```nix
-   ./modules/opencode
+   ./profiles/opencode
    ```
 
    to either:
 
    ```nix
-   ./modules/pi
+   ./profiles/pi
    ```
 
    or remove the import if Pi is configured outside Home Manager.
 
 3. Move reusable skill content out of `programs.opencode.skills.*`:
 
-   - `home/modules/opencode/direnv.nix` -> Pi skill directory such as `~/.pi/agent/skills/direnv/SKILL.md` or a managed repo path linked into Pi settings.
-   - `home/modules/opencode/secrets.nix` -> Pi skill directory such as `~/.pi/agent/skills/secrets/SKILL.md` or a managed repo path linked into Pi settings.
+   - `home/profiles/opencode/direnv.nix` -> Pi skill directory such as `~/.pi/agent/skills/direnv/SKILL.md` or a managed repo path linked into Pi settings.
+   - `home/profiles/opencode/secrets.nix` -> Pi skill directory such as `~/.pi/agent/skills/secrets/SKILL.md` or a managed repo path linked into Pi settings.
 
 4. Keep the `home.packages` additions from `secrets.nix` somewhere if the skills remain useful:
 
@@ -429,18 +429,18 @@ Needed changes:
 
 6. If needed, replace OpenCode permission behavior with a Pi extension using `pi.on("tool_call", ...)`.
 7. If needed, replace Context7 MCP with a Pi extension/package/skill later.
-8. Remove `home/modules/opencode/tools/skills.ts`; Pi has native skill discovery and `/skill:name` commands.
+8. Remove `home/profiles/opencode/tools/skills.ts`; Pi has native skill discovery and `/skill:name` commands.
 
 ### B. Port or remove OpenCode plugins
 
 OpenCode plugin files:
 
 ```text
-home/modules/opencode/plugins/direnv.ts
-home/modules/opencode/plugins/notify.js
-home/modules/opencode/plugins/secret-filter.ts
-home/modules/opencode/plugins/session-status.js
-home/modules/opencode/plugins/systemd-inhibit.js
+home/profiles/opencode/plugins/direnv.ts
+home/profiles/opencode/plugins/notify.js
+home/profiles/opencode/plugins/secret-filter.ts
+home/profiles/opencode/plugins/session-status.js
+home/profiles/opencode/plugins/systemd-inhibit.js
 ```
 
 Recommended handling:
@@ -575,7 +575,7 @@ Needed changes:
 Files:
 
 ```text
-home/modules/quickshell/AgentState.qml
+home/profiles/quickshell/AgentState.qml
 packages/agents-idle/agents-idle.py
 packages/hypr-notify/README.md
 system/configuration.nix
@@ -583,7 +583,7 @@ system/configuration.nix
 
 Needed changes:
 
-1. `home/modules/quickshell/AgentState.qml`
+1. `home/profiles/quickshell/AgentState.qml`
    - Update comments from `opencode session-status plugin` to `Pi session-status extension` or generic `agent session-status extension`.
    - Keep the statebus schema if the Pi extension preserves it.
 

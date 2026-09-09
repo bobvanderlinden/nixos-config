@@ -207,7 +207,7 @@ sed --in-place \
   --expression "s|SWAP_SIZE|${swap_gib}G|" \
   --expression "s|/tmp/nixos-luks-password|${password_file}|" \
   --expression "s|/dev/disk/by-id/REPLACE-WITH-INSTALLER-DISK|${stable_disk}|" \
-  "$work_directory/source/systems/nac54003.nix"
+  "$work_directory/source/system/nac54003.nix"
 
 if [[ "$reuse_existing" == true ]]; then
   disko_mode='mount'

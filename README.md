@@ -71,6 +71,6 @@ full system and Home Manager closure in the target disk's `/nix/store`.
 Lanzaboote creates and enrolls Secure Boot keys during the first installed boot.
 That boot is unsigned. Restart after enrollment to boot with Secure Boot.
 
-`systems/nac54003.nix` has a generic NVMe/NVIDIA baseline. After the first
+`system/nac54003.nix` has a generic NVMe/NVIDIA baseline. After the first
 boot, replace its kernel-module list with the result of
 `nixos-generate-config`.

@@ -22,14 +22,14 @@ function pathFromToolResult(toolName: string, input: unknown): string | null {
 }
 
 function selectReaction(path: string): Reaction | null {
-  if (path === "home/modules/hypr/hyprland.lua") {
+  if (path === "home/profiles/hypr/hyprland.lua") {
     return {
       name: "Hyprland configuration check",
       command: "hyprctl reload; hyprctl configerrors",
     }
   }
 
-  if (path.startsWith("home/modules/quickshell/")) {
+  if (path.startsWith("home/profiles/quickshell/")) {
     return {
       name: "Quickshell restart and log check",
       command: "systemctl --user restart quickshell; restart_status=$?; journalctl --user --unit quickshell --since '1 minute ago' --no-pager --lines 100; exit $restart_status",

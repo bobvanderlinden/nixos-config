@@ -64,4 +64,4 @@ focuses the terminal window the command was run from.
 
 `HYPR_WINDOW_ADDRESS` is set in `home/default.nix` as part of the Fish shell
 interactive init, and `hypr-notify` is invoked from the Pi notify extension
-(`home/modules/pi/extensions/notify.ts`) to alert when an AI session goes idle.
+(`home/profiles/pi/extensions/notify.ts`) to alert when an AI session goes idle.
