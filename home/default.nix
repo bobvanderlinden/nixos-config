@@ -756,6 +756,7 @@ in
         ".devenv.flake.nix"
         ".nix/"
         ".pi-subagents"
+        ".envrc.local"
       ];
       settings = {
         user = {
