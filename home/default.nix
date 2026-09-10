@@ -101,6 +101,7 @@ in
     ./profiles/tapshow.nix
     ./profiles/hypr
     ./profiles/quickshell
+    ./profiles/wl-kbptr
     ./profiles/pi
   ];
   config = {
