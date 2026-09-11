@@ -403,7 +403,6 @@
       download-buffer-size = 524288000;
 
       sandbox = true;
-      extra-sandbox-paths = [ "/etc/nix/netrc" ];
       trusted-users = [
         "root"
         "${config.suites.single-user.user}"
@@ -417,7 +416,6 @@
         # Bug in Determinate-Nix: https://github.com/cachix/devenv/issues/2364
         # "ca-derivations"
       ];
-      netrc-file = "/etc/nix/netrc";
       auto-optimise-store = true;
       log-lines = 100;
       warn-dirty = false;
@@ -425,13 +423,6 @@
       lint-url-literals = "fatal";
     };
   };
-
-  # Keep the mutable credential file available on fresh installations. Nix reads
-  # it for authenticated fetches, while the credentials themselves stay outside
-  # the Nix store.
-  systemd.tmpfiles.rules = [
-    "f /etc/nix/netrc 0600 root root -"
-  ];
 
   programs.nh = {
     enable = true;
