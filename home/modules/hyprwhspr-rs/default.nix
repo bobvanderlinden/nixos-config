@@ -9,7 +9,7 @@ let
   jsonFormat = pkgs.formats.json { };
   runtimeInputs = [
     cfg.package
-    pkgs.whisper-cpp
+    cfg.whisperCpp
     pkgs.coreutils
     pkgs.ffmpeg
     pkgs.findutils
@@ -39,7 +39,20 @@ in
   options.hyprwhspr-rs = {
     enable = lib.mkEnableOption "hyprwhspr-rs desktop dictation";
 
-    package = lib.mkPackageOption pkgs "hyprwhspr-rs" { };
+    whisperCpp = lib.mkPackageOption pkgs "whisper-cpp" { };
+
+    package = lib.mkOption {
+      type = lib.types.package;
+      default = pkgs.hyprwhspr-rs.override {
+        "whisper-cpp" = cfg.whisperCpp;
+      };
+      defaultText = lib.literalExpression ''
+        pkgs.hyprwhspr-rs.override {
+          "whisper-cpp" = config.hyprwhspr-rs.whisperCpp;
+        }
+      '';
+      description = "hyprwhspr-rs package configured to use whisperCpp.";
+    };
 
     environmentFile = lib.mkOption {
       type = lib.types.nullOr lib.types.str;
