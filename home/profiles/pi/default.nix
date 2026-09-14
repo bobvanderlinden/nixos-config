@@ -60,7 +60,15 @@ in
       };
     };
 
-    mcp.enable = lib.mkDefault true;
+    mcp = {
+      enable = lib.mkDefault true;
+      mcpServers.slite = {
+        transport = "streamable-http";
+        url = "https://api.slite.com/mcp";
+        lifecycle = "lazy";
+        auth.type = "oauth";
+      };
+    };
     subagent.settings.scheduledRuns.storeRoot = "~/.local/share/pi/subagents/schedules";
     package = pkgs.pi;
 
