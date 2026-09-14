@@ -44,12 +44,15 @@ in
       notification = {
         on_recording_start = false;
         on_recording_stop = false;
-        on_transcription = true;
+        on_transcription = false;
       };
     };
 
     text.spoken_punctuation = true;
-    osd.enabled = false;
+    osd = {
+      enabled = true;
+      frontend = "quickshell";
+    };
   };
 
   systemd.user.services.voxtype = {
@@ -61,6 +64,9 @@ in
     };
 
     Service = {
+      Environment = [
+        "VOXTYPE_OSD_QML_PATH=${pkgs.voxtype-quickshell}/share/voxtype/quickshell"
+      ];
       ExecStart = lib.getExe pkgs.voxtype-cuda;
       Restart = "on-failure";
       Slice = "session.slice";
