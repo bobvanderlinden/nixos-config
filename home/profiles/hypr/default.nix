@@ -1,29 +1,19 @@
 {
   impurity,
-  lib,
   pkgs,
   ...
 }:
 {
-  systemd.user.services.scrolloverview = {
-    Unit = {
-      Description = "Load the ScrollOverview Hyprland plugin";
-      PartOf = [ "graphical-session.target" ];
-      After = [ "graphical-session.target" ];
-    };
-
-    Service = {
-      Type = "oneshot";
-      ExecStart = "${lib.getExe' pkgs.hyprland "hyprctl"} plugin load ${pkgs.scrolloverview}/lib/libscrolloverview.so";
-      ExecStartPost = "${lib.getExe' pkgs.hyprland "hyprctl"} reload";
-    };
-
-    Install.WantedBy = [ "graphical-session.target" ];
+  wayland.windowManager.hyprland = {
+    enable = true;
+    configType = "lua";
+    plugins = [ pkgs.scrolloverview ];
+    extraLuaFiles.config = impurity.link ./hyprland.lua;
   };
+
   home.packages = with pkgs; [ jq ];
 
   xdg.configFile = {
-    "hypr/hyprland.lua".source = impurity.link ./hyprland.lua;
     "uwsm/env".text = ''
       export BROWSER=chromium
       export EDITOR="code --wait"
