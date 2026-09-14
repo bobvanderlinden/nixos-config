@@ -179,7 +179,6 @@
 
     usbutils # lsusb
 
-    polkit_gnome
 
     sbctl
 
