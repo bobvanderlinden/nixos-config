@@ -10,7 +10,12 @@ let
   inherit (lib) mapAttrsToList;
 
   backgroundColor = "1a1b26";
-  unisic = inputs.unisic.packages.${pkgs.stdenv.hostPlatform.system}.unisic;
+  unisic = inputs.unisic.packages.${pkgs.stdenv.hostPlatform.system}.unisic.overrideAttrs (previousAttrs: {
+    # Unisic uses the portal API over D-Bus. This configuration already starts
+    # xdg-desktop-portal and the Hyprland backend as user services, so neither
+    # portal package needs to be propagated through Unisic's closure.
+    propagatedBuildInputs = [ ];
+  });
   wallpaperSvg = pkgs.fetchurl {
     url = "https://raw.githubusercontent.com/NixOS/nixos-artwork/4ad062cee62116f6055e2876e9638e7bb399d219/logo/nix-snowflake-colours.svg";
     hash = "sha256-43taHBHoFJbp1GrwSQiVGtprq6pBbWcKquSTTM6RLrI=";
