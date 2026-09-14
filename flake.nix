@@ -240,7 +240,10 @@
 
       nixosConfigurations = {
         nac44250 = mkLaptop ./system/nac44250.nix [ ];
-        nac54003 = mkLaptop ./system/nac54003.nix [ inputs.disko.nixosModules.disko ];
+        nac54003 = mkLaptop ./system/nac54003.nix [
+          inputs.disko.nixosModules.disko
+          ./system/profiles/localllm.nix
+        ];
       };
 
       homeConfigurations = builtins.listToAttrs (
