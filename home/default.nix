@@ -31,6 +31,19 @@ let
     disown
   '';
 
+  bitwarden = pkgs.symlinkJoin {
+    name = "bitwarden-with-hibernation";
+    paths = [ pkgs.bitwarden-desktop ];
+    nativeBuildInputs = [ pkgs.makeWrapper ];
+    postBuild = ''
+      # memfd_secret disables Linux hibernation. LUKS protects the hibernation
+      # image, so use mlock instead. https://github.com/bitwarden/clients/issues/21661
+      rm "$out/bin/bitwarden"
+      makeWrapper ${lib.getExe pkgs.bitwarden-desktop} "$out/bin/bitwarden" \
+        --set SECURE_KEY_CONTAINER_BACKEND mlock
+    '';
+  };
+
   terminal = pkgs.writeShellScriptBin "terminal" ''
     window_class="com.mitchellh.ghostty.w$$_r''${RANDOM}"
 
@@ -214,7 +227,7 @@ in
       hypr-notify
 
       # Security & Privacy
-      bitwarden-desktop
+      bitwarden
       bitwarden-cli
       # bitwarden-cli-bio
       keepassxc
