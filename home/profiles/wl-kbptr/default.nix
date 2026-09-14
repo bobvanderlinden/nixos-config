@@ -37,7 +37,12 @@ in
   programs.wl-kbptr = {
     enable = true;
     settings = {
-      general.modes = "floating";
+      # wl-kbptr can see virtual keyboards without printable home-row keys.
+      # Configure the physical US home-row keys instead of deriving them.
+      general = {
+        home_row_keys = "asdfjklmghb";
+        modes = "floating";
+      };
       mode_floating.source = "detect";
     };
   };
