@@ -10,25 +10,18 @@ let
   inherit (lib) mapAttrsToList;
 
   backgroundColor = "1a1b26";
-  unisic = inputs.unisic.packages.${pkgs.stdenv.hostPlatform.system}.unisic.overrideAttrs (previousAttrs: {
-    # Unisic uses the portal API over D-Bus. This configuration already starts
-    # xdg-desktop-portal and the Hyprland backend as user services, so neither
-    # portal package needs to be propagated through Unisic's closure.
-    propagatedBuildInputs = [ ];
-  });
+  unisic =
+    inputs.unisic.packages.${pkgs.stdenv.hostPlatform.system}.unisic.overrideAttrs
+      (previousAttrs: {
+        # Unisic uses the portal API over D-Bus. This configuration already starts
+        # xdg-desktop-portal and the Hyprland backend as user services, so neither
+        # portal package needs to be propagated through Unisic's closure.
+        propagatedBuildInputs = [ ];
+      });
   wallpaperSvg = pkgs.fetchurl {
     url = "https://raw.githubusercontent.com/NixOS/nixos-artwork/4ad062cee62116f6055e2876e9638e7bb399d219/logo/nix-snowflake-colours.svg";
     hash = "sha256-43taHBHoFJbp1GrwSQiVGtprq6pBbWcKquSTTM6RLrI=";
   };
-  hyprwhsprWhisperModel = pkgs.fetchurl {
-    name = "ggml-large-v3-turbo-q8_0.bin";
-    url = "https://huggingface.co/ggerganov/whisper.cpp/resolve/0b364b566045a405be7225ee1e415a073e04da77/ggml-large-v3-turbo-q8_0.bin";
-    hash = "sha256-MX62nBFnPJ3h4fDUWbJTmZgE7HGsTCPBfs9fviTiWaE=";
-  };
-  hyprwhsprWhisperModels = pkgs.runCommand "hyprwhspr-whisper-models" { } ''
-    mkdir "$out"
-    ln --symbolic ${hyprwhsprWhisperModel} "$out/ggml-large-v3-turbo-q8_0.bin"
-  '';
   wallpaperPng = pkgs.runCommand "nix-snowflake.png" { } ''
     ${pkgs.resvg}/bin/resvg ${wallpaperSvg} $out
   '';
@@ -108,42 +101,11 @@ in
     ./profiles/quickshell
     ./profiles/wl-kbptr
     ./profiles/pi
+    ./profiles/voice-transcription.nix
   ];
   config = {
-    hyprwhspr-rs = {
-      enable = true;
-      settings = {
-        shortcuts = {
-          press = null;
-          hold = null;
-        };
-        audio_feedback = true;
-        auto_copy_clipboard = true;
-        fast_vad = {
-          enabled = true;
-          profile = "aggressive";
-        };
-        transcription = {
-          provider = "whisper_cpp";
-          whisper_cpp = {
-            model = "large-v3-turbo-q8_0";
-            models_dirs = [ hyprwhsprWhisperModels ];
-            threads = 4;
-            gpu_layers = 999;
-            prompt = "Transcribe spoken text accurately with punctuation and capitalization. Return only the transcription.";
-          };
-        };
-      };
-      hyprland = {
-        enable = false;
-        holdKey = "$mod, V";
-      };
-    };
-
     # UWSM owns the graphical session targets and Hyprland lifecycle.
     wayland.windowManager.hyprland.systemd.enable = false;
-
-    systemd.user.services.hyprwhspr-rs.Unit.ConditionPathExists = hyprwhsprWhisperModel;
 
     home.packages = with pkgs; [
       darkman
