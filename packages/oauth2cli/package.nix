@@ -6,19 +6,19 @@
 }:
 stdenvNoCC.mkDerivation (finalAttrs: {
   pname = "oauth2cli";
-  version = "0.1.0";
+  version = "0.1.1";
 
   src = fetchFromGitHub {
     owner = "bobvanderlinden";
     repo = finalAttrs.pname;
-    rev = "1880fc21fa6717b25e0f7c1f104ebc7409418572";
-    hash = "sha256-q2ET74ERO7oVbkui/ClCVWkIyjiEmBxdnLtEifAwavg=";
+    rev = "0de226159512052660dd944acaae82525a664bbb";
+    hash = "sha256-Vkccm84y25beXAzLj29NyvnaHrZu3E0B2SkjVDgDTjA=";
   };
 
   nativeBuildInputs = [ deno ];
 
   outputHashMode = "recursive";
-  outputHash = "sha256-rjs7gtN0bI3I8kTVCgrAmz6+n9rVVBvznZsZAxHPw24=";
+  outputHash = "sha256-7NO3ty07LYKBKXrohVz8wqGNK+9s6BiMBj48wlbBUfI=";
   outputHashAlgo = "sha256";
 
   buildPhase = ''
