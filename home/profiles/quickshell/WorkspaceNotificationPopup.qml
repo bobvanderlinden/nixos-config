@@ -2,7 +2,7 @@ import Quickshell
 import QtQuick
 import QtQuick.Layouts
 
-// A notification with an explicit Hyprland window address, placed below the
+// A notification with an explicit Hyprland window address, placed above the
 // workspace that owns that window.
 PopupWindow {
     id: root
@@ -15,7 +15,8 @@ PopupWindow {
     visible: notification !== null && workspaceItem !== null
     anchor.item: root.workspaceItem
     anchor.adjustment: PopupAdjustment.Flip
-    anchor.rect: Qt.rect(0, (root.workspaceItem?.height ?? 0) + 4 + root.stackIndex * 104, 1, 1)
+    // Stack notifications upward from the bottom bar, leaving a 4px gap.
+    anchor.rect: Qt.rect(0, -4 - root.stackIndex * (root.implicitHeight + 8), 1, 1)
 
     implicitWidth: root.workspaceItem?.width ?? 360
     implicitHeight: card.implicitHeight

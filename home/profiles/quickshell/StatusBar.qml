@@ -4,7 +4,7 @@ import Quickshell.Wayland
 import QtQuick
 import QtQuick.Layouts
 
-// The status bar panel — anchored to the top of the given screen.
+// The status bar panel, anchored to the bottom of the given screen.
 PanelWindow {
     id: bar
 
@@ -14,7 +14,7 @@ PanelWindow {
     required property var githubProvider
 
     screen: bar.targetScreen
-    anchors.top: true
+    anchors.bottom: true
     anchors.left: true
     anchors.right: true
     implicitHeight: 28

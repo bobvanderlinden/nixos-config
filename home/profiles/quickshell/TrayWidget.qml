@@ -47,7 +47,7 @@ RowLayout {
                 anchor.window: parentWindow
                 anchor.rect: Qt.rect(
                     parent.mapToItem(parentWindow.contentItem, 0, 0).x,
-                    parentWindow.implicitHeight + 4,
+                    -4,
                     parent.width,
                     1
                 )

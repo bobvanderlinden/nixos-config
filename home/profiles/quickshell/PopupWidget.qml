@@ -6,7 +6,7 @@ import QtQuick.Layouts
 //
 // Contains an inline pill (same styling as BarPill) and a PopupWindow.
 // Manages all popup machinery:
-//   - Hover open/close with 200ms grace timer so mouse can travel pill→popup
+//   - Hover open/close with 200ms grace timer so mouse can travel from pill to popup
 //   - Immediate close when another widget opens (via BarState singleton)
 //   - Consistent popup chrome: #1e1e2e bg, radius 8, #44475a border, 12px padding
 //
@@ -111,7 +111,7 @@ Rectangle {
             void(root.x);
             void(root.parent.x);
             const mapped = root.mapToItem(root.barWindow.contentItem, 0, 0);
-            return Qt.rect(mapped.x, root.barWindow.implicitHeight + 4, 1, 1);
+            return Qt.rect(mapped.x, -4, 1, 1);
         }
 
         implicitWidth: root.popupWidth

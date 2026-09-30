@@ -1,7 +1,7 @@
 import Quickshell
 import QtQuick
 
-// Tooltip that appears below the bar, centered over a given anchor item.
+// Tooltip that appears above the bar, centered over a given anchor item.
 //
 // Usage:
 //   BarTooltip {
@@ -35,7 +35,7 @@ Item {
             const mapped = root.widget.mapToItem(root.barWindow.contentItem, 0, 0);
             return Qt.rect(
                 mapped.x + root.widget.width / 2 - implicitWidth / 2,
-                root.barWindow.implicitHeight + 4,
+                -4,
                 implicitWidth,
                 1
             );
