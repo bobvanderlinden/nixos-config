@@ -14,45 +14,55 @@ in
 {
   home.packages = [ pkgs.voxtype-cuda ];
 
-  xdg.configFile."voxtype/config.toml".source = toml.generate "voxtype-config.toml" {
-    state_file = "auto";
+  xdg.configFile."voxtype/config.toml" = {
+    source = toml.generate "voxtype-config.toml" {
+      state_file = "auto";
 
-    hotkey.enabled = false;
+      hotkey.enabled = false;
 
-    audio = {
-      device = "default";
-      sample_rate = 16000;
-      max_duration_secs = 60;
-      feedback = {
+      audio = {
+        device = "default";
+        sample_rate = 16000;
+        max_duration_secs = 60;
+        feedback = {
+          enabled = true;
+          theme = "subtle";
+          volume = 0.7;
+        };
+      };
+
+      whisper = {
+        mode = "local";
+        model = toString whisperModel;
+        # Restrict automatic language detection to the languages used for dictation.
+        # This preserves Dutch and English instead of translating either language.
+        language = [
+          "nl"
+          "en"
+        ];
+        translate = false;
+        on_demand_loading = false;
+      };
+
+      output = {
+        mode = "type";
+        fallback_to_clipboard = true;
+        notification = {
+          on_recording_start = false;
+          on_recording_stop = false;
+          on_transcription = false;
+        };
+      };
+
+      text.spoken_punctuation = true;
+      osd = {
         enabled = true;
-        theme = "subtle";
-        volume = 0.7;
+        frontend = "quickshell";
       };
     };
 
-    whisper = {
-      mode = "local";
-      model = toString whisperModel;
-      language = "en";
-      translate = false;
-      on_demand_loading = false;
-    };
-
-    output = {
-      mode = "type";
-      fallback_to_clipboard = true;
-      notification = {
-        on_recording_start = false;
-        on_recording_stop = false;
-        on_transcription = false;
-      };
-    };
-
-    text.spoken_punctuation = true;
-    osd = {
-      enabled = true;
-      frontend = "quickshell";
-    };
+    # Voxtype reads its configuration only at startup.
+    onChange = "${lib.getExe' pkgs.systemd "systemctl"} --user try-restart voxtype.service";
   };
 
   systemd.user.services.voxtype = {
