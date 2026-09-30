@@ -50,6 +50,20 @@ fi
 project_path="$(cd "$project_path" && pwd -P)" || fail "Could not change to project: $project_path"
 git -C "$project_path" rev-parse --is-inside-work-tree > /dev/null || fail "Not a Git repository: $project_path"
 
+find_worktree_root() {
+  local directory="$project_path"
+
+  while :; do
+    if [[ -d "$directory/.worktrees" ]]; then
+      printf '%s\n' "$directory/.worktrees"
+      return
+    fi
+
+    [[ "$directory" == "/" ]] && return
+    directory="$(dirname "$directory")"
+  done
+}
+
 if ! git -C "$project_path" remote get-url upstream > /dev/null 2>&1; then
   git -C "$project_path" remote add upstream "$(git -C "$project_path" remote get-url origin)"
 fi
@@ -91,7 +105,12 @@ else
 fi
 
 repository_name="$(basename "$project_path")"
-worktree_base="/tmp/worktrees/$UID/$repository_name"
+worktree_root="$(find_worktree_root)"
+if [[ -n "$worktree_root" ]]; then
+  worktree_base="$worktree_root/$repository_name"
+else
+  worktree_base="/tmp/worktrees/$UID/$repository_name"
+fi
 mkdir --parents "$worktree_base"
 
 if [[ -n "${github_pull_request_number-}" ]]; then
