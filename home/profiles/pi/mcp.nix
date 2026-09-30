@@ -46,7 +46,8 @@ let
     )
   );
 
-  mergedMcpServers = sharedMcpServers // cfg.mcpServers;
+  mergedMcpServers =
+    sharedMcpServers // lib.filterAttrs (_name: isSharedServerEnabled) cfg.mcpServers;
 
   mcpConfig = {
     inherit (cfg) settings;
@@ -60,7 +61,7 @@ in
       default = false;
       description = ''
         Whether to integrate MCP servers from {option}`programs.mcp.servers`
-        into Pi's {file}`mcp.json` for pi-mcp-extension.
+        into Pi's {file}`mcp.json` for pi-mcp-adapter.
 
         Note: Settings defined in {option}`programs.pi-coding-agent.mcp.mcpServers`
         are merged with {option}`programs.mcp.servers`, with Pi-specific
@@ -80,7 +81,7 @@ in
           maxRetries = 5;
         };
         description = ''
-          Global settings written to Pi's {file}`mcp.json` for pi-mcp-extension.
+          Global settings written to Pi's {file}`mcp.json` for pi-mcp-adapter.
         '';
       };
 
@@ -100,7 +101,7 @@ in
         };
         description = ''
           Pi-specific MCP servers written under Pi's {file}`mcp.json` for
-          pi-mcp-extension.
+          pi-mcp-adapter.
 
           Shared MCP servers should usually be defined in
           {option}`programs.mcp.servers` and enabled for Pi with
@@ -112,7 +113,7 @@ in
 
   config = lib.mkIf cfg.enable {
     programs.pi-coding-agent.settings.packages = lib.mkIf piConfig.enable [
-      "npm:pi-mcp-extension"
+      "npm:pi-mcp-adapter"
     ];
 
     home.file."${piConfig.configDir}/mcp.json" = lib.mkIf piConfig.enable {

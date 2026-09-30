@@ -27,9 +27,69 @@ let
       source = impurity.link (./skills + "/${name}");
     }
   ) skillFiles;
+
+  piModels = {
+    providers = {
+      "llama.cpp" = {
+        baseUrl = "http://127.0.0.1:8080/v1";
+        api = "openai-completions";
+        apiKey = "llama.cpp";
+        compat = {
+          supportsDeveloperRole = false;
+          supportsReasoningEffort = false;
+          supportsUsageInStreaming = false;
+          maxTokensField = "max_tokens";
+        };
+        models = [
+          {
+            id = "qwen3:14b";
+            name = "Qwen3 14B Q4_K_M local";
+            contextWindow = 16384;
+            maxTokens = 4096;
+            cost = {
+              input = 0;
+              output = 0;
+              cacheRead = 0;
+              cacheWrite = 0;
+            };
+          }
+        ];
+      };
+
+      colibri = {
+        baseUrl = "http://127.0.0.1:8081/v1";
+        api = "openai-completions";
+        apiKey = "local";
+        models = [
+          {
+            id = "glm-5.2-colibri";
+            name = "GLM-5.2 via Colibri";
+            reasoning = true;
+            input = [ "text" ];
+            contextWindow = 32768;
+            maxTokens = 4096;
+            cost = {
+              input = 0;
+              output = 0;
+              cacheRead = 0;
+              cacheWrite = 0;
+            };
+          }
+        ];
+      };
+    };
+  };
 in
 {
-  home.file = extensionFileLinks // skillFileLinks;
+  home.file =
+    extensionFileLinks
+    // skillFileLinks
+    // {
+      "${piConfigDir}/models.json" = {
+        force = true;
+        text = builtins.toJSON piModels;
+      };
+    };
 
   imports = [
     ./lsp.nix
@@ -62,11 +122,12 @@ in
 
     mcp = {
       enable = lib.mkDefault true;
-      mcpServers.slite = {
-        transport = "streamable-http";
-        url = "https://api.slite.com/mcp";
-        lifecycle = "lazy";
-        auth.type = "oauth";
+      mcpServers = {
+        slite = {
+          url = "https://api.slite.com/mcp";
+          lifecycle = "lazy";
+          auth = "oauth";
+        };
       };
     };
     subagent.settings.scheduledRuns.storeRoot = "~/.local/share/pi/subagents/schedules";
@@ -95,7 +156,8 @@ in
       defaultThinkingLevel = "medium";
       npmCommand = [ "${pkgs.nodejs}/bin/npm" ];
       packages = [
-        "git:github.com/nicobailon/pi-subagents@main"
+        "npm:@earendil-works/pi-coding-agent@0.84.4"
+        "npm:pi-subagents@0.70.1"
         "npm:pi-web-access"
         "npm:remote-pi"
         "npm:@ayulab/pi-rewind"
