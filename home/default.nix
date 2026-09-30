@@ -79,6 +79,10 @@ let
     # These conflict with node inside vscode.
     export NODE_OPTIONS=""
 
+    # Hyprland does not identify a desktop keyring to Electron. Use the
+    # running GNOME Keyring through libsecret instead of VS Code's weaker
+    # file-based encryption.
+    #
     # Open files in the vscode instance on the current workspace.
     # Otherwise, open a new instance on the current workspace.
     exec ${lib.getExe pkgs.hypr-open} \
@@ -86,6 +90,7 @@ let
       --new-window-argument="--new-window" \
       -- \
       ${lib.getExe pkgs.vscode} \
+      --password-store=gnome-libsecret \
       "$@" > /dev/null 2>&1
   '';
 
@@ -121,9 +126,6 @@ in
     wayland.windowManager.hyprland.systemd.enable = false;
 
     home.packages = with pkgs; [
-      darkman
-      gnome-keyring
-
       # Development Tools
       nixfmt
       gdb
@@ -146,7 +148,6 @@ in
 
       # Version Control
       hub
-      gh
       gh-batch-merge
       gh-org-clone
       git-cola
@@ -162,7 +163,6 @@ in
       git-xargs
       git-pr-clean
       tig
-      mergiraf
       jujutsu
       hunk
       tuicr
@@ -201,7 +201,6 @@ in
       # File Management
       thunar
       xfconf
-      tumbler
       xfce4-exo
       file-roller
       meld
@@ -257,12 +256,10 @@ in
       # CLI Utilities
       entr
       xclip
-      jq
       graphviz
       screen
       yq-go
       watchexec
-      difftastic
       dust
       fx
       cachix
@@ -366,9 +363,6 @@ in
         ];
       };
     };
-    # swaync replaced by quickshell notification center
-    services.swaync.enable = false;
-
     services.cliphist = {
       enable = true;
       systemdTargets = [ "graphical-session.target" ];
@@ -382,9 +376,6 @@ in
         image = "${wallpaperPng}";
       };
     };
-
-    # Waybar replaced by quickshell bar (see home/profiles/quickshell/)
-    programs.waybar.enable = false;
 
     services.xdg-desktop-portal = {
       enable = true;
@@ -674,11 +665,6 @@ in
 
       };
     };
-
-    services.xssproxy.enable = false;
-    services.lxqt-policykit-agent.enable = false;
-    services.polkit-gnome.enable = false; # replaced by PolkitAgent.qml in quickshell
-    services.hyprpolkitagent.enable = false;
 
     xdg.enable = true;
     # news.display = "silent";

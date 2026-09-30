@@ -165,7 +165,6 @@
     unzip
     vim
     wget
-    btop
     efibootmgr
 
     # Networking tools
@@ -175,10 +174,7 @@
     iw
     wirelesstools # iwconfig
 
-    docker
-
     usbutils # lsusb
-
 
     sbctl
 
@@ -358,9 +354,6 @@
     autoPrune.enable = true;
   };
 
-  virtualisation.podman = {
-    enable = true;
-  };
   networking.firewall.trustedInterfaces = [ "docker0" ];
 
   users.defaultUserShell = pkgs.fish;
