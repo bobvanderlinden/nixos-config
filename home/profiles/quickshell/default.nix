@@ -33,6 +33,7 @@
     pkgs.session-time
     pkgs.inotify-tools
     pkgs.todo-txt-cli
+    pkgs.gh-inbox
   ];
 
   home.file.".todo/config".text = ''

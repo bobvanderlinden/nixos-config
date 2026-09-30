@@ -30,10 +30,16 @@ PopupWidget {
             }
 
             Text {
-                text: root.githubProvider.reviewRequests.length.toString()
-                    + " / " + root.githubProvider.teamReviewRequests.length.toString()
-                    + " / " + root.githubProvider.readyToMerge.length.toString()
-                color: "#f8f8f2"
+                text: {
+                    if (root.githubProvider.loading)
+                        return "…";
+                    if (root.githubProvider.failed)
+                        return "!";
+                    return root.githubProvider.reviewRequests.length.toString()
+                        + " / " + root.githubProvider.teamReviewRequests.length.toString()
+                        + " / " + root.githubProvider.readyToMerge.length.toString();
+                }
+                color: root.githubProvider.failed ? "#ff5555" : "#f8f8f2"
                 font.family: "SauceCodePro Nerd Font"
                 font.pixelSize: 11
             }
@@ -91,6 +97,12 @@ PopupWidget {
             }
 
             InboxGroup {
+                title: "Needs reviewers assigned"
+                pullRequests: root.githubProvider.needsReviewers
+                accentColor: "#ffb86c"
+            }
+
+            InboxGroup {
                 title: "Waiting for review or checks"
                 pullRequests: root.githubProvider.waitingForReview
                 accentColor: "#8be9fd"
@@ -100,6 +112,12 @@ PopupWidget {
                 title: "Needs action"
                 pullRequests: root.githubProvider.needsAction
                 accentColor: "#ff5555"
+            }
+
+            InboxGroup {
+                title: "Approved, needs action"
+                pullRequests: root.githubProvider.approvedNeedsAction
+                accentColor: "#ff79c6"
             }
 
             InboxGroup {
@@ -118,6 +136,7 @@ PopupWidget {
         required property color accentColor
         property bool expanded: false
 
+        visible: pullRequests.length > 0
         Layout.fillWidth: true
         spacing: 2
 

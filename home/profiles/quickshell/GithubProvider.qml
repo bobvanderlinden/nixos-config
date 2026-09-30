@@ -9,69 +9,46 @@ Item {
     property var reviewRequests: []
     property var teamReviewRequests: []
     property var drafts: []
+    property var needsReviewers: []
     property var waitingForReview: []
     property var needsAction: []
+    property var approvedNeedsAction: []
     property var readyToMerge: []
+    property bool failed: false
+    readonly property bool loading: inboxProcess.running
 
     readonly property var pullRequests: [
         ...reviewRequests,
         ...teamReviewRequests,
         ...drafts,
+        ...needsReviewers,
         ...waitingForReview,
         ...needsAction,
+        ...approvedNeedsAction,
         ...readyToMerge,
     ].sort((first, second) => second.updatedAt.localeCompare(first.updatedAt))
 
-    function parsePullRequests(output, destination) {
+    function parseInbox(output) {
         try {
-            const data = JSON.parse(output);
-            root[destination] = data.map(pullRequest => ({
-                number: pullRequest.number,
-                title: pullRequest.title,
-                repository: pullRequest.repository.name,
-                url: pullRequest.url,
-                updatedAt: pullRequest.updatedAt,
-            }));
+            const inbox = JSON.parse(output);
+            root.reviewRequests = inbox.reviewRequests;
+            root.teamReviewRequests = inbox.teamReviewRequests;
+            root.drafts = inbox.drafts;
+            root.needsReviewers = inbox.needsReviewers || [];
+            root.waitingForReview = inbox.waitingForReview;
+            root.needsAction = inbox.needsAction;
+            root.approvedNeedsAction = inbox.approvedNeedsAction || [];
+            root.readyToMerge = inbox.readyToMerge;
+            root.failed = false;
         } catch (error) {
-            console.warn("GithubProvider: failed to parse pull request search:", error);
-        }
-    }
-
-    function parseReviewRequests(output) {
-        try {
-            const result = JSON.parse(output).data;
-            const userReviewRequests = [];
-            const teamRequests = [];
-
-            for (const pullRequest of result.search.nodes) {
-                const reviewers = pullRequest.reviewRequests.nodes.map(request => request.requestedReviewer);
-                const request = {
-                    number: pullRequest.number,
-                    title: pullRequest.title,
-                    repository: pullRequest.repository.name,
-                    url: pullRequest.url,
-                    updatedAt: pullRequest.updatedAt,
-                };
-
-                if (reviewers.some(reviewer => reviewer.__typename === "User" && reviewer.login === result.viewer.login))
-                    userReviewRequests.push(request);
-                if (reviewers.some(reviewer => reviewer.__typename === "Team"))
-                    teamRequests.push(request);
-            }
-
-            root.reviewRequests = userReviewRequests;
-            root.teamReviewRequests = teamRequests;
-        } catch (error) {
-            console.warn("GithubProvider: failed to parse review requests:", error);
+            root.failed = true;
+            console.warn("GithubProvider: failed to parse inbox:", error);
         }
     }
 
     function refresh() {
-        reviewRequestsProcess.running = true;
-        draftsProcess.running = true;
-        waitingForReviewProcess.running = true;
-        needsActionProcess.running = true;
-        readyToMergeProcess.running = true;
+        if (!inboxProcess.running)
+            inboxProcess.running = true;
     }
 
     function items(query) {
@@ -94,51 +71,27 @@ Item {
     }
 
     Process {
-        id: reviewRequestsProcess
-        command: [
-            "gh", "api", "graphql",
-            "-f", "query=query { viewer { login } search(query: \"is:open is:pr review-requested:@me\", type: ISSUE, first: 100) { nodes { ... on PullRequest { number title url updatedAt repository { name } reviewRequests(first: 100) { nodes { requestedReviewer { __typename ... on User { login } ... on Team { slug } } } } } } } }"
-        ]
+        id: inboxProcess
+        command: ["gh-inbox"]
         running: true
         stdout: StdioCollector {
-            onStreamFinished: root.parseReviewRequests(this.text)
+            id: inboxOutput
+        }
+        onExited: (exitCode) => {
+            if (exitCode === 0)
+                root.parseInbox(inboxOutput.text);
+            else {
+                root.failed = true;
+                retryTimer.restart();
+            }
         }
     }
 
-    Process {
-        id: draftsProcess
-        command: ["gh", "search", "prs", "--author=@me", "--draft", "--state=open", "--json", "number,title,repository,url,updatedAt", "--limit", "50"]
-        running: true
-        stdout: StdioCollector {
-            onStreamFinished: root.parsePullRequests(this.text, "drafts")
-        }
-    }
-
-    Process {
-        id: waitingForReviewProcess
-        command: ["gh", "search", "prs", "--author=@me", "--review=required", "--state=open", "--json", "number,title,repository,url,updatedAt", "--limit", "50", "--", "draft:false"]
-        running: true
-        stdout: StdioCollector {
-            onStreamFinished: root.parsePullRequests(this.text, "waitingForReview")
-        }
-    }
-
-    Process {
-        id: needsActionProcess
-        command: ["gh", "search", "prs", "--author=@me", "--review=changes_requested", "--state=open", "--json", "number,title,repository,url,updatedAt", "--limit", "50", "--", "draft:false"]
-        running: true
-        stdout: StdioCollector {
-            onStreamFinished: root.parsePullRequests(this.text, "needsAction")
-        }
-    }
-
-    Process {
-        id: readyToMergeProcess
-        command: ["gh", "search", "prs", "--author=@me", "--review=approved", "--state=open", "--json", "number,title,repository,url,updatedAt", "--limit", "50", "--", "draft:false"]
-        running: true
-        stdout: StdioCollector {
-            onStreamFinished: root.parsePullRequests(this.text, "readyToMerge")
-        }
+    Timer {
+        id: retryTimer
+        interval: 30 * 1000
+        repeat: false
+        onTriggered: root.refresh()
     }
 
     Timer {
