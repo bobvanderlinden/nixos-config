@@ -242,6 +242,7 @@
         nac44250 = mkLaptop ./system/nac44250.nix [ ];
         nac54003 = mkLaptop ./system/nac54003.nix [
           inputs.disko.nixosModules.disko
+          ./system/profiles/colibri.nix
           ./system/profiles/localllm.nix
         ];
       };
