@@ -201,6 +201,17 @@
           #   ];
           # });
 
+          # Fixes gdbuspp 3 failing with "may be used uninitialized" under GCC 16.
+          # Source: https://github.com/OpenVPN/gdbuspp/commit/7462325fb03d318658eaa9fecfc34f46cc5705fc.patch
+          gdbuspp = prev.gdbuspp.overrideAttrs (oldAttrs: {
+            patches = (oldAttrs.patches or [ ]) ++ [
+              (prev.fetchpatch {
+                url = "https://github.com/OpenVPN/gdbuspp/commit/7462325fb03d318658eaa9fecfc34f46cc5705fc.patch";
+                hash = "sha256-hK7E9A5x/NN/6/bGmgHZJ76s/eprGaoiH7PWkrkla+M=";
+              })
+            ];
+          });
+
           fwupd = prev.fwupd.overrideAttrs (oldAttrs: {
             postPatch = (oldAttrs.postPatch or "") + ''
               substituteInPlace libfwupdplugin/fu-path-store.c \
