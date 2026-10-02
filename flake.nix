@@ -189,6 +189,31 @@
         #   };
         # in
         {
+          # Backport https://github.com/NixOS/nixpkgs/pull/568318. The pinned
+          # nixpkgs revision predates its fix for CUDA redistributable builds.
+          cudaPackages = prev.cudaPackages.overrideScope (
+            _cudaFinal: cudaPrev: {
+              buildRedist =
+                arguments:
+                (cudaPrev.buildRedist arguments).overrideAttrs (oldAttrs: {
+                  nativeBuildInputs = oldAttrs.nativeBuildInputs ++ [
+                    (final.writeText "cuda-build-redist-hook-fix.bash" ''
+                      preFixupHooks=("''${preFixupHooks[@]/fixupPropagatedBuildOutputsForMultipleOutputs}")
+
+                      fixupCudaPropagatedBuildOutputsToOut() {
+                        local output
+                        mkdir --parents "''${out:?}/nix-support"
+                        for output in "''${propagatedBuildOutputs[@]}"; do
+                          nixLog "adding ''${!output:?} to propagatedBuildInputs of ''${out:?}"
+                          printWords "''${!output:?}" >>"''${out:?}/nix-support/propagated-build-inputs"
+                        done
+                      }
+                    '')
+                  ];
+                });
+            }
+          );
+
           # pasystray = prev.pasystray.overrideAttrs (prevAttrs: {
           #   patches = (prevAttrs.patches or [ ]) ++ [
           #     (prev.fetchpatch {
@@ -215,7 +240,6 @@
           mergiraf = prev.mergiraf.overrideAttrs (oldAttrs: {
             NIX_CFLAGS_COMPILE = (oldAttrs.NIX_CFLAGS_COMPILE or "") + " -fno-strict-aliasing";
           });
-
 
           fwupd = prev.fwupd.overrideAttrs (oldAttrs: {
             postPatch = (oldAttrs.postPatch or "") + ''
@@ -251,7 +275,6 @@
             }
           ];
         };
-        networkmanager-openvpn3 = inputs.networkmanager-openvpn3.nixosModules.default;
       };
 
       nixosConfigurations = {
