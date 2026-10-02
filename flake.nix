@@ -90,11 +90,12 @@
           name = "nixpkgs-patched";
           src = inputs.nixpkgs;
           patches = [
-            # Fix afdko otfautohint regression that breaks cantarell-fonts.
-            # (pkgs.fetchpatch {
-            #   url = "https://github.com/NixOS/nixpkgs/pull/536673.patch";
-            #   hash = "sha256-Il1hTXGwDyn5C3pDkXbH1ZLyb5z5JQoL7ykXZXIeHuA=";
-            # })
+            # Fixes gdbuspp and OpenVPN3 build failures under GCC 16.
+            # Source: https://github.com/NixOS/nixpkgs/pull/569341.patch
+            (pkgs.fetchpatch {
+              url = "https://github.com/NixOS/nixpkgs/pull/569341.patch";
+              hash = "sha256-/tyqq8SO/U20OkqVG4rInE0dDqUvCQHdnl6bf2+p7sQ=";
+            })
           ];
         };
 
@@ -201,16 +202,6 @@
           #   ];
           # });
 
-          # Fixes gdbuspp 3 failing with "may be used uninitialized" under GCC 16.
-          # Source: https://github.com/OpenVPN/gdbuspp/commit/7462325fb03d318658eaa9fecfc34f46cc5705fc.patch
-          gdbuspp = prev.gdbuspp.overrideAttrs (oldAttrs: {
-            patches = (oldAttrs.patches or [ ]) ++ [
-              (prev.fetchpatch {
-                url = "https://github.com/OpenVPN/gdbuspp/commit/7462325fb03d318658eaa9fecfc34f46cc5705fc.patch";
-                hash = "sha256-hK7E9A5x/NN/6/bGmgHZJ76s/eprGaoiH7PWkrkla+M=";
-              })
-            ];
-          });
 
           # GCC 16 deprecates volatile-qualified function return values. ltrace's
           # test fixture treats that warning as a compilation failure.
@@ -229,6 +220,7 @@
           mergiraf = prev.mergiraf.overrideAttrs (oldAttrs: {
             NIX_CFLAGS_COMPILE = (oldAttrs.NIX_CFLAGS_COMPILE or "") + " -fno-strict-aliasing";
           });
+
 
           fwupd = prev.fwupd.overrideAttrs (oldAttrs: {
             postPatch = (oldAttrs.postPatch or "") + ''
