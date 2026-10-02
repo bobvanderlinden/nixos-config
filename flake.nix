@@ -223,6 +223,13 @@
             '';
           });
 
+          # Generated tree-sitter parsers violate strict aliasing, corrupting
+          # mergiraf's test process under GCC 16.
+          # Source: https://codeberg.org/mergiraf/mergiraf/issues/761
+          mergiraf = prev.mergiraf.overrideAttrs (oldAttrs: {
+            NIX_CFLAGS_COMPILE = (oldAttrs.NIX_CFLAGS_COMPILE or "") + " -fno-strict-aliasing";
+          });
+
           fwupd = prev.fwupd.overrideAttrs (oldAttrs: {
             postPatch = (oldAttrs.postPatch or "") + ''
               substituteInPlace libfwupdplugin/fu-path-store.c \
