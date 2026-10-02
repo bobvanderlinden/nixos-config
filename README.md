@@ -17,7 +17,7 @@ It includes the following:
 To switch to a new system+home configuration I usually run:
 
 ```sh
-nix run .#switch
+nix run --impure .#switch
 ```
 
 Which does the following:
@@ -31,8 +31,8 @@ Which does the following:
 This is similar to using the `home-manager` and `nixos-rebuild` tools:
 
 ```console
-$ home-manager switch --flake .
-$ nixos-rebuild --flake . switch --use-remote-sudo
+$ home-manager switch --impure --flake .
+$ nixos-rebuild --impure --flake . switch --use-remote-sudo
 ```
 
 To update nixpkgs and others I usually do:

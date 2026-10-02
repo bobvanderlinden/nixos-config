@@ -1,2 +1,2 @@
-`nix run .#switch-home` to apply Home-manager configuration
-`nix run .#switch` to apply NixOS configuration
+`nix run --impure .#switch-home` to apply Home-manager configuration
+`nix run --impure .#switch` to apply NixOS configuration
