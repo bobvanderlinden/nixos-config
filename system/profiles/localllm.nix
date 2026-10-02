@@ -7,8 +7,8 @@ let
       pkgs.llama-cpp-cuda
     ];
     text = ''
-      model_path="$STATE_DIRECTORY/Qwen3-14B-Q4_K_M.gguf"
-      model_url="https://huggingface.co/Qwen/Qwen3-14B-GGUF/resolve/main/Qwen3-14B-Q4_K_M.gguf"
+      model_path="$STATE_DIRECTORY/Qwen3.5-9B-Q4_K_M.gguf"
+      model_url="https://huggingface.co/unsloth/Qwen3.5-9B-GGUF/resolve/main/Qwen3.5-9B-Q4_K_M.gguf"
 
       if [[ ! -f "$model_path" ]]; then
         curl \
@@ -22,18 +22,20 @@ let
       fi
 
       exec llama-server \
-        --alias qwen3:14b \
+        --alias qwen3.5:9b \
+        --chat-template-kwargs '{"enable_thinking":false}' \
         --ctx-size 16384 \
         --host 127.0.0.1 \
         --model "$model_path" \
         --n-gpu-layers 999 \
-        --port 8080
+        --port 8080 \
+        --reasoning off
     '';
   };
 in
 {
   systemd.services.llama-qwen = {
-    description = "llama.cpp server for Qwen3 14B";
+    description = "llama.cpp server for Qwen3.5 9B";
     after = [ "network-online.target" ];
     wants = [ "network-online.target" ];
     wantedBy = [ "multi-user.target" ];
