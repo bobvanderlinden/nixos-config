@@ -18,10 +18,6 @@
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    networkmanager-openvpn3 = {
-      url = "github:bobvanderlinden/NetworkManager-openvpn3";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
     impurity = {
       url = "github:outfoxxed/impurity.nix";
     };
@@ -201,7 +197,6 @@
           #     })
           #   ];
           # });
-
 
           # GCC 16 deprecates volatile-qualified function return values. ltrace's
           # test fixture treats that warning as a compilation failure.

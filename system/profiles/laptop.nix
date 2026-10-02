@@ -137,7 +137,6 @@
   };
   services.resolved.enable = true;
   programs.openvpn3.enable = true;
-  programs.networkmanager-openvpn3.enable = true;
 
   fonts = {
     fontDir.enable = true;
