@@ -11,7 +11,7 @@ voxtype.overrideAttrs (oldAttrs: {
   patches = (oldAttrs.patches or [ ]) ++ [
     (fetchpatch {
       url = "https://github.com/bobvanderlinden/voxtype/commit/960577e75b66710bef8b93b3e4d80876c6b0a8e0.patch";
-      hash = "sha256-fpi6mM1q6A3k3xjYT8icDpi6/6n5AfdfUcv6+7Ya+DI=";
+      hash = "sha256-TW1prMrhJggEYVFQA6jExcoHn/ScO7DxCXXQQHOv5/g=";
     })
   ];
 
