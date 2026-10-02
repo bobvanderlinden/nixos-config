@@ -203,6 +203,18 @@
         #     config.allowUnfree = true;
         #   };
         # in
+        let
+          cudaBuildRedistHookSource = final.applyPatches {
+            name = "nixpkgs-cuda-build-redist-hook";
+            src = prev.path;
+            patches = [
+              (final.fetchpatch {
+                url = "https://github.com/NixOS/nixpkgs/pull/568318.patch";
+                hash = "sha256-jPfgDK5QWTA8i2GtPWmiP68o6A+Mn/OvhYYdCnHRFUs=";
+              })
+            ];
+          };
+        in
         {
           # Determinate Nix 3.23 emits activity types that nom 2.2.0 does not
           # recognise. Remove this when nixpkgs carries a newer nom release.
@@ -227,20 +239,13 @@
               buildRedist =
                 arguments:
                 (cudaPrev.buildRedist arguments).overrideAttrs (oldAttrs: {
-                  nativeBuildInputs = oldAttrs.nativeBuildInputs ++ [
-                    (final.writeText "cuda-build-redist-hook-fix.bash" ''
-                      preFixupHooks=("''${preFixupHooks[@]/fixupPropagatedBuildOutputsForMultipleOutputs}")
-
-                      fixupCudaPropagatedBuildOutputsToOut() {
-                        local output
-                        mkdir --parents "''${out:?}/nix-support"
-                        for output in "''${propagatedBuildOutputs[@]}"; do
-                          nixLog "adding ''${!output:?} to propagatedBuildInputs of ''${out:?}"
-                          printWords "''${!output:?}" >>"''${out:?}/nix-support/propagated-build-inputs"
-                        done
-                      }
-                    '')
-                  ];
+                  nativeBuildInputs = builtins.map (
+                    input:
+                    if final.lib.hasSuffix "/buildRedistHook.bash" (toString input) then
+                      "${cudaBuildRedistHookSource}/pkgs/development/cuda-modules/buildRedist/buildRedistHook.bash"
+                    else
+                      input
+                  ) oldAttrs.nativeBuildInputs;
                 });
             }
           );
