@@ -1,4 +1,5 @@
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent"
+import { Type } from "typebox"
 import { spawn } from "node:child_process"
 import { existsSync } from "node:fs"
 import { dirname, join } from "node:path"
@@ -210,9 +211,9 @@ async function loadDirenv(
   setSyncPromise: (promise: Promise<ExportResult> | null) => void,
   originalEnvironment: Map<string, string | undefined>,
   force = false,
-) {
+): Promise<ExportResult | null> {
   if (isLoaded() && !force) {
-    return
+    return null
   }
 
   setLoaded(true)
@@ -240,19 +241,21 @@ async function loadDirenv(
     if (result.envrcPath && context.hasUI) {
       context.ui.notify("direnv: failed to load environment", "error")
     }
-    return
+    return result
   }
 
   if (result.autoAllowed) {
     if (context.hasUI) {
       context.ui.notify("direnv: allowed and reloaded environment", "info")
     }
-    return
+    return result
   }
 
   if (result.envDiff && context.hasUI) {
     context.ui.notify("direnv: environment loaded", "info")
   }
+
+  return result
 }
 
 export default function (pi: ExtensionAPI) {
@@ -268,6 +271,39 @@ export default function (pi: ExtensionAPI) {
   const setSyncPromise = (nextSyncPromise: Promise<ExportResult> | null) => {
     syncPromise = nextSyncPromise
   }
+
+  pi.registerTool({
+    name: "direnv_reload",
+    label: "Reload direnv",
+    description: "Reload the current directory's .envrc and apply its environment to this Pi session.",
+    promptSnippet: "Reload the current directory's direnv environment",
+    promptGuidelines: [
+      "Use direnv_reload after changing .envrc or a file it watches, before commands need the updated environment.",
+    ],
+    parameters: Type.Object({}),
+    async execute(_toolCallId, _params, _signal, _onUpdate, context) {
+      const result = await loadDirenv(
+        context,
+        isLoaded,
+        setLoaded,
+        getSyncPromise,
+        setSyncPromise,
+        originalEnvironment,
+        true,
+      )
+
+      if (!result || result.failed) {
+        throw new Error("direnv failed to reload the environment")
+      }
+
+      const location = result.envrcPath ?? "the current directory"
+      const action = result.autoAllowed ? "Allowed and reloaded" : "Reloaded"
+      return {
+        content: [{ type: "text", text: `${action} direnv environment from ${location}.` }],
+        details: { envrcPath: result.envrcPath, autoAllowed: result.autoAllowed },
+      }
+    },
+  })
 
   pi.on("session_start", async (_event, context) => {
     await loadDirenv(
