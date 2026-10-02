@@ -212,6 +212,17 @@
             ];
           });
 
+          # GCC 16 deprecates volatile-qualified function return values. ltrace's
+          # test fixture treats that warning as a compilation failure.
+          ltrace = prev.ltrace.overrideAttrs (oldAttrs: {
+            postPatch = (oldAttrs.postPatch or "") + ''
+              substituteInPlace testsuite/ltrace.minor/demangle-lib.cpp \
+                --replace-fail "volatile int Fv_Vi" "int Fv_Vi"
+              substituteInPlace testsuite/ltrace.minor/demangle.cpp \
+                --replace-fail "volatile int Fv_Vi" "int Fv_Vi"
+            '';
+          });
+
           fwupd = prev.fwupd.overrideAttrs (oldAttrs: {
             postPatch = (oldAttrs.postPatch or "") + ''
               substituteInPlace libfwupdplugin/fu-path-store.c \
