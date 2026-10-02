@@ -28,9 +28,27 @@ function isEnvDiff(value: unknown): value is EnvDiff {
   )
 }
 
-function applyEnvDiff(envDiff: EnvDiff) {
+function applyEnvDiff(
+  envDiff: EnvDiff,
+  originalEnvironment: Map<string, string | undefined>,
+) {
   for (const [key, value] of Object.entries(envDiff)) {
+    if (!originalEnvironment.has(key)) {
+      originalEnvironment.set(key, process.env[key])
+    }
+
     if (value === null) {
+      delete process.env[key]
+      continue
+    }
+
+    process.env[key] = value
+  }
+}
+
+function restoreEnvironment(originalEnvironment: Map<string, string | undefined>) {
+  for (const [key, value] of originalEnvironment) {
+    if (value === undefined) {
       delete process.env[key]
       continue
     }
@@ -45,10 +63,14 @@ function runCommand(
   cwd: string,
   signal?: AbortSignal,
 ): Promise<CommandResult> {
+  const environment = { ...process.env }
+  delete environment.DIRENV_DIR
+  delete environment.DIRENV_FILE
+
   return new Promise((resolve) => {
     const childProcess = spawn(command, argumentsList, {
       cwd,
-      env: process.env,
+      env: environment,
       stdio: ["ignore", "pipe", "pipe"],
       signal,
     })
@@ -146,6 +168,7 @@ async function syncDirenv(
   cwd: string,
   getSyncPromise: () => Promise<ExportResult> | null,
   setSyncPromise: (promise: Promise<ExportResult> | null) => void,
+  originalEnvironment: Map<string, string | undefined>,
   signal?: AbortSignal,
 ): Promise<ExportResult> {
   const existingSyncPromise = getSyncPromise()
@@ -164,7 +187,7 @@ async function syncDirenv(
 
       const result = await exportDirenv(envrcPath, signal)
       if (result.envDiff) {
-        applyEnvDiff(result.envDiff)
+        applyEnvDiff(result.envDiff, originalEnvironment)
       }
 
       return result
@@ -185,6 +208,7 @@ async function loadDirenv(
   setLoaded: (loaded: boolean) => void,
   getSyncPromise: () => Promise<ExportResult> | null,
   setSyncPromise: (promise: Promise<ExportResult> | null) => void,
+  originalEnvironment: Map<string, string | undefined>,
   force = false,
 ) {
   if (isLoaded() && !force) {
@@ -203,6 +227,7 @@ async function loadDirenv(
       context.cwd,
       getSyncPromise,
       setSyncPromise,
+      originalEnvironment,
       context.signal,
     )
   } finally {
@@ -233,6 +258,7 @@ async function loadDirenv(
 export default function (pi: ExtensionAPI) {
   let loaded = false
   let syncPromise: Promise<ExportResult> | null = null
+  const originalEnvironment = new Map<string, string | undefined>()
 
   const isLoaded = () => loaded
   const setLoaded = (nextLoaded: boolean) => {
@@ -250,6 +276,7 @@ export default function (pi: ExtensionAPI) {
       setLoaded,
       getSyncPromise,
       setSyncPromise,
+      originalEnvironment,
     )
   })
 
@@ -260,6 +287,7 @@ export default function (pi: ExtensionAPI) {
       setLoaded,
       getSyncPromise,
       setSyncPromise,
+      originalEnvironment,
     )
   })
 
@@ -270,6 +298,7 @@ export default function (pi: ExtensionAPI) {
       setLoaded,
       getSyncPromise,
       setSyncPromise,
+      originalEnvironment,
     )
   })
 
@@ -283,7 +312,12 @@ export default function (pi: ExtensionAPI) {
       setLoaded,
       getSyncPromise,
       setSyncPromise,
+      originalEnvironment,
       true,
     )
+  })
+
+  pi.on("session_shutdown", () => {
+    restoreEnvironment(originalEnvironment)
   })
 }

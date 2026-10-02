@@ -7,6 +7,15 @@
 }:
 let
   piConfigDir = config.programs.pi-coding-agent.configDir;
+  subagentWorktreeSetup = pkgs.writeShellApplication {
+    name = "pi-subagent-worktree-setup";
+    runtimeInputs = [ pkgs.direnv ];
+    text = ''
+      unset DIRENV_DIR DIRENV_FILE
+      direnv allow
+      printf '%s\n' '{"syntheticPaths":[]}'
+    '';
+  };
 
   extensionFiles = lib.filterAttrs (
     name: type: (type == "regular" && lib.hasSuffix ".ts" name) || type == "directory"
@@ -130,7 +139,10 @@ in
         };
       };
     };
-    subagent.settings.scheduledRuns.storeRoot = "~/.local/share/pi/subagents/schedules";
+    subagent.settings = {
+      scheduledRuns.storeRoot = "~/.local/share/pi/subagents/schedules";
+      worktreeSetupHook = "${subagentWorktreeSetup}/bin/pi-subagent-worktree-setup";
+    };
     package = pkgs.pi;
 
     extraPackages = [
@@ -155,6 +167,7 @@ in
       defaultModel = "gpt-5.6-terra";
       defaultThinkingLevel = "medium";
       npmCommand = [ "${pkgs.nodejs}/bin/npm" ];
+      subagents.defaultSubagentOnlyExtensions = [ "${piConfigDir}/extensions/direnv.ts" ];
       packages = [
         "npm:@earendil-works/pi-coding-agent@0.84.4"
         "npm:pi-subagents@0.70.1"
