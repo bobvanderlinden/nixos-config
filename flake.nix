@@ -90,7 +90,7 @@
             # Source: https://github.com/NixOS/nixpkgs/pull/569341.patch
             (pkgs.fetchpatch {
               url = "https://github.com/NixOS/nixpkgs/pull/569341.patch";
-              hash = "sha256-/tyqq8SO/U20OkqVG4rInE0dDqUvCQHdnl6bf2+p7sQ=";
+              hash = "sha256-aQZwuXY5q6GTqb6brkvSqmvagbsKl/13RMRmwuxz1js=";
             })
           ];
         };
