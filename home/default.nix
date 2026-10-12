@@ -114,7 +114,6 @@ let
 in
 {
   imports = collectNixModules ./modules ++ [
-    ./profiles/tapshow.nix
     ./profiles/hypr
     ./profiles/quickshell
     ./profiles/wl-kbptr
