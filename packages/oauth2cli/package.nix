@@ -18,18 +18,24 @@ stdenvNoCC.mkDerivation (finalAttrs: {
   nativeBuildInputs = [ deno ];
 
   outputHashMode = "recursive";
-  outputHash = "sha256-G53IuyWM9Tw6zhh5zJvFrDarqvZyNjHUmOGM9S7ACRg=";
+  outputHash = "sha256-jUeJDyPXiEOvbnbA3EkN6sghfz3Vejt9L5MUU9+E4UQ=";
   outputHashAlgo = "sha256";
 
   buildPhase = ''
     export DENO_DIR="$TMPDIR/deno"
+    deno cache --frozen --lock=deno.lock main.ts
+    # `deno compile` embeds dependency mtimes. Normalise the cache so that
+    # fetching npm packages during the build does not change the output.
+    find "$DENO_DIR" -exec touch -h -d @1 {} +
     deno compile --frozen --lock=deno.lock \
       --allow-net --allow-read --allow-write --allow-run --allow-env --allow-ffi --allow-sys \
-      --output "$out/bin/oauth2cli" \
+      --output oauth2cli \
       main.ts
   '';
 
-  installPhase = "true";
+  installPhase = ''
+    install -Dm755 oauth2cli "$out/bin/oauth2cli"
+  '';
 
   meta = {
     description = "CLI for handling OAuth2 for curl";
