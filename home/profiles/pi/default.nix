@@ -158,7 +158,7 @@ in
     ];
 
     settings = {
-      lastChangelogVersion = "0.80.2";
+      lastChangelogVersion = "1.1.0";
       collapseChangelog = true;
       enableAnalytics = false;
       enableInstallTelemetry = false;
@@ -169,8 +169,8 @@ in
       npmCommand = [ "${pkgs.nodejs}/bin/npm" ];
       subagents.defaultSubagentOnlyExtensions = [ "${piConfigDir}/extensions/direnv.ts" ];
       packages = [
-        "npm:@earendil-works/pi-coding-agent@0.84.4"
-        "npm:pi-subagents@0.70.1"
+        "npm:@earendil-works/pi-coding-agent@1.1.0"
+        "npm:pi-subagents@0.77.0"
         "npm:pi-web-access"
         "npm:remote-pi"
         "npm:@ayulab/pi-rewind"
