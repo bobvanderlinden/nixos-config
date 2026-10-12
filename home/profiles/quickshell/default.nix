@@ -21,6 +21,7 @@
 
     Service = {
       ExecStart = lib.getExe pkgs.quickshell;
+      Environment = [ "QUICKSHELL_BAR_EDGE=bottom" ];
       Restart = "on-failure";
       Slice = "session.slice";
     };

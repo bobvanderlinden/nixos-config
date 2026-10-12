@@ -4,9 +4,11 @@ import Quickshell.Wayland
 import QtQuick
 import QtQuick.Layouts
 
-// The status bar panel, anchored to the bottom of the given screen.
+// The status bar panel, placed at the edge selected by its systemd service.
 PanelWindow {
     id: bar
+
+    readonly property bool atTop: Quickshell.env("QUICKSHELL_BAR_EDGE") === "top"
 
     // Set by parent (shell.qml Variants loop).
     // Use a distinct name to avoid shadowing PanelWindow's built-in 'screen' property.
@@ -14,7 +16,8 @@ PanelWindow {
     required property var githubProvider
 
     screen: bar.targetScreen
-    anchors.bottom: true
+    anchors.top: bar.atTop
+    anchors.bottom: !bar.atTop
     anchors.left: true
     anchors.right: true
     implicitHeight: 28
