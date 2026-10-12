@@ -6,13 +6,13 @@ import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-a
 import { StringEnum } from "@earendil-works/pi-ai"
 import { Type, type Static } from "typebox"
 
-const STATUS_KEY = "nixos-build"
-const MESSAGE_TYPE = "nixos-build"
+const STATUS_KEY = "nix-build"
+const MESSAGE_TYPE = "nix-build"
 const MAX_LOG_LINES = 500
 const MAX_REPORTS = 20
 
-const nixosBuildSchema = Type.Object({
-  action: StringEnum(["start", "stop", "status", "logs"] as const),
+const nixBuildSchema = Type.Object({
+  action: StringEnum(["start-build", "stop", "status", "logs"] as const),
   host: Type.Optional(
     Type.String({
       description: "NixOS hostname to build. Defaults to the local hostname.",
@@ -30,18 +30,52 @@ const nixosBuildSchema = Type.Object({
       description: "Number of trailing log lines to return for the logs action.",
     }),
   ),
+  installables: Type.Optional(
+    Type.Array(
+      Type.String({
+        description: "An installable to build, such as nixpkgs#ltrace or .#nixosConfigurations.host.pkgs.ltrace.",
+      }),
+      {
+        minItems: 1,
+        description: "Installables to build. When omitted, builds the configured NixOS and Home Manager outputs.",
+      },
+    ),
+  ),
 })
 
-type NixosBuildInput = Static<typeof nixosBuildSchema>
+type NixBuildInput = Static<typeof nixBuildSchema>
 type IssueKind = "warning" | "failure"
 
+type NixActivity = {
+  type: number
+  name?: string
+  text: string
+  derivation?: string
+}
+
+type NixProgress = {
+  done: number
+  expected: number
+  running: number
+  failed: number
+}
+
+type BuildKind = "system" | "expression"
+
 type BuildJob = {
+  kind: BuildKind
   childProcess: ChildProcess
   host: string
   user: string
   logPath: string
   outputLink: string
+  description: string
   recentLines: string[]
+  pendingOutput: string
+  activities: Map<number, NixActivity>
+  activeDerivations: Map<number, string>
+  transfers: Map<number, { done: number; expected: number }>
+  progress?: NixProgress
   reportedIssues: Set<string>
   reportCount: number
   startedAt: number
@@ -83,15 +117,109 @@ function tail(lines: string[], lineCount: number): string {
   return lines.slice(-lineCount).join("\n")
 }
 
-function updateStatus(context: ExtensionContext, job?: BuildJob) {
+function derivationName(derivation: string): string {
+  return derivation.replace(/^\/nix\/store\/[^-]+-/, "").replace(/\.drv$/, "")
+}
+
+function activeBuilds(job: BuildJob): string {
+  const derivations = [...job.activeDerivations.values()].map(derivationName)
+  return derivations.length === 0 ? "" : ` [${derivations.join(", ")}]`
+}
+
+function formatBytes(bytes: number): string {
+  const units = ["B", "KiB", "MiB", "GiB", "TiB"]
+  let value = bytes
+  let unit = 0
+  while (value >= 1024 && unit < units.length - 1) {
+    value /= 1024
+    unit += 1
+  }
+  return `${value.toFixed(unit === 0 ? 0 : 1)} ${units[unit]}`
+}
+
+function progressSummary(job: BuildJob): string {
+  if (!job.progress) return ""
+  const { done, expected, running, failed } = job.progress
+  const failureText = failed === 0 ? "" : `, ${failed} failed`
+  return ` ${done}/${expected}, ${running} running${failureText}`
+}
+
+function transferSummary(job: BuildJob): string {
+  const transfer = [...job.transfers.values()].at(-1)
+  return transfer ? ` ${formatBytes(transfer.done)}/${formatBytes(transfer.expected)} transferred` : ""
+}
+
+function parseNixEvent(line: string): Record<string, unknown> | undefined {
+  if (!line.startsWith("@nix ")) return undefined
+  try {
+    const event = JSON.parse(line.slice("@nix ".length))
+    return event !== null && typeof event === "object" ? event as Record<string, unknown> : undefined
+  } catch {
+    return undefined
+  }
+}
+
+function stringField(event: Record<string, unknown>, index: number): string | undefined {
+  const fields = event.fields
+  return Array.isArray(fields) && typeof fields[index] === "string" ? fields[index] : undefined
+}
+
+function formatNixEvent(job: BuildJob, event: Record<string, unknown>): string | undefined {
+  const action = event.action
+  const id = typeof event.id === "number" ? event.id : undefined
+
+  if (action === "start" && id !== undefined) {
+    const type = typeof event.type === "number" ? event.type : -1
+    const name = typeof event.name === "string" ? event.name : undefined
+    const text = typeof event.text === "string" ? event.text : ""
+    const derivation = stringField(event, 0)?.endsWith(".drv")
+      ? stringField(event, 0)
+      : text.match(/building '([^']+\.drv)'/)?.[1]
+    job.activities.set(id, { type, name, text, derivation })
+    if (derivation) job.activeDerivations.set(id, derivation)
+    return derivation ? `building '${derivation}'` : text || undefined
+  }
+
+  if (action === "result" && id !== undefined) {
+    const fields = event.fields
+    const activity = job.activities.get(id)
+    if (Array.isArray(fields) && fields.length === 4 && fields.every((field) => typeof field === "number")) {
+      const [done, expected, running, failed] = fields as number[]
+      if (activity?.type === 104 || activity?.name === "Builds") {
+        job.progress = { done, expected, running, failed }
+      } else if (Math.max(done, expected, running, failed) >= 1024) {
+        job.transfers.set(id, { done, expected })
+      }
+    }
+    const output = stringField(event, 0)
+    if (output && activity?.derivation) return `${derivationName(activity.derivation)}: ${output}`
+    return undefined
+  }
+
+  if (action === "stop" && id !== undefined) {
+    job.activeDerivations.delete(id)
+    job.transfers.delete(id)
+    job.activities.delete(id)
+    return undefined
+  }
+
+  if (action === "msg" && typeof event.msg === "string") return event.msg
+  return undefined
+}
+
+function updateStatus(context: ExtensionContext, jobs: Iterable<BuildJob>) {
   if (!context.hasUI) return
-  if (!job) {
+  const activeJobs = [...jobs]
+  if (activeJobs.length === 0) {
     context.ui.setStatus(STATUS_KEY, undefined)
     return
   }
 
-  const elapsedSeconds = Math.floor((Date.now() - job.startedAt) / 1000)
-  context.ui.setStatus(STATUS_KEY, `Nix build ${job.host}, ${elapsedSeconds}s`)
+  const status = activeJobs.map((job) => {
+    const elapsedSeconds = Math.floor((Date.now() - job.startedAt) / 1000)
+    return `${job.description}, ${elapsedSeconds}s${progressSummary(job)}${transferSummary(job)}${activeBuilds(job)}`
+  })
+  context.ui.setStatus(STATUS_KEY, `Nix build ${status.join("; ")}`)
 }
 
 function stopProcessGroup(childProcess: ChildProcess) {
@@ -104,15 +232,18 @@ function stopProcessGroup(childProcess: ChildProcess) {
   }
 }
 
-function parseCommandArguments(argumentsText: string): NixosBuildInput {
-  const [action, host, user] = argumentsText.trim().split(/\s+/)
-  if (action === "start") return { action, host, user }
+function parseCommandArguments(argumentsText: string): NixBuildInput {
+  const argumentsList = argumentsText.trim().split(/\s+/)
+  const [action, firstArgument, secondArgument] = argumentsList
+  if (action === "start-build") {
+    return firstArgument ? { action, installables: argumentsList.slice(1) } : { action }
+  }
   if (action === "stop" || action === "status" || action === "logs") return { action }
-  throw new Error("Usage: /nixos-build start [host] [user] | stop | status | logs")
+  throw new Error("Usage: /nix-build start-build [installable]... | stop | status | logs")
 }
 
 export default function (pi: ExtensionAPI) {
-  let activeJob: BuildJob | undefined
+  const activeJobs = new Map<BuildKind, BuildJob>()
   let statusTimer: NodeJS.Timeout | undefined
 
   const clearStatusTimer = () => {
@@ -135,12 +266,12 @@ export default function (pi: ExtensionAPI) {
       {
         customType: MESSAGE_TYPE,
         content: [
-          `Background Nix build ${label} for ${job.host}:`,
+          `Background Nix build ${label} for ${job.description}:`,
           "```text",
           contextLines,
           "```",
           `The build is still running. Log: ${job.logPath}`,
-          "Do not edit the configuration and leave this build running. Stop it before making a fix, then start a new build.",
+          "You may edit the configuration while this broad build continues. Validate the fix first with a targeted build of the failing package or expression, then start a new broad build.",
         ].join("\n"),
         display: true,
         details: { kind, line, logPath: job.logPath },
@@ -149,15 +280,27 @@ export default function (pi: ExtensionAPI) {
     )
   }
 
-  const appendOutput = (context: ExtensionContext, job: BuildJob, chunk: Buffer | string) => {
-    const text = chunk.toString()
-    for (const line of text.split(/\r?\n/)) {
+  const appendOutput = (
+    context: ExtensionContext,
+    job: BuildJob,
+    logStream: ReturnType<typeof createWriteStream>,
+    chunk: Buffer | string,
+  ) => {
+    job.pendingOutput += chunk.toString()
+    const lines = job.pendingOutput.split(/\r?\n/)
+    job.pendingOutput = lines.pop() ?? ""
+
+    for (const line of lines) {
       if (!line) continue
-      job.recentLines.push(line)
+      const event = parseNixEvent(line)
+      const formatted = event ? formatNixEvent(job, event) : line
+      if (!formatted) continue
+      logStream.write(`${formatted}\n`)
+      job.recentLines.push(formatted)
       if (job.recentLines.length > MAX_LOG_LINES) job.recentLines.shift()
 
-      const kind = issueKindForLine(line)
-      if (kind) notifyAgent(context, job, kind, line)
+      const kind = issueKindForLine(formatted)
+      if (kind) notifyAgent(context, job, kind, formatted)
     }
   }
 
@@ -165,13 +308,16 @@ export default function (pi: ExtensionAPI) {
     context: ExtensionContext,
     requestedHost?: string,
     requestedUser?: string,
+    installables?: string[],
   ): Promise<string> => {
-    if (activeJob) {
-      throw new Error(`A NixOS build is already running for ${activeJob.host}. Stop it before starting another.`)
+    const kind: BuildKind = installables ? "expression" : "system"
+    if (activeJobs.has(kind)) {
+      throw new Error(`A background Nix ${kind} build is already running. Stop it before starting another ${kind} build.`)
     }
 
-    const host = validateAttributeName(requestedHost ?? hostname(), "host")
-    const user = validateAttributeName(requestedUser ?? process.env.USER ?? "", "user")
+    const host = installables ? undefined : validateAttributeName(requestedHost ?? hostname(), "host")
+    const user = installables ? undefined : validateAttributeName(requestedUser ?? process.env.USER ?? "", "user")
+    const description = installables ? `installables ${installables.join(" ")}` : host!
     const directory = await fileSystem.mkdtemp("/tmp/pi-nixos-build-")
     const logPath = join(directory, "build.log")
     const outputLink = join(directory, "result")
@@ -181,13 +327,13 @@ export default function (pi: ExtensionAPI) {
       [
         "build",
         "--impure",
+        ...(installables ? ["--inputs-from", "."] : []),
         "--keep-going",
         "--log-format",
-        "raw",
+        "internal-json",
         "--out-link",
         outputLink,
-        targetForSystem(host),
-        targetForHome(host, user),
+        ...(installables ?? [targetForSystem(host!), targetForHome(host!, user!)]),
       ],
       {
         cwd: context.cwd,
@@ -198,46 +344,52 @@ export default function (pi: ExtensionAPI) {
     )
 
     const job: BuildJob = {
+      kind,
       childProcess,
-      host,
-      user,
+      host: host ?? "expression",
+      user: user ?? "",
       logPath,
+      description,
       outputLink,
       recentLines: [],
+      pendingOutput: "",
+      activities: new Map(),
+      activeDerivations: new Map(),
+      transfers: new Map(),
+      progress: undefined,
       reportedIssues: new Set(),
       reportCount: 0,
       startedAt: Date.now(),
       stopping: false,
     }
-    activeJob = job
-    updateStatus(context, job)
-    statusTimer = setInterval(() => updateStatus(context, activeJob), 1000)
+    activeJobs.set(kind, job)
+    updateStatus(context, activeJobs.values())
+    statusTimer ??= setInterval(() => updateStatus(context, activeJobs.values()), 1000)
 
     const consumeOutput = (chunk: Buffer) => {
-      logStream.write(chunk)
-      appendOutput(context, job, chunk)
+      appendOutput(context, job, logStream, chunk)
     }
     childProcess.stdout?.on("data", consumeOutput)
     childProcess.stderr?.on("data", consumeOutput)
 
     childProcess.on("error", (error) => {
-      logStream.write(`${error.message}\n`)
-      appendOutput(context, job, error.message)
+      appendOutput(context, job, logStream, `${error.message}\n`)
     })
 
     childProcess.on("close", async (code, signal) => {
+      if (job.pendingOutput) appendOutput(context, job, logStream, "\n")
       logStream.end()
-      if (activeJob !== job) return
+      if (activeJobs.get(job.kind) !== job) return
 
-      activeJob = undefined
-      clearStatusTimer()
-      updateStatus(context)
+      activeJobs.delete(job.kind)
+      if (activeJobs.size === 0) clearStatusTimer()
+      updateStatus(context, activeJobs.values())
 
       const result = job.stopping
-        ? `Background Nix build stopped for ${host}.`
+        ? `Background Nix build stopped for ${job.description}.`
         : code === 0
-          ? `Background Nix build succeeded for ${host}. It did not activate the configuration.`
-          : `Background Nix build failed for ${host} with ${signal ? `signal ${signal}` : `exit code ${code ?? "unknown"}`}.`
+          ? `Background Nix build succeeded for ${job.description}. It did not activate the configuration.`
+          : `Background Nix build failed for ${job.description} with ${signal ? `signal ${signal}` : `exit code ${code ?? "unknown"}`}.`
       pi.sendMessage(
         {
           customType: MESSAGE_TYPE,
@@ -249,42 +401,53 @@ export default function (pi: ExtensionAPI) {
       )
     })
 
-    return `Started a background Nix build for ${host} and ${user}. It builds but does not activate the configuration. Log: ${logPath}`
+    return installables
+      ? `Started a background Nix build for ${installables.join(" ")}, using this flake's inputs. It does not activate the configuration. Log: ${logPath}`
+      : `Started a background Nix build for ${host} and ${user}. It builds but does not activate the configuration. Log: ${logPath}`
   }
 
   const stop = (): string => {
-    if (!activeJob) return "No background Nix build is running."
-    activeJob.stopping = true
-    stopProcessGroup(activeJob.childProcess)
-    return `Stopping the background Nix build for ${activeJob.host}.`
+    if (activeJobs.size === 0) return "No background Nix build is running."
+    const descriptions = [...activeJobs.values()].map((job) => {
+      job.stopping = true
+      stopProcessGroup(job.childProcess)
+      return job.description
+    })
+    return `Stopping background Nix builds for ${descriptions.join(" and ")}.`
   }
 
   const status = (): string => {
-    if (!activeJob) return "No background Nix build is running."
-    const elapsedSeconds = Math.floor((Date.now() - activeJob.startedAt) / 1000)
-    return `Background Nix build for ${activeJob.host} has run for ${elapsedSeconds}s. Log: ${activeJob.logPath}`
+    if (activeJobs.size === 0) return "No background Nix build is running."
+    return [...activeJobs.values()].map((job) => {
+      const elapsedSeconds = Math.floor((Date.now() - job.startedAt) / 1000)
+      return `Background Nix build for ${job.description} has run for ${elapsedSeconds}s. Log: ${job.logPath}`
+    }).join("\n")
   }
 
   const logs = async (lineCount: number): Promise<string> => {
-    if (!activeJob) return "No background Nix build is running."
-    const log = await fileSystem.readFile(activeJob.logPath, "utf8").catch(() => "")
-    return tail(log.split(/\r?\n/), lineCount) || "The build has not produced output yet."
+    if (activeJobs.size === 0) return "No background Nix build is running."
+    const logs = await Promise.all([...activeJobs.values()].map(async (job) => {
+      const log = await fileSystem.readFile(job.logPath, "utf8").catch(() => "")
+      const output = tail(log.split(/\r?\n/), lineCount) || "The build has not produced output yet."
+      return `${job.description}:\n${output}`
+    }))
+    return logs.join("\n\n")
   }
 
   pi.registerTool({
-    name: "nixos_build",
-    label: "NixOS Build",
+    name: "nix_build",
+    label: "Nix Build",
     description:
-      "Start, stop, inspect, or read logs from a background NixOS and Home Manager build. It never activates a configuration. Start it before a long build, stop it before editing after a failure, and restart it to validate a fix.",
+      "Start, stop, inspect, or read logs from background NixOS, Home Manager, and targeted expression builds. It never activates a configuration. Keep a broad build running while investigating failures, validate each fix with a targeted build, then start a new broad build.",
     promptSnippet: "Run and monitor background NixOS builds without activating them",
     promptGuidelines: [
-      "Use nixos_build to start NixOS builds that may take a long time. When it reports a failure, stop the build before editing configuration files, then start a new build after the fix.",
+      "Use nix_build to start long NixOS builds. When it reports a failure, leave the broad build running, edit the configuration, and use nix_build with action start-build and installables to validate the failed package or expression. Start a new broad build after the targeted build passes.",
     ],
-    parameters: nixosBuildSchema,
+    parameters: nixBuildSchema,
     async execute(_toolCallId, parameters, _signal, _onUpdate, context) {
       let message: string
-      if (parameters.action === "start") {
-        message = await start(context, parameters.host, parameters.user)
+      if (parameters.action === "start-build") {
+        message = await start(context, parameters.host, parameters.user, parameters.installables)
       } else if (parameters.action === "stop") {
         message = stop()
       } else if (parameters.action === "status") {
@@ -297,13 +460,13 @@ export default function (pi: ExtensionAPI) {
     },
   })
 
-  pi.registerCommand("nixos-build", {
-    description: "Build NixOS in the background without activation. Usage: /nixos-build start [host] [user] | stop | status | logs",
+  pi.registerCommand("nix-build", {
+    description: "Build NixOS outputs or installables in the background without activation. Usage: /nix-build start-build [installable]... | stop | status | logs",
     handler: async (argumentsText, context) => {
       try {
         const parameters = parseCommandArguments(argumentsText)
-        const message = parameters.action === "start"
-          ? await start(context, parameters.host, parameters.user)
+        const message = parameters.action === "start-build"
+          ? await start(context, parameters.host, parameters.user, parameters.installables)
           : parameters.action === "stop"
             ? stop()
             : parameters.action === "status"
@@ -318,9 +481,10 @@ export default function (pi: ExtensionAPI) {
 
   pi.on("session_shutdown", () => {
     clearStatusTimer()
-    if (!activeJob) return
-    activeJob.stopping = true
-    stopProcessGroup(activeJob.childProcess)
-    activeJob = undefined
+    for (const job of activeJobs.values()) {
+      job.stopping = true
+      stopProcessGroup(job.childProcess)
+    }
+    activeJobs.clear()
   })
 }
