@@ -71,7 +71,8 @@ type BuildJob = {
   outputLink: string
   description: string
   recentLines: string[]
-  pendingOutput: string
+  pendingStdout: string
+  pendingStderr: string
   activities: Map<number, NixActivity>
   activeDerivations: Map<number, string>
   transfers: Map<number, { done: number; expected: number }>
@@ -172,9 +173,11 @@ function formatNixEvent(job: BuildJob, event: Record<string, unknown>): string |
     const type = typeof event.type === "number" ? event.type : -1
     const name = typeof event.name === "string" ? event.name : undefined
     const text = typeof event.text === "string" ? event.text : ""
-    const derivation = stringField(event, 0)?.endsWith(".drv")
-      ? stringField(event, 0)
-      : text.match(/building '([^']+\.drv)'/)?.[1]
+    const derivation = type === 105
+      ? stringField(event, 0)?.endsWith(".drv")
+        ? stringField(event, 0)
+        : text.match(/building '([^']+\.drv)'/)?.[1]
+      : undefined
     job.activities.set(id, { type, name, text, derivation })
     if (derivation) job.activeDerivations.set(id, derivation)
     return derivation ? `building '${derivation}'` : text || undefined
@@ -191,7 +194,8 @@ function formatNixEvent(job: BuildJob, event: Record<string, unknown>): string |
         job.transfers.set(id, { done, expected })
       }
     }
-    const output = stringField(event, 0)
+    const resultType = typeof event.type === "number" ? event.type : -1
+    const output = resultType === 101 ? stringField(event, 0) : undefined
     if (output && activity?.derivation) return `${derivationName(activity.derivation)}: ${output}`
     return undefined
   }
@@ -284,11 +288,13 @@ export default function (pi: ExtensionAPI) {
     context: ExtensionContext,
     job: BuildJob,
     logStream: ReturnType<typeof createWriteStream>,
+    source: "stdout" | "stderr",
     chunk: Buffer | string,
   ) => {
-    job.pendingOutput += chunk.toString()
-    const lines = job.pendingOutput.split(/\r?\n/)
-    job.pendingOutput = lines.pop() ?? ""
+    const pendingKey = source === "stdout" ? "pendingStdout" : "pendingStderr"
+    job[pendingKey] += chunk.toString()
+    const lines = job[pendingKey].split(/\r?\n/)
+    job[pendingKey] = lines.pop() ?? ""
 
     for (const line of lines) {
       if (!line) continue
@@ -352,7 +358,8 @@ export default function (pi: ExtensionAPI) {
       description,
       outputLink,
       recentLines: [],
-      pendingOutput: "",
+      pendingStdout: "",
+      pendingStderr: "",
       activities: new Map(),
       activeDerivations: new Map(),
       transfers: new Map(),
@@ -366,18 +373,19 @@ export default function (pi: ExtensionAPI) {
     updateStatus(context, activeJobs.values())
     statusTimer ??= setInterval(() => updateStatus(context, activeJobs.values()), 1000)
 
-    const consumeOutput = (chunk: Buffer) => {
-      appendOutput(context, job, logStream, chunk)
+    const consumeOutput = (source: "stdout" | "stderr", chunk: Buffer) => {
+      appendOutput(context, job, logStream, source, chunk)
     }
-    childProcess.stdout?.on("data", consumeOutput)
-    childProcess.stderr?.on("data", consumeOutput)
+    childProcess.stdout?.on("data", (chunk) => consumeOutput("stdout", chunk))
+    childProcess.stderr?.on("data", (chunk) => consumeOutput("stderr", chunk))
 
     childProcess.on("error", (error) => {
-      appendOutput(context, job, logStream, `${error.message}\n`)
+      appendOutput(context, job, logStream, "stderr", `${error.message}\n`)
     })
 
     childProcess.on("close", async (code, signal) => {
-      if (job.pendingOutput) appendOutput(context, job, logStream, "\n")
+      if (job.pendingStdout) appendOutput(context, job, logStream, "stdout", "\n")
+      if (job.pendingStderr) appendOutput(context, job, logStream, "stderr", "\n")
       logStream.end()
       if (activeJobs.get(job.kind) !== job) return
 
