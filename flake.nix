@@ -369,10 +369,22 @@
               switch-home = pkgs.writeShellApplication {
                 name = "switch-home";
                 text = ''
+                  if [[ "''${1-}" == "--plain" ]]
+                  then
+                    build=("${pkgs.nix}/bin/nix" build --log-format raw)
+                    shift
+                  elif [[ $# -eq 0 ]]
+                  then
+                    build=(nom build)
+                  else
+                    echo "Usage: switch-home [--plain]" >&2
+                    exit 2
+                  fi
+
                   IMPURITY_PATH="$(pwd)"
                   export IMPURITY_PATH
                   HOSTNAME="''${HOSTNAME-$(hostname)}"
-                  nom build --impure --keep-going --out-link home-result ${self}#nixosConfigurations."$HOSTNAME".config.home-manager.users.\""$USER"\".home.activationPackage
+                  "''${build[@]}" --impure --keep-going --out-link home-result ${self}#nixosConfigurations."$HOSTNAME".config.home-manager.users.\""$USER"\".home.activationPackage
                   ./home-result/activate
                 '';
                 runtimeInputs = [ pkgs.nix-output-monitor ];
@@ -388,11 +400,23 @@
               switch = pkgs.writeShellApplication {
                 name = "switch";
                 text = ''
+                  if [[ "''${1-}" == "--plain" ]]
+                  then
+                    build=("${pkgs.nix}/bin/nix" build --log-format raw)
+                    shift
+                  elif [[ $# -eq 0 ]]
+                  then
+                    build=(nom build)
+                  else
+                    echo "Usage: switch [--plain]" >&2
+                    exit 2
+                  fi
+
                   IMPURITY_PATH="$(pwd)"
                   export IMPURITY_PATH
                   HOSTNAME="''${HOSTNAME-$(hostname)}"
-                  nom build --impure --keep-going --out-link system-result ${self}#nixosConfigurations."$HOSTNAME".config.system.build.toplevel
-                  nom build --impure --keep-going --out-link home-result ${self}#nixosConfigurations."$HOSTNAME".config.home-manager.users.\""$USER"\".home.activationPackage
+                  "''${build[@]}" --impure --keep-going --out-link system-result ${self}#nixosConfigurations."$HOSTNAME".config.system.build.toplevel
+                  "''${build[@]}" --impure --keep-going --out-link home-result ${self}#nixosConfigurations."$HOSTNAME".config.home-manager.users.\""$USER"\".home.activationPackage
                   if [[ "$(readlink --canonicalize system-result)" != "$(readlink --canonicalize /nix/var/nix/profiles/system)" ]]
                   then
                     ${pkgs.coin}/bin/coin

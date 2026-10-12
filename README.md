@@ -25,6 +25,7 @@ Which does the following:
 - Switch to new configuration for home-manager
 - Switch to new configuration for NixOS
 - Builds configuration using [`nom`](https://github.com/maralorn/nix-output-monitor) for more insightful output.
+- Pass `--plain` to use Nix's raw log output instead, which is suitable for non-interactive tools and agents: `nix run --impure .#switch -- --plain`.
 - Asks for `sudo` only when system configuration has actually changed.
 - Plings when actually switching system configuration.
 
