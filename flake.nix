@@ -85,14 +85,7 @@
         pkgs.applyPatches {
           name = "nixpkgs-patched";
           src = inputs.nixpkgs;
-          patches = [
-            # Fixes gdbuspp and OpenVPN3 build failures under GCC 16.
-            # Source: https://github.com/NixOS/nixpkgs/pull/569341.patch
-            (pkgs.fetchpatch {
-              url = "https://github.com/NixOS/nixpkgs/pull/569341.patch";
-              hash = "sha256-aQZwuXY5q6GTqb6brkvSqmvagbsKl/13RMRmwuxz1js=";
-            })
-          ];
+          patches = [ ];
         };
 
       username = "bob.vanderlinden";
