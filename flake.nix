@@ -418,8 +418,12 @@
                   IMPURITY_PATH="$(pwd)"
                   export IMPURITY_PATH
                   HOSTNAME="''${HOSTNAME-$(hostname)}"
-                  "''${build[@]}" --impure --keep-going --out-link system-result ${self}#nixosConfigurations."$HOSTNAME".config.system.build.toplevel
-                  "''${build[@]}" --impure --keep-going --out-link home-result ${self}#nixosConfigurations."$HOSTNAME".config.home-manager.users.\""$USER"\".home.activationPackage
+                  # Build both targets together so Nix evaluates the shared NixOS configuration once.
+                  # `nix build --out-link system-result` names the second result system-result-1.
+                  "''${build[@]}" --impure --keep-going --out-link system-result \
+                    ${self}#nixosConfigurations."$HOSTNAME".config.system.build.toplevel \
+                    ${self}#nixosConfigurations."$HOSTNAME".config.home-manager.users.\""$USER"\".home.activationPackage
+                  ln --symbolic --force --no-target-directory "$(readlink system-result-1)" home-result
                   if [[ "$(readlink --canonicalize system-result)" != "$(readlink --canonicalize /nix/var/nix/profiles/system)" ]]
                   then
                     ${pkgs.coin}/bin/coin
