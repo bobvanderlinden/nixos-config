@@ -374,7 +374,7 @@
                 text = ''
                   if [[ "''${1-}" == "--plain" ]]
                   then
-                    build=("${pkgs.nix}/bin/nix" build --log-format raw)
+                    build=(nix build --log-format raw)
                     shift
                   elif [[ $# -eq 0 ]]
                   then
@@ -405,7 +405,7 @@
                 text = ''
                   if [[ "''${1-}" == "--plain" ]]
                   then
-                    build=("${pkgs.nix}/bin/nix" build --log-format raw)
+                    build=(nix build --log-format raw)
                     shift
                   elif [[ $# -eq 0 ]]
                   then
@@ -428,7 +428,7 @@
                   then
                     ${pkgs.coin}/bin/coin
                     system_result="$(readlink system-result)"
-                    switch_system_command="${pkgs.nix}/bin/nix-env -p /nix/var/nix/profiles/system --set \"$system_result\" && \"$system_result/bin/switch-to-configuration\" switch"
+                    switch_system_command="nix-env -p /nix/var/nix/profiles/system --set \"$system_result\" && \"$system_result/bin/switch-to-configuration\" switch"
                     if [[ -e /run/wrappers/bin/pkexec ]]
                     then
                       /run/wrappers/bin/pkexec ${pkgs.runtimeShell} -c "$switch_system_command"
