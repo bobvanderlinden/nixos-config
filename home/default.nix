@@ -271,7 +271,7 @@ in
 
       # Fonts
       liberation_ttf
-      ttf_bitstream_vera
+      ttf-bitstream-vera
 
       # Misc
       coin
