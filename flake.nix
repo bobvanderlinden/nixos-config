@@ -140,7 +140,7 @@
         import nixpkgs (options // { inherit system config overlays; });
       nixosSystem = import (patchedNixpkgs + "/nixos/lib/eval-config.nix");
       mkLaptop =
-        hostModule: extraModules:
+        hostModule: homeProfile: extraModules:
         nixosSystem {
           inherit system;
           specialArgs = { inherit inputs collectNixModules; };
@@ -149,6 +149,9 @@
             ++ [
               ./system/profiles/laptop.nix
               hostModule
+              {
+                home-manager.users.${username}.imports = [ homeProfile ];
+              }
             ]
             ++ extraModules;
         };
@@ -278,8 +281,8 @@
       };
 
       nixosConfigurations = {
-        nac44250 = mkLaptop ./system/nac44250.nix [ ];
-        nac54003 = mkLaptop ./system/nac54003.nix [
+        nac44250 = mkLaptop ./system/nac44250.nix ./home/profiles/machines/nac44250.nix [ ];
+        nac54003 = mkLaptop ./system/nac54003.nix ./home/profiles/machines/nac54003.nix [
           inputs.disko.nixosModules.disko
           ./system/profiles/colibri.nix
           ./system/profiles/localllm.nix

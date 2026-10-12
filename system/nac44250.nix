@@ -85,11 +85,6 @@
 
   powerManagement.cpuFreqGovernor = lib.mkDefault "powersave";
 
-  # Override the shared Home Manager service setting for this laptop only.
-  home-manager.users."bob.vanderlinden".systemd.user.services.quickshell.Service.Environment = lib.mkForce [
-    "QUICKSHELL_BAR_EDGE=top"
-  ];
-
   # This system was first installed with NixOS 21.03.
   system.stateVersion = "21.03";
 }
