@@ -1,5 +1,7 @@
 {
   impurity,
+  lib,
+  osConfig,
   pkgs,
   ...
 }:
@@ -8,7 +10,19 @@
     enable = true;
     configType = "lua";
     plugins = [ pkgs.scrolloverview ];
-    extraLuaFiles.config = impurity.link ./hyprland.lua;
+    extraLuaFiles = {
+      config = impurity.link ./hyprland.lua;
+    }
+    // lib.optionalAttrs (osConfig.networking.hostName == "nac44250") {
+      # This laptop's 3840x2400 panel needs a 2x logical scale. Keep the
+      # native-resolution configuration for the other laptop.
+      monitor = ''
+        hl.monitor({
+          output = "eDP-1",
+          scale = 2,
+        })
+      '';
+    };
   };
 
   home.packages = with pkgs; [ jq ];
