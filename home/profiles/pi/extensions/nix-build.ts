@@ -446,10 +446,10 @@ export default function (pi: ExtensionAPI) {
     name: "nix_build",
     label: "Nix Build",
     description:
-      "Start, stop, inspect, or read logs from background NixOS, Home Manager, and targeted expression builds. It never activates a configuration. Keep a broad build running while investigating failures, validate each fix with a targeted build, then start a new broad build.",
+      "Start, stop, inspect, or read logs from background NixOS, Home Manager, and targeted expression builds. It never activates a configuration. The build sends the agent a message on warnings, failures, and completion. Keep a broad build running while investigating failures, validate each fix with a targeted build, then start a new broad build.",
     promptSnippet: "Run and monitor background NixOS builds without activating them",
     promptGuidelines: [
-      "Use nix_build to start long NixOS builds. When it reports a failure, leave the broad build running, edit the configuration, and use nix_build with action start-build and installables to validate the failed package or expression. Start a new broad build after the targeted build passes.",
+      "Use nix_build to start long NixOS builds, then return control. Do not poll it or use sleep. nix_build sends messages when the build warns, fails, or completes. When it reports a failure, leave the broad build running, edit the configuration, and use nix_build with action start-build and installables to validate the failed package or expression. Start a new broad build after the targeted build passes.",
     ],
     parameters: nixBuildSchema,
     async execute(_toolCallId, parameters, _signal, _onUpdate, context) {
