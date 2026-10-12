@@ -132,13 +132,24 @@
         }@options:
         import nixpkgs (options // { inherit system config overlays; });
       nixosSystem = import (patchedNixpkgs + "/nixos/lib/eval-config.nix");
+      commonLaptopModules = [
+        self.nixosModules.overlays
+        self.nixosModules.single-user
+        self.nixosModules."suite-single-user"
+        self.nixosModules."suite-nix-channels"
+        self.nixosModules.home-manager
+        self.nixosModules.lanzaboote
+        self.nixosModules.determinate
+        self.nixosModules.nix-index-database-home-manager
+        self.nixosModules.impurity-home-manager
+      ];
       mkLaptop =
         hostModule: homeProfile: extraModules:
         nixosSystem {
           inherit system;
           specialArgs = { inherit inputs collectNixModules; };
           modules =
-            (builtins.attrValues self.nixosModules)
+            commonLaptopModules
             ++ [
               ./system/profiles/laptop.nix
               hostModule
@@ -160,14 +171,22 @@
         };
 
       overlays.default =
-        final: prev:
-        (prev.lib.packagesFromDirectoryRecursive {
-          inherit (final) callPackage;
-          directory = ./packages;
-        })
+        final: _prev:
+        let
+          packageEntries = builtins.readDir ./packages;
+          packageNames = builtins.filter (
+            name:
+            packageEntries.${name} == "directory" && builtins.pathExists (./packages + "/${name}/package.nix")
+          ) (builtins.attrNames packageEntries);
+          packages = builtins.listToAttrs (
+            builtins.map (name: {
+              inherit name;
+              value = final.callPackage (./packages + "/${name}/package.nix") { };
+            }) packageNames
+          );
+        in
+        packages
         // {
-          "3dmmex" = final.callPackage ./packages/3dmmex/package.nix { };
-          pi = final.callPackage ./packages/pi/package.nix { };
           scrolloverview = final.callPackage ./packages/scrolloverview/package.nix {
             src = inputs.scrolloverview;
           };
@@ -295,26 +314,6 @@
       system:
       let
         pkgs = mkPkgs { inherit system; };
-        nac54003Installer = pkgs.writeShellApplication {
-          name = "install-nac54003";
-          runtimeInputs = with pkgs; [
-            disko
-            findutils
-            gnused
-            jq
-            nix-output-monitor
-            shadow
-            util-linux
-          ];
-          text =
-            builtins.replaceStrings
-              [ "@flakeSource@" "@flakeRevision@" ]
-              [
-                "${self.outPath}"
-                (self.rev or "unknown")
-              ]
-              (builtins.readFile ./packages/install-nixos/install-nac54003.sh);
-        };
       in
       {
         checks = pkgs.lib.optionalAttrs (system == "x86_64-linux") {
@@ -349,11 +348,11 @@
               (package ? meta) -> (package.meta ? platforms) -> builtins.elem system package.meta.platforms
             ) finalPackages;
           in
-          compatiblePackages // { install-nac54003 = nac54003Installer; };
+          compatiblePackages;
 
-        apps.install-nac54003 = {
+        apps.install-nixos = {
           type = "app";
-          program = "${nac54003Installer}/bin/install-nac54003";
+          program = "${pkgs.install-nixos}/bin/install-nixos";
         };
 
         apps.switch-home = {

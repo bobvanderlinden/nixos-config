@@ -47,8 +47,8 @@
   disko.devices = {
     disk.main = {
       type = "disk";
-      # install-nac54003 replaces this with the selected stable disk path.
-      device = "/dev/disk/by-id/REPLACE-WITH-INSTALLER-DISK";
+      # install-nixos replaces this in a temporary source copy with the selected stable disk path.
+      device = "@INSTALLER_DISK@";
       content = {
         type = "gpt";
         partitions = {
@@ -78,7 +78,7 @@
             content = {
               type = "luks";
               name = "nixos";
-              passwordFile = "/tmp/nixos-luks-password";
+              passwordFile = "@INSTALLER_LUKS_PASSWORD_FILE@";
               settings.allowDiscards = true;
               extraOpenArgs = [ "--allow-discards" ];
               content = {
@@ -95,7 +95,7 @@
       type = "lvm_vg";
       lvs = {
         swap = {
-          size = "SWAP_SIZE";
+          size = "@INSTALLER_SWAP_SIZE@";
           content = {
             type = "swap";
             resumeDevice = true;

@@ -1,5 +1,6 @@
 {
   impurity,
+  lib,
   pkgs,
   ...
 }:
@@ -14,7 +15,7 @@
   home.packages = with pkgs; [ jq ];
 
   xdg.configFile = {
-    "uwsm/env".text = ''
+    "uwsm/env".text = lib.mkBefore ''
       export BROWSER=chromium
       export EDITOR="code --wait"
       export ELECTRON_OZONE_PLATFORM_HINT=wayland
@@ -25,9 +26,6 @@
       export CLUTTER_BACKEND=wayland
       export MOZ_DISABLE_RDD_SANDBOX=1
       export NIXOS_OZONE_WL=1
-      export LIBVA_DRIVER_NAME=nvidia
-      export __GLX_VENDOR_LIBRARY_NAME=nvidia
-      export NVD_BACKEND=direct
     '';
   };
 }

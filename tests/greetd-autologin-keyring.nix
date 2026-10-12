@@ -43,6 +43,7 @@ in
     { lib, pkgs, ... }:
     {
       imports = [ greetdAutologinKeyringModule ];
+      services.greetd.autologinKeyring.enable = true;
 
       virtualisation = {
         emptyDiskImages = [ 512 ];

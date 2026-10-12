@@ -1,30 +1,65 @@
 set -euo pipefail
 
 flake_source='@flakeSource@'
-flake_revision='@flakeRevision@'
-host='nac54003'
 target_mount='/mnt'
-
-printf 'nixos-config revision: %s\n' "$flake_revision"
 
 usage() {
   cat <<'EOF'
-Usage: install-nac54003 [--disk DEVICE] [--reuse-existing]
+Usage: install-nixos --host HOST --disko-config PATH --user USER [OPTIONS]
 
-Selects the only writable, non-USB disk when possible. Use --disk to choose a
-specific whole-disk device. --reuse-existing mounts an existing NixOS layout
-instead of partitioning it again. The command always shows its plan and
-requires an explicit confirmation before it writes anything.
+Install the selected flake host from a NixOS installer environment. HOST is the
+nixosConfigurations attribute to install. DISKO-CONFIG is its source-relative
+Disko template path (for example system/nac54003.nix). USER is the configured
+normal user whose password will be set to the entered LUKS passphrase.
+
+The Disko template must contain these literal placeholders, which are replaced
+in a temporary source copy and never in the checkout:
+  @INSTALLER_DISK@                selected stable whole-disk path
+  @INSTALLER_SWAP_SIZE@           RAM plus 2 GiB, such as 34G
+  @INSTALLER_LUKS_PASSWORD_FILE@  temporary file holding the LUKS passphrase
+
+Options:
+  --disk DEVICE          Whole non-removable disk to use. If omitted, selects
+                         the only writable non-USB disk.
+  --target-mount PATH    Target mount point (default: /mnt).
+  --reuse-existing       Mount an existing NIXOS-LUKS layout instead of erasing.
+  --help                 Show this help text.
+
+The command shows the plan and requires ERASE or REUSE confirmation before
+writing anything.
 EOF
 }
 
+host=''
+disko_config=''
+user=''
 disk=''
 reuse_existing=false
 while (( $# > 0 )); do
   case "$1" in
+    --host)
+      (( $# >= 2 )) || { echo '--host needs a flake host name' >&2; exit 2; }
+      host="$2"
+      shift 2
+      ;;
+    --disko-config)
+      (( $# >= 2 )) || { echo '--disko-config needs a source-relative path' >&2; exit 2; }
+      disko_config="$2"
+      shift 2
+      ;;
+    --user)
+      (( $# >= 2 )) || { echo '--user needs a configured user name' >&2; exit 2; }
+      user="$2"
+      shift 2
+      ;;
     --disk)
       (( $# >= 2 )) || { echo '--disk needs a device path' >&2; exit 2; }
       disk="$2"
+      shift 2
+      ;;
+    --target-mount)
+      (( $# >= 2 )) || { echo '--target-mount needs a path' >&2; exit 2; }
+      target_mount="$2"
       shift 2
       ;;
     --reuse-existing)
@@ -42,6 +77,22 @@ while (( $# > 0 )); do
       ;;
   esac
 done
+
+if [[ -z "$host" || -z "$disko_config" || -z "$user" ]]; then
+  echo '--host, --disko-config, and --user are required.' >&2
+  usage >&2
+  exit 2
+fi
+
+if [[ ! "$host" =~ ^[[:alnum:]._-]+$ ]]; then
+  echo "Invalid host name: $host" >&2
+  exit 2
+fi
+
+if [[ "$disko_config" == /* || "$disko_config" == *".."* ]]; then
+  echo "--disko-config must be a source-relative path without '..': $disko_config" >&2
+  exit 2
+fi
 
 if (( EUID != 0 )); then
   echo 'Run this as root from the NixOS installer environment.' >&2
@@ -152,6 +203,8 @@ cat <<EOF
 The following installation plan will $installation_action.
 
 Host:             $host
+Disko template:   $disko_config
+Configured user:  $user
 Selected disk:    $canonical_disk
 Persistent path:  $stable_disk
 Size:             $size
@@ -203,11 +256,22 @@ fi
 printf '%s' "$luks_password" > "$password_file"
 
 cp --recursive --no-preserve=mode "$flake_source" "$work_directory/source"
+disko_config_path="$work_directory/source/$disko_config"
+if [[ ! -f "$disko_config_path" ]]; then
+  echo "Disko template does not exist in the flake source: $disko_config" >&2
+  exit 1
+fi
+for placeholder in @INSTALLER_SWAP_SIZE@ @INSTALLER_LUKS_PASSWORD_FILE@ @INSTALLER_DISK@; do
+  if ! grep --quiet --fixed-strings "$placeholder" "$disko_config_path"; then
+    echo "Disko template is missing required placeholder $placeholder: $disko_config" >&2
+    exit 1
+  fi
+done
 sed --in-place \
-  --expression "s|SWAP_SIZE|${swap_gib}G|" \
-  --expression "s|/tmp/nixos-luks-password|${password_file}|" \
-  --expression "s|/dev/disk/by-id/REPLACE-WITH-INSTALLER-DISK|${stable_disk}|" \
-  "$work_directory/source/system/nac54003.nix"
+  --expression "s|@INSTALLER_SWAP_SIZE@|${swap_gib}G|" \
+  --expression "s|@INSTALLER_LUKS_PASSWORD_FILE@|${password_file}|" \
+  --expression "s|@INSTALLER_DISK@|${stable_disk}|" \
+  "$disko_config_path"
 
 if [[ "$reuse_existing" == true ]]; then
   disko_mode='mount'
@@ -236,5 +300,5 @@ nixos-install \
   --system "$system_path" \
   --no-root-password
 
-printf '%s:%s\n' 'bob.vanderlinden' "$luks_password" | chpasswd --root "$target_mount"
+printf '%s:%s\n' "$user" "$luks_password" | chpasswd --root "$target_mount"
 unset luks_password luks_password_repeat

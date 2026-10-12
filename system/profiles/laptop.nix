@@ -6,6 +6,12 @@
   ...
 }:
 {
+  imports = [
+    ../modules/docker-config.nix
+    ../modules/greetd-autologin-keyring.nix
+    ../modules/wireguard.nix
+  ];
+
   # Allow opening a shell during boot.
   # systemd.additionalUpstreamSystemUnits = ["debug-shell.service"];
 
@@ -323,6 +329,7 @@
     };
   };
   services.systemd-lock-handler.enable = true;
+  services.greetd.autologinKeyring.enable = true;
 
   # Fingerprint reader
   security.pam.services.hyprlock = { };
@@ -352,6 +359,9 @@
     # };
     autoPrune.enable = true;
   };
+
+  virtualisation.dockerConfig.enable = true;
+  networking.wireguardNmProfile.enable = true;
 
   networking.firewall.trustedInterfaces = [ "docker0" ];
 
