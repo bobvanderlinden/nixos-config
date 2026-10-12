@@ -383,12 +383,6 @@
   nix = {
     registry.nixpkgs.flake = inputs.nixpkgs;
 
-    gc = {
-      dates = "weekly";
-      automatic = true;
-      options = "--delete-older-than 60d";
-    };
-
     settings = {
       # Source: https://github.com/NixOS/nix/issues/11728
       download-buffer-size = 524288000;
@@ -414,6 +408,16 @@
       lint-url-literals = "fatal";
     };
   };
+
+  # Determinate Nixd manages garbage collection continuously. Do not enable
+  # Nix's periodic collector alongside it.
+
+  # Keep online discard disabled (the default) and trim periodically instead.
+  # Skipping small extents prevents a GC from issuing excessive discard requests.
+  systemd.services.fstrim.serviceConfig.ExecStart = lib.mkForce [
+    ""
+    "${pkgs.util-linux}/sbin/fstrim --listed-in /etc/fstab:/proc/self/mountinfo --verbose --quiet-unsupported --minimum 1M"
+  ];
 
   programs.nh = {
     enable = true;
