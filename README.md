@@ -10,6 +10,8 @@ It includes the following:
 - Custom NixOS modules (see [system/modules/](system/modules/))
 - Custom home-manager modules (see [home/modules/](home/modules/))
 - Custom packages (see [packages/](packages/))
+- [Pi](https://github.com/badlogic/pi-mono) extensions (see [home/profiles/pi/extensions/](home/profiles/pi/extensions/))
+- [Quickshell](https://quickshell.org/) configuration (see [home/profiles/quickshell/](home/profiles/quickshell/))
 - Do not expect this configuration to work for your system as-is
 
 ## Usage
