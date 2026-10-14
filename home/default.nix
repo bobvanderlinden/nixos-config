@@ -168,6 +168,7 @@ in
 
       # Text Processing & Search
       ripgrep
+      anonymize
       fd
       sd
       q-text-as-data
