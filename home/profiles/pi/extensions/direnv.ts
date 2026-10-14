@@ -65,8 +65,12 @@ function runCommand(
   signal?: AbortSignal,
 ): Promise<CommandResult> {
   const environment = { ...process.env }
-  delete environment.DIRENV_DIR
-  delete environment.DIRENV_FILE
+  const direnvDir = environment.DIRENV_DIR?.replace(/^-/, "")
+
+  if (direnvDir !== cwd) {
+    delete environment.DIRENV_DIR
+    delete environment.DIRENV_FILE
+  }
 
   return new Promise((resolve) => {
     const childProcess = spawn(command, argumentsList, {
