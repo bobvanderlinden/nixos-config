@@ -45,13 +45,14 @@ PopupWidget {
     }
 
     property bool wifiConnecting: wifiDevice
-        ? wifiDevice.state === DeviceConnectionState.Connecting
-          || wifiDevice.state === DeviceConnectionState.Disconnecting
+        ? wifiDevice.state === ConnectionState.Connecting
+          || wifiDevice.state === ConnectionState.Disconnecting
         : false
 
     property string netText: {
         if (wiredConnected) return "󰈀";
         if (connectedNetwork) return wifiIcon(connectedNetwork.signalStrength);
+        if (nmWifiConnected) return "󰤨";
         return "󰤭";
     }
 
@@ -88,11 +89,13 @@ PopupWidget {
 
     property var nmVpnConnections: []
     property var nmWiredConnections: []
+    property bool nmWifiConnected: false
 
     function parseNmConnections(output) {
         const ESCAPE = "\x00";
         const vpns = [];
         const wired = [];
+        let wifiConnected = false;
         const lines = output.trim().split("\n");
         for (const line of lines) {
             if (!line) continue;
@@ -107,10 +110,13 @@ PopupWidget {
                 vpns.push({ uuid, name, active });
             } else if (type === "802-3-ethernet") {
                 if (active) wired.push({ uuid, name, device, active });
+            } else if (type === "802-11-wireless" && active) {
+                wifiConnected = true;
             }
         }
         root.nmVpnConnections = vpns;
         root.nmWiredConnections = wired;
+        root.nmWifiConnected = wifiConnected;
     }
 
     property bool wiredConnected: nmWiredConnections.length > 0
