@@ -111,7 +111,7 @@ in
     };
 
     mcp = {
-      enable = lib.mkDefault true;
+      enable = false;
       mcpServers = {
         slite = {
           url = "https://api.slite.com/mcp";
@@ -144,16 +144,19 @@ in
       enableAnalytics = false;
       enableInstallTelemetry = false;
       quietStartup = true;
+      tuiMode = "regular";
+      outputPad = 0;
       defaultProvider = "openai-codex";
-      defaultModel = "gpt-5.6-terra";
+      defaultModel = "gpt-6.1-sol";
       defaultThinkingLevel = "medium";
+      defaultTools = [ "+codemode" ];
       npmCommand = [ "${pkgs.nodejs}/bin/npm" ];
       subagents.defaultSubagentOnlyExtensions = [ "${piConfigDir}/extensions/direnv.ts" ];
       packages = [
         "npm:@earendil-works/pi-coding-agent@1.1.0"
         "npm:pi-subagents@0.77.0"
-        "npm:pi-web-access"
-        "npm:remote-pi"
+        "npm:pi-background-tasks@2.6.10"
+        "npm:pi-web-access@0.37.0"
         "npm:@ayulab/pi-rewind"
         "pi-lens"
       ];
