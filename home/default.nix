@@ -168,8 +168,8 @@ in
       tuicr
 
       # Text Processing & Search
-      ripgrep
       anonymize
+      ripgrep
       fd
       sd
       q-text-as-data
@@ -849,6 +849,7 @@ in
         # See https://github.com/nix-community/home-manager/issues/4744
         version = "1";
         editor = "code --wait";
+        aliases.wait-ci = "!gh pr checks --watch";
       };
     };
     programs.gh-dash.enable = true;
