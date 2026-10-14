@@ -87,6 +87,13 @@ hl.monitor({
   scale = 1,
 })
 
+hl.monitor({
+  output = "desc:HP Inc. HP Z27k G3 CN421739MS",
+  mode = "3840x2160@60",
+  position = "0x0",
+  scale = 2,
+})
+
 hl.window_rule({
   match = { class = "jetbrains-.*", title = "^win(.*)" },
   no_initial_focus = true,
