@@ -39,40 +39,20 @@ let
 
   piModels = {
     providers = {
-      "llama.cpp" = {
+      strata = {
         baseUrl = "http://127.0.0.1:8080/v1";
         api = "openai-completions";
-        apiKey = "llama.cpp";
+        apiKey = "strata";
         compat = {
           supportsDeveloperRole = false;
-          supportsReasoningEffort = false;
+          supportsReasoningEffort = true;
           supportsUsageInStreaming = false;
           maxTokensField = "max_tokens";
         };
         models = [
           {
-            id = "qwen3:14b";
-            name = "Qwen3 14B Q4_K_M local";
-            contextWindow = 16384;
-            maxTokens = 4096;
-            cost = {
-              input = 0;
-              output = 0;
-              cacheRead = 0;
-              cacheWrite = 0;
-            };
-          }
-        ];
-      };
-
-      colibri = {
-        baseUrl = "http://127.0.0.1:8081/v1";
-        api = "openai-completions";
-        apiKey = "local";
-        models = [
-          {
-            id = "glm-5.2-colibri";
-            name = "GLM-5.2 via Colibri";
+            id = "qwen3.8-flash-next";
+            name = "Qwen3.8-Flash-Next IQ2_XS via Strata";
             reasoning = true;
             input = [ "text" ];
             contextWindow = 32768;
@@ -86,6 +66,7 @@ let
           }
         ];
       };
+
     };
   };
 in

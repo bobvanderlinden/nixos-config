@@ -1,51 +1,74 @@
-{ pkgs, ... }:
+{ config, pkgs, ... }:
 let
-  llamaQwenServer = pkgs.writeShellApplication {
-    name = "llama-qwen-server";
+  strataQwenServer = pkgs.writeShellApplication {
+    name = "strata-qwen-server";
     runtimeInputs = [
-      pkgs.curl
-      pkgs.llama-cpp-cuda
+      pkgs.coreutils
+      pkgs.jq
+      pkgs.strata
+      config.hardware.nvidia.package
     ];
     text = ''
-      model_path="$STATE_DIRECTORY/Qwen3.5-9B-Q4_K_M.gguf"
-      model_url="https://huggingface.co/unsloth/Qwen3.5-9B-GGUF/resolve/main/Qwen3.5-9B-Q4_K_M.gguf"
+      export HOME="$STATE_DIRECTORY"
+      export XDG_CONFIG_HOME="$STATE_DIRECTORY/config"
+      export XDG_CACHE_HOME="$STATE_DIRECTORY/cache"
+      runtime_directory="$STATE_DIRECTORY/runtime"
+      model_config="$runtime_directory/strata-iq2_xs.json"
 
-      if [[ ! -f "$model_path" ]]; then
-        curl \
-          --continue-at - \
-          --fail \
-          --location \
-          --output "$model_path.part" \
-          --retry 3 \
-          "$model_url"
-        mv "$model_path.part" "$model_path"
+      mkdir --parents "$runtime_directory"
+      cp --recursive --no-preserve=mode ${pkgs.strata}/share/strata/. "$runtime_directory/"
+      cd "$runtime_directory"
+
+      # Setup downloads and verifies the pinned model and prepares its expert pack.
+      # The Nix package supplies Python dependencies and the CUDA engine.
+      if [[ ! -f "$model_config" ]]; then
+        strata-setup \
+          --setup \
+          --yes \
+          --family qwen \
+          --model IQ2_XS \
+          --context 32768 \
+          --vision no \
+          --backend cuda \
+          --data-dir "$STATE_DIRECTORY/data" \
+          --vram-reserve-mib 2048 \
+          --host 127.0.0.1 \
+          --port 8080 \
+          --no-browser \
+          --no-start
       fi
 
-      exec llama-server \
-        --alias qwen3.5:9b \
-        --chat-template-kwargs '{"enable_thinking":false}' \
-        --ctx-size 16384 \
-        --host 127.0.0.1 \
-        --model "$model_path" \
-        --n-gpu-layers 999 \
-        --port 8080 \
-        --reasoning off
+      # Keep dictation non-thinking unless a client explicitly requests reasoning.
+      jq \
+        --arg engine "${pkgs.strata}/libexec/strata/engine/strata" \
+        '.exe = $engine | .reasoning_effort = "none" | .open_browser = false' \
+        "$model_config" > "$model_config.next"
+      mv "$model_config.next" "$model_config"
+
+      exec strata-server --config "$model_config" --host 127.0.0.1 --port 8080
     '';
   };
 in
 {
-  systemd.services.llama-qwen = {
-    description = "llama.cpp server for Qwen3.5 9B";
+  systemd.services.strata-qwen = {
+    description = "Strata server for Qwen3.8-Flash-Next IQ2_XS";
     after = [ "network-online.target" ];
     wants = [ "network-online.target" ];
     wantedBy = [ "multi-user.target" ];
+    environment = {
+      PYTHONUNBUFFERED = "1";
+      LD_LIBRARY_PATH = "/run/opengl-driver/lib";
+    };
 
     serviceConfig = {
       DynamicUser = true;
-      ExecStart = "${llamaQwenServer}/bin/llama-qwen-server";
+      ExecStart = "${strataQwenServer}/bin/strata-qwen-server";
       Restart = "on-failure";
-      RestartSec = "5s";
-      StateDirectory = "llama-qwen";
+      RestartSec = "30s";
+      StateDirectory = "strata-qwen";
+      LimitMEMLOCK = "infinity";
+      TimeoutStartSec = "infinity";
+      TimeoutStopSec = "120s";
     };
   };
 }

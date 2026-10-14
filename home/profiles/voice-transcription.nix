@@ -19,11 +19,11 @@ let
     text = ''
       transcription="$(cat)"
       jq --null-input --arg transcription "$transcription" '{
-        model: "qwen3.5:9b",
+        model: "qwen3.8-flash-next",
         stream: false,
         temperature: 0.2,
         max_tokens: 256,
-        chat_template_kwargs: { enable_thinking: false },
+        reasoning_effort: "none",
         messages: [
           {
             role: "system",
