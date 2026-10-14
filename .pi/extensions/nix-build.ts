@@ -102,15 +102,12 @@ function targetForHome(host: string, user: string): string {
   return `.#nixosConfigurations.${shellQuoteAttribute(host)}.config.home-manager.users.${shellQuoteAttribute(user)}.home.activationPackage`
 }
 
-function issueKindForLine(line: string): IssueKind | undefined {
-  if (/\bwarning:/.test(line)) return "warning"
-  if (
-    /\berror:/.test(line)
-    || /builder for .* failed/.test(line)
-    || /failed to build/.test(line)
-  ) {
-    return "failure"
-  }
+function issueKindForEvent(event: Record<string, unknown>): IssueKind | undefined {
+  // Nix diagnostics are messages; builder output is a result event (type 101).
+  // Nix verbosity levels are 0 for errors and 1 for warnings.
+  if (event.action !== "msg" || typeof event.msg !== "string") return undefined
+  if (event.level === 1) return "warning"
+  if (event.level === 0) return "failure"
   return undefined
 }
 
@@ -305,7 +302,7 @@ export default function (pi: ExtensionAPI) {
       job.recentLines.push(formatted)
       if (job.recentLines.length > MAX_LOG_LINES) job.recentLines.shift()
 
-      const kind = issueKindForLine(formatted)
+      const kind = event ? issueKindForEvent(event) : undefined
       if (kind) notifyAgent(context, job, kind, formatted)
     }
   }
@@ -446,7 +443,7 @@ export default function (pi: ExtensionAPI) {
     name: "nix_build",
     label: "Nix Build",
     description:
-      "Start, stop, inspect, or read logs from background NixOS, Home Manager, and targeted expression builds. It never activates a configuration. The build sends the agent a message on warnings, failures, and completion. Keep a broad build running while investigating failures, validate each fix with a targeted build, then start a new broad build.",
+      "Start, stop, inspect, or read logs from background NixOS, Home Manager, and targeted expression builds. It never activates a configuration. The build sends the agent a message on Nix diagnostics, failures, and completion, but not builder log warnings. Keep a broad build running while investigating failures, validate each fix with a targeted build, then start a new broad build.",
     promptSnippet: "Run and monitor background NixOS builds without activating them",
     promptGuidelines: [
       "Use nix_build to start long NixOS builds, then return control. Do not poll it or use sleep. nix_build sends messages when the build warns, fails, or completes. When it reports a failure, leave the broad build running, edit the configuration, and use nix_build with action start-build and installables to validate the failed package or expression. Start a new broad build after the targeted build passes.",
