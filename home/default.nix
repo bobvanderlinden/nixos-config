@@ -138,12 +138,13 @@ in
       strace
       ltrace
       kubectl
+      kubelogin
       k9s
       postgresql
       oauth2c
       oauth2cli
       datadog-pup
-      # azure-cli
+      azure-cli
 
       # Version Control
       hub
