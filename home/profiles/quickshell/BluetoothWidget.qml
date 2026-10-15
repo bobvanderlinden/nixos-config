@@ -1,112 +1,25 @@
 import Quickshell
 import Quickshell.Io
+import Quickshell.Bluetooth
 import QtQuick
 import QtQuick.Layouts
 
-// Bluetooth status and paired-device menu. State is read from bluetoothctl so
-// it remains usable without a tray applet. Click a paired device to connect or
-// disconnect it; the settings entry opens Blueman for pairing and discovery.
+// Bluetooth status and paired-device menu backed by BlueZ D-Bus properties.
+// Click a paired device to connect or disconnect it. Blueman handles pairing.
 PopupWidget {
     id: root
 
     popupWidth: 280
 
-    property bool powered: false
-    property var devices: []
+    readonly property BluetoothAdapter adapter: Bluetooth.defaultAdapter
+    readonly property bool powered: adapter?.enabled ?? false
+    readonly property var devices: adapter ? adapter.devices.values.filter(device => device.paired) : []
 
     function bluetoothIcon() {
         if (!powered) return "󰂲";
         if (devices.some(device => device.connected)) return "󰂱";
         return "󰂯";
     }
-
-    function refresh() {
-        controllerProcess.exec(controllerProcess.command);
-        devicesProcess.exec(devicesProcess.command);
-    }
-
-    function runAction(arguments) {
-        actionProcess.exec(["bluetoothctl", ...arguments]);
-        refreshTimer.restart();
-    }
-
-    function parseDevices(output) {
-        const parsedDevices = [];
-        for (const line of output.trim().split("\n")) {
-            if (!line) continue;
-            const [address, connected, battery, ...nameParts] = line.split("\t");
-            if (!address || !nameParts.length) continue;
-            parsedDevices.push({
-                address: address,
-                connected: connected === "yes",
-                battery: battery === "" ? -1 : Number(battery),
-                name: nameParts.join("\t")
-            });
-        }
-        root.devices = parsedDevices;
-    }
-
-    Process {
-        id: controllerProcess
-        command: ["bluetoothctl", "show"]
-        stdout: StdioCollector {
-            onStreamFinished: root.powered = /^\s*Powered:\s*yes\s*$/m.test(text)
-        }
-    }
-
-    // Emit one tab-separated record for every paired device. Names are retained
-    // verbatim, while the device address is the only value passed back to BlueZ.
-    Process {
-        id: devicesProcess
-        command: ["sh", "-c", `
-            bluetoothctl devices Paired | while IFS=' ' read -r _ address name; do
-                info="$(bluetoothctl info "$address")"
-                connected="$(printf '%s\\n' "$info" | awk '/^[[:space:]]*Connected:/ { print $2; exit }')"
-                battery="$(printf '%s\\n' "$info" | sed -n 's/^[[:space:]]*Battery Percentage:.*(\\([0-9][0-9]*\\)%%).*/\\1/p')"
-                printf '%s\\t%s\\t%s\\t%s\\n' "$address" "$connected" "$battery" "$name"
-            done
-        `]
-        stdout: StdioCollector {
-            onStreamFinished: root.parseDevices(text)
-        }
-    }
-
-    Process {
-        id: actionProcess
-        onExited: refreshTimer.restart()
-    }
-
-    // BlueZ emits changes here for actions performed outside the bar too.
-    Process {
-        id: monitorProcess
-        running: true
-        command: ["bluetoothctl", "monitor"]
-        stdout: SplitParser {
-            onRead: refreshTimer.restart()
-        }
-        onExited: monitorRestartTimer.start()
-    }
-
-    Timer {
-        id: monitorRestartTimer
-        interval: 2000
-        onTriggered: monitorProcess.running = true
-    }
-
-    Timer {
-        id: refreshTimer
-        interval: 400
-        onTriggered: root.refresh()
-    }
-
-    Timer {
-        interval: 10000
-        repeat: true
-        running: true
-        onTriggered: root.refresh()
-    }
-
-    Component.onCompleted: refresh()
 
     pillContent: Component {
         Text {
@@ -154,7 +67,9 @@ PopupWidget {
                     MouseArea {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: root.runAction(["power", root.powered ? "off" : "on"])
+                        onClicked: {
+                            if (root.adapter) root.adapter.enabled = !root.powered;
+                        }
                     }
                 }
 
@@ -211,8 +126,8 @@ PopupWidget {
                         }
 
                         Text {
-                            visible: modelData.battery >= 0
-                            text: modelData.battery + "%"
+                            visible: modelData.batteryAvailable
+                            text: Math.round(modelData.battery * 100) + "%"
                             color: "#6272a4"
                             font.pixelSize: 10
                             font.family: "SauceCodePro Nerd Font"
@@ -231,7 +146,7 @@ PopupWidget {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: parent.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-                        onClicked: root.runAction([modelData.connected ? "disconnect" : "connect", modelData.address])
+                        onClicked: modelData.connected = !modelData.connected
                     }
                 }
             }
