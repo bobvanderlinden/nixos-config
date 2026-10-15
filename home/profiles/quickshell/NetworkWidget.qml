@@ -1,11 +1,10 @@
 import Quickshell
-import Quickshell.Io
 import Quickshell.Networking
 import Quickshell.Wayland
 import QtQuick
 import QtQuick.Layouts
 
-// Network status widget. Reactive via Quickshell.Networking (no polling).
+// Network status widget. Native Wi-Fi state and shared NM/OpenVPN queries.
 // Bar label: wired/wifi icon + optional VPN icon.
 // Hover to open popup with:
 //   - Wired connection (if active)
@@ -28,13 +27,7 @@ PopupWidget {
 
     // ── Networking state ──────────────────────────────────────────────────────
 
-    property WifiDevice wifiDevice: {
-        const devices = Networking.devices.values;
-        for (const device of devices) {
-            if (device.type === DeviceType.Wifi) return device;
-        }
-        return null;
-    }
+    readonly property WifiDevice wifiDevice: SharedNetworkProvider.wifiDevice
 
     property var connectedNetwork: {
         if (!wifiDevice) return null;
@@ -59,7 +52,7 @@ PopupWidget {
     property bool disconnected: !wiredConnected && !wifiConnecting && netText === "󰤭"
     property bool vpnActive: nmVpnConnections.some(c => c.active) || openvpn3Profiles.some(p => p.active)
 
-    // Stable snapshot of sorted networks — re-snapshotted when popup opens
+    // Keep sorting local to the view; refresh on open and network changes.
     property var sortedNetworks: []
 
     function refreshSortedNetworks() {
@@ -70,157 +63,39 @@ PopupWidget {
         });
     }
 
-    // Enable wifi scanner while popup is open; refresh snapshot on scan complete.
+    // Each view owns a scanner lease. Closing one cannot stop another view.
     onPopupOpenChanged: {
-        if (wifiDevice) wifiDevice.scannerEnabled = popupOpen;
+        SharedNetworkProvider.setScannerOwner(root, popupOpen);
         if (popupOpen) refreshSortedNetworks();
     }
+    onWifiDeviceChanged: { if (popupOpen) refreshSortedNetworks(); }
+    onConnectedNetworkChanged: { if (popupOpen) refreshSortedNetworks(); }
+    Component.onDestruction: SharedNetworkProvider.setScannerOwner(root, false)
 
+    Connections {
+        target: root.wifiDevice ? root.wifiDevice.networks : null
+        function onValuesChanged() { if (root.popupOpen) root.refreshSortedNetworks(); }
+    }
     Connections {
         target: root.wifiDevice
         function onScannerEnabledChanged() {
-            if (!root.wifiDevice.scannerEnabled && root.popupOpen)
-                root.refreshSortedNetworks();
+            if (root.popupOpen) root.refreshSortedNetworks();
         }
         ignoreUnknownSignals: true
     }
 
     // ── NM VPN ────────────────────────────────────────────────────────────────
 
-    property var nmVpnConnections: []
-    property var nmWiredConnections: []
-    property bool nmWifiConnected: false
+    readonly property var nmVpnConnections: SharedNetworkProvider.nmVpnConnections
+    readonly property var nmWiredConnections: SharedNetworkProvider.nmWiredConnections
+    readonly property bool nmWifiConnected: SharedNetworkProvider.nmWifiConnected
+    readonly property bool wiredConnected: nmWiredConnections.length > 0
+    readonly property var openvpn3Profiles: SharedNetworkProvider.openvpn3Profiles
 
-    function parseNmConnections(output) {
-        const ESCAPE = "\x00";
-        const vpns = [];
-        const wired = [];
-        let wifiConnected = false;
-        const lines = output.trim().split("\n");
-        for (const line of lines) {
-            if (!line) continue;
-            const parts = line.replace(/\\:/g, ESCAPE).split(":");
-            if (parts.length < 4) continue;
-            const name   = parts[0].replace(new RegExp(ESCAPE, "g"), ":");
-            const uuid   = parts[1].replace(new RegExp(ESCAPE, "g"), ":");
-            const type   = parts[2].replace(new RegExp(ESCAPE, "g"), ":");
-            const device = parts[3].replace(new RegExp(ESCAPE, "g"), ":").trim();
-            const active = device !== "--" && device !== "";
-            if (type === "vpn" || type === "wireguard") {
-                vpns.push({ uuid, name, active });
-            } else if (type === "802-3-ethernet") {
-                if (active) wired.push({ uuid, name, device, active });
-            } else if (type === "802-11-wireless" && active) {
-                wifiConnected = true;
-            }
-        }
-        root.nmVpnConnections = vpns;
-        root.nmWiredConnections = wired;
-        root.nmWifiConnected = wifiConnected;
-    }
-
-    property bool wiredConnected: nmWiredConnections.length > 0
-
-    Process {
-        id: nmListProcess
-        command: ["nmcli", "--terse", "--fields", "NAME,UUID,TYPE,DEVICE", "connection", "show"]
-        stdout: StdioCollector {
-            onStreamFinished: root.parseNmConnections(text)
-        }
-    }
-
-    Process {
-        id: nmMonitorProcess
-        running: true
-        command: ["nmcli", "monitor"]
-        stdout: SplitParser {
-            onRead: nmListProcess.exec(nmListProcess.command)
-        }
-        onExited: nmMonitorRestartTimer.start()
-    }
-
-    Timer {
-        id: nmMonitorRestartTimer
-        interval: 2000
-        onTriggered: nmMonitorProcess.running = true
-    }
-
-    function nmVpnConnect(uuid) {
-        nmVpnActionProcess.command = ["nmcli", "connection", "up", "uuid", uuid];
-        nmVpnActionProcess.startDetached();
-    }
-    function nmVpnDisconnect(uuid) {
-        nmVpnActionProcess.command = ["nmcli", "connection", "down", "uuid", uuid];
-        nmVpnActionProcess.startDetached();
-    }
-
-    Process { id: nmVpnActionProcess }
-
-    // ── OpenVPN3 ──────────────────────────────────────────────────────────────
-
-    property var openvpn3Profiles: []
-    property var _ov3ConfigList: []
-
-    Process {
-        id: ov3ConfigsProcess
-        command: ["openvpn3", "configs-list", "--json"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                try {
-                    const json = JSON.parse(text);
-                    root._ov3ConfigList = Object.entries(json).map(([path, config]) => ({
-                        name: config.name, configPath: path
-                    }));
-                } catch (e) {
-                    root._ov3ConfigList = [];
-                }
-                ov3SessionsProcess.exec(ov3SessionsProcess.command);
-            }
-        }
-    }
-
-    Process {
-        id: ov3SessionsProcess
-        command: ["openvpn3", "sessions-list"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const activeNames = new Set();
-                for (const line of text.split("\n")) {
-                    const match = line.match(/^\s*Config name:\s*(.+)$/);
-                    if (match) activeNames.add(match[1].trim());
-                }
-                root.openvpn3Profiles = root._ov3ConfigList.map(config => ({
-                    name: config.name,
-                    configPath: config.configPath,
-                    active: activeNames.has(config.name)
-                }));
-            }
-        }
-    }
-
-    Timer {
-        interval: 5000
-        repeat: true
-        running: true
-        onTriggered: ov3ConfigsProcess.exec(ov3ConfigsProcess.command)
-    }
-
-    function openvpn3Connect(configPath) {
-        ov3ActionProcess.exec(["openvpn3", "session-start", "--config-path", configPath]);
-    }
-    function openvpn3Disconnect(name) {
-        ov3ActionProcess.exec(["openvpn3", "session-manage", "--config", name, "--disconnect"]);
-    }
-
-    Process {
-        id: ov3ActionProcess
-        onExited: ov3ConfigsProcess.exec(ov3ConfigsProcess.command)
-    }
-
-    Component.onCompleted: {
-        nmListProcess.exec(nmListProcess.command);
-        ov3ConfigsProcess.exec(ov3ConfigsProcess.command);
-    }
+    function nmVpnConnect(uuid) { SharedNetworkProvider.nmVpnConnect(uuid); }
+    function nmVpnDisconnect(uuid) { SharedNetworkProvider.nmVpnDisconnect(uuid); }
+    function openvpn3Connect(configPath) { SharedNetworkProvider.openvpn3Connect(configPath); }
+    function openvpn3Disconnect(name) { SharedNetworkProvider.openvpn3Disconnect(name); }
 
     // ── Pill content ──────────────────────────────────────────────────────────
 

@@ -1,5 +1,4 @@
 import Quickshell
-import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
 
@@ -13,42 +12,7 @@ PopupWidget {
     popupWidth: 360
     visible: containers.length > 0
 
-    property var containers: []
-
-    // ── Container list poller ─────────────────────────────────────────────────
-
-    Process {
-        id: listProc
-        command: ["docker", "ps",
-            "--format", '{"id":"{{.ID}}","name":"{{.Names}}","image":"{{.Image}}","status":"{{.Status}}"}']
-        running: true
-        property string buf: ""
-        stdout: SplitParser {
-            onRead: data => listProc.buf += data + "\n"
-        }
-        onExited: {
-            const lines = listProc.buf.trim().split("\n").filter(l => l !== "");
-            listProc.buf = "";
-            const parsed = [];
-            for (const line of lines) {
-                try { parsed.push(JSON.parse(line)); } catch (e) { }
-            }
-            root.containers = parsed;
-        }
-    }
-
-    Timer {
-        interval: 10000; running: true; repeat: true
-        onTriggered: listProc.running = true
-    }
-
-    Process {
-        id: killProc
-        property string containerId: ""
-        command: ["docker", "stop", containerId]
-        running: false
-        onExited: listProc.running = true
-    }
+    readonly property var containers: SharedDockerProvider.containers
 
     // ── Pill ──────────────────────────────────────────────────────────────────
 
@@ -124,8 +88,7 @@ PopupWidget {
                                 anchors.fill: parent
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: {
-                                    killProc.containerId = container.id;
-                                    killProc.running = true;
+                                    SharedDockerProvider.stopContainer(container.id);
                                 }
                             }
                         }

@@ -1,5 +1,4 @@
 import Quickshell
-import Quickshell.Io
 import Quickshell.Hyprland
 import QtQuick
 import QtQuick.Layouts
@@ -17,7 +16,7 @@ Rectangle {
 
     required property var barWindow
 
-    property var tasks: []
+    readonly property var tasks: SharedTodoProvider.tasks
     property real popupWidth: 360
     property bool popupVisible: false
 
@@ -26,70 +25,6 @@ Rectangle {
     radius: 4
     implicitHeight: 22
     implicitWidth: pillRow.implicitWidth + 12
-
-    // ── Fetch tasks ───────────────────────────────────────────────────────────
-
-    Process {
-        id: fetchProc
-        command: ["todo.sh", "ls"]
-        running: true
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const tasks = [];
-                const lines = this.text.replace(/\x1B\[[0-?]*[ -\/]*[@-~]/g, "").split("\n");
-
-                for (const line of lines) {
-                    const match = line.match(/^\s*(\d+)\s+(?:\(([A-Z])\)\s+)?(.*)$/);
-                    if (match) {
-                        tasks.push({
-                            id: Number(match[1]),
-                            priority: match[2] ?? "",
-                            title: match[3],
-                        });
-                    }
-                }
-
-                root.tasks = tasks;
-            }
-        }
-    }
-
-    Timer {
-        interval: 60 * 1000
-        running: true
-        repeat: true
-        onTriggered: fetchProc.running = true
-    }
-
-    // ── Add task process ──────────────────────────────────────────────────────
-
-    Process {
-        id: addProc
-        property string taskTitle: ""
-        command: ["todo.sh", "add", taskTitle]
-        running: false
-        onRunningChanged: {
-            if (!running && taskTitle !== "") {
-                taskTitle = "";
-                fetchProc.running = true;
-            }
-        }
-    }
-
-    // ── Toggle task process ───────────────────────────────────────────────────
-
-    Process {
-        id: toggleProc
-        property int taskId: 0
-        command: ["todo.sh", "do", taskId.toString()]
-        running: false
-        onRunningChanged: {
-            if (!running && taskId !== 0) {
-                taskId = 0;
-                fetchProc.running = true;
-            }
-        }
-    }
 
     // ── Pill content ──────────────────────────────────────────────────────────
 
@@ -220,8 +155,7 @@ Rectangle {
 
                         function addTask() {
                             if (taskInput.text.trim() !== "") {
-                                addProc.taskTitle = taskInput.text.trim();
-                                addProc.running = true;
+                                if (!SharedTodoProvider.addTask(taskInput.text.trim())) return;
                                 taskInput.text = "";
                             }
                             closePopup();
@@ -293,8 +227,7 @@ Rectangle {
                                         anchors.fill: parent
                                         cursorShape: Qt.PointingHandCursor
                                         onClicked: {
-                                            toggleProc.taskId = task.id;
-                                            toggleProc.running = true;
+                                            SharedTodoProvider.completeTask(task.id);
                                         }
                                     }
                                 }

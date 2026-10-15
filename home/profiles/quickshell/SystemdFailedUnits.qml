@@ -1,4 +1,3 @@
-import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
 
@@ -9,37 +8,7 @@ Item {
     implicitHeight: 22
     visible: failedCount > 0
 
-    property int failedCount: 0
-
-    Process {
-        id: systemdCheck
-        command: ["systemctl", "--user", "--state=failed", "--no-legend", "--no-pager",
-                  "list-units", "--output=json"]
-        running: true
-
-        property string buf: ""
-
-        stdout: SplitParser {
-            onRead: data => systemdCheck.buf += data
-        }
-
-        onExited: {
-            try {
-                const units = JSON.parse(systemdCheck.buf);
-                root.failedCount = Array.isArray(units) ? units.length : 0;
-            } catch (e) {
-                root.failedCount = 0;
-            }
-            systemdCheck.buf = "";
-        }
-    }
-
-    Timer {
-        interval: 30000
-        running: true
-        repeat: true
-        onTriggered: systemdCheck.running = true
-    }
+    readonly property int failedCount: SharedSystemdProvider.failedCount
 
     Rectangle {
         anchors.fill: parent
