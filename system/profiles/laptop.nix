@@ -7,7 +7,6 @@
 }:
 {
   imports = [
-    ../modules/docker-config.nix
     ../modules/greetd-autologin-keyring.nix
     ../modules/wireguard.nix
   ];
@@ -353,14 +352,14 @@
   # virtualisation.virtualbox.host.enable = true;
   virtualisation.docker = {
     enable = true;
-    # daemon.settings = {
-    #   ipv6 = true;
-    #   "fixed-cidr-v6" = "fd00::/80";
-    # };
+    # Keep Docker IPv6 aligned with the host, using the existing bridge subnet.
+    daemon.settings = lib.mkIf config.networking.enableIPv6 {
+      ipv6 = true;
+      "fixed-cidr-v6" = "fd00::/80";
+    };
     autoPrune.enable = true;
   };
 
-  virtualisation.dockerConfig.enable = true;
   networking.wireguardNmProfile.enable = true;
 
   networking.firewall.trustedInterfaces = [ "docker0" ];
