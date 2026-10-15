@@ -22,11 +22,12 @@ PopupWindow {
     implicitHeight: card.implicitHeight
     color: "transparent"
 
-    Timer {
-        interval: root.notification?.expireTimeout > 0 ? root.notification.expireTimeout : 5000
-        running: root.notification !== null && root.notification.expireTimeout !== 0
-        onTriggered: root.notification.dismiss()
+    property var retainedNotification: null
+    Component.onCompleted: {
+        retainedNotification = notification;
+        retainedNotification.retainView();
     }
+    Component.onDestruction: if (retainedNotification) retainedNotification.releaseView()
 
     Rectangle {
         id: card
@@ -100,9 +101,7 @@ PopupWindow {
             z: -1
             cursorShape: Qt.PointingHandCursor
             onClicked: {
-                const defaultAction = root.notification.actions.find(action => action.identifier === "default");
-                if (defaultAction) defaultAction.invoke();
-                root.notification.dismiss();
+                if (root.notification) root.notification.activate();
             }
         }
     }

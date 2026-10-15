@@ -2,7 +2,6 @@
 //@ pragma IconTheme Adwaita
 import Quickshell
 import Quickshell.Io
-import Quickshell.Services.Notifications
 import QtQuick
 
 // Shell root - manages the bar, notification daemon, and OSD overlays.
@@ -33,32 +32,6 @@ ShellRoot {
         function toggle(): void {
             launcher.toggle();
         }
-    }
-
-    // ── Notification daemon ───────────────────────────────────────────────────
-    NotificationServer {
-        id: notifServer
-        actionsSupported: true
-        actionIconsSupported: true
-        bodyMarkupSupported: true
-        bodyHyperlinksSupported: true
-        bodyImagesSupported: true
-        imageSupported: true
-        persistenceSupported: true
-        keepOnReload: true
-
-        onNotification: function(n) {
-            n.tracked = true;
-            // Spread into ScriptModel so ListView picks up the change reactively.
-            notifModel.values = [...notifServer.trackedNotifications.values];
-        }
-    }
-
-    // ScriptModel wrapper — avoids the "Non list data QVariant(QObject*) assigned
-    // to Variants.model" silent-fail when passing ObjectModel directly.
-    ScriptModel {
-        id: notifModel
-        values: [...notifServer.trackedNotifications.values]
     }
 
     // ── Notification toast stack (one per screen, top-right) ─────────────────

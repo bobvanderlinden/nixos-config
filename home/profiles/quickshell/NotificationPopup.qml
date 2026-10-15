@@ -67,24 +67,19 @@ PanelWindow {
         delegate: Item {
             id: toastItem
 
-            // modelData is a Notification object.
-            // It is cached at creation time so it stays valid during remove
-            // animations, when QML may set modelData to null.
+            // Keep the wrapper and its retained data through remove animations,
+            // even when ListView clears modelData.
             required property var modelData
             property var notification: null
 
-            Component.onCompleted: notification = modelData
+            Component.onCompleted: {
+                notification = modelData;
+                notification.retainView();
+            }
+            Component.onDestruction: if (notification) notification.releaseView()
 
             width: toastList.width
             implicitHeight: toastCard.implicitHeight
-
-            // Auto-dismiss after expireTimeout. 0 means never auto-dismiss.
-            Timer {
-                id: dismissTimer
-                interval: notification && notification.expireTimeout > 0 ? notification.expireTimeout : 5000
-                running: notification !== null && notification.expireTimeout !== 0
-                onTriggered: if (notification) notification.dismiss()
-            }
 
             HoverHandler {
                 id: cardHover
@@ -115,13 +110,17 @@ PanelWindow {
                     radius: 1
                     color: notification && notification.urgency === 2 ? "#ff5555" : "#bd93f9"
 
-                    property real progress: 1.0
+                    property double currentTime: Date.now()
+                    readonly property real progress: notification && notification.timeout > 0
+                        ? Math.max(0, Math.min(1, (notification.deadline - currentTime) / notification.timeout)) : 0
                     width: parent.width * progress
 
-                    NumberAnimation on progress {
-                        from: 1.0; to: 0.0
-                        duration: dismissTimer.interval
-                        running: true
+                    // Visual only. The singleton owns expiry on every monitor.
+                    Timer {
+                        interval: 50
+                        repeat: true
+                        running: timerBar.visible
+                        onTriggered: timerBar.currentTime = Date.now()
                     }
                 }
 
@@ -269,8 +268,8 @@ PanelWindow {
                                     hoverEnabled: true
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: {
-                                        action.invoke();
-                                        if (toastItem.notification) toastItem.notification.dismiss();
+                                        if (toastItem.notification)
+                                            toastItem.notification.invokeAction(action.identifier);
                                     }
                                 }
 
@@ -289,15 +288,7 @@ PanelWindow {
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
                         if (!toastItem.notification) return;
-                        const defaultAction = toastItem.notification.actions
-                            ? toastItem.notification.actions.find(a => a.identifier === "default")
-                            : null;
-                        if (defaultAction) {
-                            defaultAction.invoke();
-                            toastItem.notification.dismiss();
-                        } else {
-                            toastItem.notification.dismiss();
-                        }
+                        toastItem.notification.activate();
                     }
                 }
             }
