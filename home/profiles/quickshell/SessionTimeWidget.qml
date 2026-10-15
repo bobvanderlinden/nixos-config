@@ -9,7 +9,7 @@ BarPill {
 
     Text {
         id: label
-        text: "🔓 " + root.sessionTime
+        text: "🔓 " + root.sessionTime + (SharedSessionProvider.status === "unavailable" ? " unavailable" : SharedSessionProvider.status === "stale" ? " (stale)" : "")
         color: "#50fa7b"
         font.pixelSize: 12
     }

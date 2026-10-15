@@ -44,7 +44,7 @@ try {
     for (const component of [...providerNames, "PrivacyWidget", "DockerWidget", "NetworkWidget", "TodoWidget", "SystemdFailedUnits", "SessionTimeWidget", "BarPill", "BarTooltip", "PopupWidget", "BarState"])
         await copyFile(path.join(sourceDirectory, `${component}.qml`), path.join(temporaryDirectory, `${component}.qml`));
     // Camera integration does not inspect the host's descriptors during tests.
-    await writeFile(path.join(temporaryDirectory, "shared-camera-users.sh"), "printf 'camera scan\\n' >> \"$PROVIDER_TEST_LOG\"\nprintf 'test-camera\\n'\n");
+    await writeFile(path.join(temporaryDirectory, "shared-camera-users.sh"), "printf 'camera scan\\n' >> \"$PROVIDER_TEST_LOG\"\nprintf 'camera-scan:complete\\ntest-camera\\n'\n");
     const logPath = path.join(temporaryDirectory, "commands.log");
     const mockScript = `#!/bin/sh
 name=\${0##*/}
@@ -72,7 +72,7 @@ case "$name $1" in
       'todo.sh ls') printf '1 (A) test task\\n' ;;
       'nmcli --terse') printf 'test-vpn:uuid:vpn:tun0\\n' ;;
       'openvpn3 configs-list') printf '%s\\n' '{"/config/test":{"name":"test-vpn"}}' ;;
-      'openvpn3 sessions-list') printf 'Config name: test-vpn\\n' ;;
+      'openvpn3 sessions-list') printf 'Path: /net/openvpn/v3/sessions/test\\nConfig name: test-vpn\\n' ;;
     esac
     rmdir "$lock"
     ;;

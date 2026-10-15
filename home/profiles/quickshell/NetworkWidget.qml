@@ -104,7 +104,7 @@ PopupWidget {
         spacing: 0
 
         Text {
-            text: root.netText
+            text: root.netText + (SharedNetworkProvider.queryMessage ? " ⚠" : "")
             color: root.disconnected ? "#6272a4" : root.wifiConnecting ? "#89b4fa" : "#f8f8f2"
             font.pixelSize: 12
             font.family: "SauceCodePro Nerd Font"
@@ -143,6 +143,15 @@ PopupWidget {
     popupContent: Component {
     ColumnLayout {
         spacing: 6
+
+        Text {
+            Layout.fillWidth: true
+            visible: text !== ""
+            text: SharedNetworkProvider.queryMessage
+            wrapMode: Text.WordWrap
+            color: "#ffb86c"
+            font.pixelSize: 12
+        }
 
         // ── Wired section ─────────────────────────────────────────────────────
         ColumnLayout {

@@ -19,6 +19,20 @@ Rectangle {
     readonly property var tasks: SharedTodoProvider.tasks
     property real popupWidth: 360
     property bool popupVisible: false
+    property string pendingTitle: ""
+
+    Connections {
+        target: SharedTodoProvider
+        function onActionFinished(successful) {
+            if (!root.pendingTitle) return;
+            if (successful && taskInput.text.trim() === root.pendingTitle) {
+                taskInput.text = "";
+                root.popupVisible = false;
+                if (BarState.activePopupWidget === root) BarState.activePopupWidget = null;
+            }
+            root.pendingTitle = "";
+        }
+    }
 
     // Pill appearance
     color: "#313244"
@@ -41,7 +55,7 @@ Rectangle {
         }
 
         Text {
-            text: root.tasks.length.toString()
+            text: (SharedTodoProvider.hasSnapshot ? root.tasks.length.toString() : "?") + (SharedTodoProvider.status !== "ready" || SharedTodoProvider.actionFailed ? " ⚠" : "")
             color: "#50fa7b"
             font.pixelSize: 11
             font.family: "SauceCodePro Nerd Font"
@@ -128,6 +142,15 @@ Rectangle {
                 }
                 spacing: 8
 
+                Text {
+                    Layout.fillWidth: true
+                    visible: text !== ""
+                    text: [SharedTodoProvider.queryMessage, SharedTodoProvider.actionFailed ? "Task change failed. Your task was not confirmed saved." : ""].filter(message => message).join("\n")
+                    wrapMode: Text.WordWrap
+                    color: "#ffb86c"
+                    font.pixelSize: 12
+                }
+
                 // ── Input for new task ────────────────────────────────────────
 
                 Rectangle {
@@ -156,7 +179,8 @@ Rectangle {
                         function addTask() {
                             if (taskInput.text.trim() !== "") {
                                 if (!SharedTodoProvider.addTask(taskInput.text.trim())) return;
-                                taskInput.text = "";
+                                root.pendingTitle = taskInput.text.trim();
+                                return;
                             }
                             closePopup();
                         }
@@ -225,6 +249,7 @@ Rectangle {
 
                                     MouseArea {
                                         anchors.fill: parent
+                                        enabled: !SharedTodoProvider.busy && SharedTodoProvider.status === "ready"
                                         cursorShape: Qt.PointingHandCursor
                                         onClicked: {
                                             SharedTodoProvider.completeTask(task.id);
@@ -259,7 +284,7 @@ Rectangle {
 
                 Text {
                     Layout.fillWidth: true
-                    visible: root.tasks.length === 0
+                    visible: root.tasks.length === 0 && SharedTodoProvider.status === "ready"
                     text: "No open tasks"
                     color: "#6272a4"
                     font.pixelSize: 12

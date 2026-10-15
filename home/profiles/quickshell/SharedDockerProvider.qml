@@ -7,6 +7,25 @@ Singleton {
     id: root
     property var containers: []
     property bool failed: false
+    property bool hasSnapshot: false
+    readonly property string status: !hasSnapshot ? "unavailable" : failed ? "stale" : "ready"
+    readonly property string queryMessage: status === "ready" ? "" : status === "stale" ? "Docker updates unavailable. Showing last known containers." : "Docker status unavailable."
+
+    function acceptSnapshot(output, exitCode, exitStatus = 0) {
+        failed = true;
+        if (exitCode !== 0 || exitStatus !== 0) return;
+        try {
+            const nextContainers = output.trim().split("\n").filter(line => line.length > 0).map(line => {
+                const container = JSON.parse(line);
+                if (!container || [container.ID, container.Names, container.Image, container.Status].some(value => typeof value !== "string" || !value))
+                    throw new Error("Invalid container row");
+                return { id: container.ID, name: container.Names, image: container.Image, status: container.Status };
+            });
+            containers = nextContainers;
+            hasSnapshot = true;
+            failed = false;
+        } catch (error) { console.warn("SharedDockerProvider:", error); }
+    }
     property bool actionFailed: false
     property bool refreshPending: false
     readonly property bool stopping: stopProcess.running
@@ -17,6 +36,7 @@ Singleton {
     }
     function stopContainer(containerId) {
         if (stopProcess.running) return false;
+        actionFailed = false;
         stopProcess.command = ["timeout", "30", "docker", "stop", containerId];
         stopProcess.running = true;
         return true;
@@ -26,16 +46,8 @@ Singleton {
         id: listProcess
         command: ["timeout", "10", "docker", "ps", "--format", "{{json .}}"]
         stdout: StdioCollector { id: listOutput }
-        onExited: exitCode => {
-            root.failed = exitCode !== 0;
-            if (exitCode === 0) {
-                try {
-                    root.containers = listOutput.text.trim().split("\n").filter(line => line.length > 0).map(line => {
-                        const container = JSON.parse(line);
-                        return { id: container.ID, name: container.Names, image: container.Image, status: container.Status };
-                    });
-                } catch (error) { root.failed = true; console.warn("SharedDockerProvider:", error); }
-            }
+        onExited: (exitCode, exitStatus) => {
+            root.acceptSnapshot(listOutput.text, exitCode, exitStatus);
             if (root.failed) retryTimer.restart();
             else retryTimer.stop();
             if (root.refreshPending) Qt.callLater(root.refresh);
@@ -45,7 +57,7 @@ Singleton {
         id: eventsProcess
         command: ["docker", "events", "--filter", "type=container", "--format", "{{json .}}"]
         stdout: SplitParser { onRead: root.refresh() }
-        onExited: reconnectTimer.restart()
+        onExited: { root.failed = true; reconnectTimer.restart(); }
     }
     // Subscribe before taking a snapshot. Reconnect always resnapshots, since
     // events during a daemon outage may have been lost.
@@ -57,7 +69,7 @@ Singleton {
     Timer { id: retryTimer; interval: 10000; onTriggered: root.refresh() }
     Process {
         id: stopProcess
-        onExited: exitCode => { root.actionFailed = exitCode !== 0; root.refresh(); }
+        onExited: (exitCode, exitStatus) => { root.actionFailed = exitCode !== 0 || exitStatus !== 0; root.refresh(); }
     }
     Component.onCompleted: reconnect()
 }

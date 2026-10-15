@@ -20,12 +20,19 @@ BarPill {
 
     // ── Visibility ────────────────────────────────────────────────────────────
 
-    visible: micActive || camActive || scrActive
+    visible: micActive || camActive || scrActive || SharedPrivacyProvider.cameraStatus !== "ready" || SharedPrivacyProvider.cameraLimited || SharedPrivacyProvider.pipewireUnavailable
 
     // ── Bar pill content ──────────────────────────────────────────────────────
 
     RowLayout {
         spacing: 4
+
+        Text {
+            visible: SharedPrivacyProvider.cameraStatus !== "ready" || SharedPrivacyProvider.cameraLimited || SharedPrivacyProvider.pipewireUnavailable
+            text: "⚠"
+            color: "#ffb86c"
+            font.pixelSize: 13
+        }
 
         Text {
             visible: root.micActive
@@ -60,13 +67,14 @@ BarPill {
         widget: root
         shown: hoverHandler.hovered
         text: {
-            var parts = [];
+            var parts = [SharedPrivacyProvider.cameraMessage];
+            if (SharedPrivacyProvider.pipewireUnavailable) parts.push("Microphone and screen capture status unavailable: PipeWire is not ready.");
             if (root.micActive)
-                parts.push("Mic: " + (root.micApps.length > 0 ? root.micApps.join(", ") : "active"));
+                parts.push("Mic" + (SharedPrivacyProvider.pipewireUnavailable ? " (last known)" : "") + ": " + (root.micApps.length > 0 ? root.micApps.join(", ") : "active"));
             if (root.camActive)
-                parts.push("Camera open (may not be streaming): " + root.camApps.join(", "));
+                parts.push("Camera open" + (SharedPrivacyProvider.cameraStatus === "stale" ? " (last known)" : " (may not be streaming)") + ": " + root.camApps.join(", "));
             if (root.scrActive)
-                parts.push("Screen share: " + (root.scrApps.length > 0 ? root.scrApps.join(", ") : "active"));
+                parts.push("Screen share" + (SharedPrivacyProvider.pipewireUnavailable ? " (last known)" : "") + ": " + (root.scrApps.length > 0 ? root.scrApps.join(", ") : "active"));
             return parts.join("\n");
         }
     }

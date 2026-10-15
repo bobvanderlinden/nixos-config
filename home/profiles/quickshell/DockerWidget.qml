@@ -10,7 +10,7 @@ PopupWidget {
     id: root
 
     popupWidth: 360
-    visible: containers.length > 0
+    visible: containers.length > 0 || SharedDockerProvider.status !== "ready" || SharedDockerProvider.actionFailed
 
     readonly property var containers: SharedDockerProvider.containers
 
@@ -18,7 +18,7 @@ PopupWidget {
 
     pillContent: Component {
         Text {
-            text: "🐳 " + root.containers.length
+            text: "🐳 " + (SharedDockerProvider.hasSnapshot ? root.containers.length : "?") + (SharedDockerProvider.status !== "ready" || SharedDockerProvider.actionFailed ? " ⚠" : "")
             color: "#89b4fa"
             font.pixelSize: 11
             font.family: "SauceCodePro Nerd Font"
@@ -30,6 +30,15 @@ PopupWidget {
     popupContent: Component {
         ColumnLayout {
             spacing: 2
+
+            Text {
+                Layout.fillWidth: true
+                visible: text !== ""
+                text: [SharedDockerProvider.queryMessage, SharedDockerProvider.actionFailed ? "Container stop failed. Check Docker and retry." : ""].filter(message => message).join("\n")
+                wrapMode: Text.WordWrap
+                color: "#ffb86c"
+                font.pixelSize: 12
+            }
 
             Repeater {
                 model: root.containers
@@ -86,6 +95,7 @@ PopupWidget {
 
                             MouseArea {
                                 anchors.fill: parent
+                                enabled: !SharedDockerProvider.stopping && SharedDockerProvider.status === "ready"
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: {
                                     SharedDockerProvider.stopContainer(container.id);

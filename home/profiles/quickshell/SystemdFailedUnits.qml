@@ -6,7 +6,7 @@ Item {
     id: root
     implicitWidth: visible ? failedText.implicitWidth + 12 : 0
     implicitHeight: 22
-    visible: failedCount > 0
+    visible: failedCount > 0 || SharedSystemdProvider.status !== "ready"
 
     readonly property int failedCount: SharedSystemdProvider.failedCount
 
@@ -18,7 +18,7 @@ Item {
         Text {
             id: failedText
             anchors.centerIn: parent
-            text: "⚠ " + root.failedCount + " failed"
+            text: SharedSystemdProvider.status === "unavailable" ? "⚠ User units unavailable" : "⚠ " + root.failedCount + " failed" + (SharedSystemdProvider.status === "stale" ? " (last known)" : "")
             color: "#ffffff"
             font.pixelSize: 12
         }
