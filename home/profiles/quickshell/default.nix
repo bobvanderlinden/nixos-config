@@ -32,7 +32,7 @@
   # Additional binaries that the QML widgets call by name.
   home.packages = [
     pkgs.session-time
-    pkgs.inotify-tools
+    pkgs.python3 # Persistent brightness monitor, without per-poll subprocesses.
     pkgs.todo-txt-cli
     pkgs.gh-inbox
   ];
