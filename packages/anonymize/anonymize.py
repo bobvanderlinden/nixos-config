@@ -10,8 +10,7 @@ import urllib.request
 
 
 SYSTEM_PROMPT = """Anonymize the supplied data by replacing sensitive information with
-consistent descriptive placeholders such as [PERSON_1], [EMAIL_1], [ADDRESS_1],
-[IDENTIFIER_1], and [SECRET_1]. Replace names, contact details, precise locations,
+consistent descriptive placeholders such as [REDACTED:Full name of person 1], [REDACTED:Last name of person 1], [REDACTED:Email address], [REDACTED:Address], [REDACTED:City], [REDACTED:Streetname], [REDACTED:Streetname with number and suffix], [REDACTED:BSN of person 1], and [REDACTED:GitHub PAT]. Replace names, contact details, precise locations,
 account and patient identifiers, credentials, tokens, and other information that
 identifies a person or exposes a secret. Replace indirect identifying details
 when their combination could identify someone. Use the same placeholder for
