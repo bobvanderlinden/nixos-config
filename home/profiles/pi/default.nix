@@ -9,11 +9,13 @@ let
   piConfigDir = config.programs.pi-coding-agent.configDir;
   subagentWorktreeSetup = pkgs.writeShellApplication {
     name = "pi-subagent-worktree-setup";
-    runtimeInputs = [ pkgs.direnv ];
+    runtimeInputs = [
+      pkgs.jq
+      pkgs.worktree
+    ];
     text = ''
-      unset DIRENV_DIR DIRENV_FILE
-      direnv allow
-      printf '%s\n' '{"syntheticPaths":[]}'
+      repository_root="$(jq --raw-output --exit-status '.repoRoot')"
+      worktree --prepare "$repository_root" "$PWD"
     '';
   };
 
@@ -121,6 +123,11 @@ in
       };
     };
     subagent.settings = {
+      # Our patched native allocator calls worktree for paths and creation.
+      # Pi-subagents still owns handoff artifacts and cleanup.
+      # Callers can use worktree:false for shared-checkout inspection.
+      worktree = true;
+      worktreeProvider = "native";
       scheduledRuns.storeRoot = "~/.local/share/pi/subagents/schedules";
       worktreeSetupHook = "${subagentWorktreeSetup}/bin/pi-subagent-worktree-setup";
     };
@@ -154,7 +161,7 @@ in
       subagents.defaultSubagentOnlyExtensions = [ "${piConfigDir}/extensions/direnv.ts" ];
       packages = [
         "npm:@earendil-works/pi-coding-agent@1.1.0"
-        "npm:pi-subagents@0.77.0"
+        "${pkgs.pi-subagents}/lib/node_modules/pi-subagents"
         "npm:pi-background-tasks@2.6.10"
         "npm:pi-web-access@0.37.0"
         "npm:@ayulab/pi-rewind"

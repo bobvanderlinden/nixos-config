@@ -1,0 +1,42 @@
+diff --git a/src/runs/shared/worktree.js b/src/runs/shared/worktree.js
+index 979f823..ba8ac4a 100644
+--- a/src/runs/shared/worktree.js
++++ b/src/runs/shared/worktree.js
+@@ -510,9 +510,10 @@ function resolveWorktreeDedicatedRoot(configuredBaseDir, repoRoot, relocateExten
+     const rawBaseDir = configuredBaseDir ?? process.env.PI_SUBAGENTS_WORKTREE_DIR;
+     let expanded;
+     if (rawBaseDir === undefined || (configuredBaseDir === undefined && !rawBaseDir.trim())) {
+-        expanded = relocateExtensionRepo && isInsidePiExtensionsDirectory(repoRoot)
+-            ? path.join(getAgentDir(), "worktrees")
+-            : path.join(path.dirname(repoRoot), "worktrees");
++        const result = spawnSync("@worktree@", ["--root", repoRoot], { encoding: "utf-8", shell: false });
++        if (result.status !== 0 || !path.isAbsolute(result.stdout.trim()))
++            throw new Error(result.stderr?.trim() || "worktree --root failed");
++        expanded = result.stdout.trim();
+     }
+     else {
+         const trimmed = rawBaseDir.trim();
+@@ -528,7 +529,8 @@ function resolveWorktreeDedicatedRoot(configuredBaseDir, repoRoot, relocateExten
+     return expanded;
+ }
+ function buildNativeProjectPath(dedicatedRoot, repoRoot) {
+-    return path.join(dedicatedRoot, path.basename(repoRoot));
++    const commonDirectory = runGitChecked(repoRoot, ["rev-parse", "--path-format=absolute", "--git-common-dir"]).trim();
++    return path.join(dedicatedRoot, path.basename(path.dirname(commonDirectory)));
+ }
+ /**
+  * Creates the project folder (parents included) so `git worktree add` can create
+@@ -781,7 +783,12 @@ async function createNativeWorktree(tx, toplevel, cwdRelative, runId, index, bas
+     tx.attempt(index, naming.requestedBranch, worktreePath);
+     ensureProjectWorktreeDir(dedicatedRoot, toplevel);
+     const recordedBaseDir = normalizeComparableCwd(path.dirname(worktreePath));
+-    await tx.git(toplevel, ["worktree", "add", worktreePath, "-b", naming.requestedBranch, baseCommit]);
++    const created = await tx.command("@worktree@", [
++        "--managed", "--name", path.basename(worktreePath), "--directory", worktreePath,
++        "--branch", naming.requestedBranch, "--base-ref", baseCommit, toplevel,
++    ], { cwd: toplevel });
++    if (created.stdout.trim() !== worktreePath)
++        throw new Error("worktree returned a path different from the allocation plan");
+     const worktree = {
+         path: worktreePath,
+         recordedBaseDir,
