@@ -1,4 +1,5 @@
 {
+  config,
   lib,
   pkgs,
   ...
@@ -45,6 +46,9 @@ let
   };
 in
 {
+  # Set to false to restore local Whisper with Dutch + English support.
+  services.phonon.enable = true;
+
   home.packages = [ pkgs.voxtype-cuda ];
 
   xdg.configFile."voxtype/config.toml" = {
@@ -64,19 +68,32 @@ in
         };
       };
 
-      whisper = {
-        mode = "local";
-        model = toString whisperModel;
-        # Restrict automatic language detection to the languages used for dictation.
-        # This preserves Dutch and English instead of translating either language.
-        language = [
-          "nl"
-          "en"
-        ];
-        initial_prompt = "Terminology: FHIR, HAPI FHIR, HL7, Voxtype, Nix, NixOS, LLM, OpenAPI, PostgreSQL, Hyprland, Nixpkgs, Home Manager.";
-        translate = false;
-        on_demand_loading = false;
-      };
+      whisper =
+        if config.services.phonon.enable then
+          {
+            mode = "remote";
+            remote_endpoint = "http://127.0.0.1:${toString config.services.phonon.port}";
+            remote_model = "phonon-2";
+            remote_timeout_secs = 120;
+            language = "auto";
+            translate = false;
+            # Phonon interprets prompt as a vocabulary list, not instructions.
+            initial_prompt = "FHIR, HAPI FHIR, HL7, Voxtype, Nix, NixOS, LLM, OpenAPI, PostgreSQL, Hyprland, Nixpkgs, Home Manager";
+          }
+        else
+          {
+            mode = "local";
+            model = toString whisperModel;
+            # Restrict automatic language detection to the languages used for dictation.
+            # This preserves Dutch and English instead of translating either language.
+            language = [
+              "nl"
+              "en"
+            ];
+            initial_prompt = "Terminology: FHIR, HAPI FHIR, HL7, Voxtype, Nix, NixOS, LLM, OpenAPI, PostgreSQL, Hyprland, Nixpkgs, Home Manager.";
+            translate = false;
+            on_demand_loading = false;
+          };
 
       output = {
         mode = "type";
