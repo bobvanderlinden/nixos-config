@@ -148,7 +148,12 @@ async function exportDirenv(envrcPath: string, signal?: AbortSignal): Promise<Ex
         return { envDiff: null, envrcPath, autoAllowed, failed: false }
       }
 
-      const parsed: unknown = JSON.parse(stdout)
+      let parsed: unknown
+      try {
+        parsed = JSON.parse(stdout)
+      } catch {
+        return { envDiff: null, envrcPath, autoAllowed, failed: true }
+      }
       if (!isEnvDiff(parsed)) {
         return { envDiff: null, envrcPath, autoAllowed, failed: true }
       }
@@ -266,6 +271,7 @@ export default function (pi: ExtensionAPI) {
   let loaded = false
   let syncPromise: Promise<ExportResult> | null = null
   const originalEnvironment = new Map<string, string | undefined>()
+  let latestResult: ExportResult | null = null
 
   const isLoaded = () => loaded
   const setLoaded = (nextLoaded: boolean) => {
@@ -275,6 +281,31 @@ export default function (pi: ExtensionAPI) {
   const setSyncPromise = (nextSyncPromise: Promise<ExportResult> | null) => {
     syncPromise = nextSyncPromise
   }
+
+  async function load(context: ExtensionContext, force = false) {
+    const result = await loadDirenv(
+      context,
+      isLoaded,
+      setLoaded,
+      getSyncPromise,
+      setSyncPromise,
+      originalEnvironment,
+      force,
+    )
+    if (result) latestResult = result
+    return result
+  }
+
+  pi.on("before_agent_start", async (event, context) => {
+    await load(context)
+    if (!latestResult?.envrcPath && !latestResult?.failed) return
+
+    const status = latestResult?.failed
+      ? "The direnv extension failed to load the environment. Do not assume project tools are available. Diagnose the .envrc failure before running project commands."
+      : `The direnv extension automatically loaded ${latestResult?.envrcPath} into this Pi session before tools run. Do not source .envrc or wrap commands in direnv exec or nix develop. After changing .envrc or watched files, reload the environment with direnv_reload if available, otherwise ask the parent to reload it.`
+
+    return { systemPrompt: `${event.systemPrompt}\n\n${status}` }
+  })
 
   pi.registerTool({
     name: "direnv_reload",
@@ -286,15 +317,7 @@ export default function (pi: ExtensionAPI) {
     ],
     parameters: Type.Object({}),
     async execute(_toolCallId, _params, _signal, _onUpdate, context) {
-      const result = await loadDirenv(
-        context,
-        isLoaded,
-        setLoaded,
-        getSyncPromise,
-        setSyncPromise,
-        originalEnvironment,
-        true,
-      )
+      const result = await load(context, true)
 
       if (!result || result.failed) {
         throw new Error("direnv failed to reload the environment")
@@ -310,51 +333,22 @@ export default function (pi: ExtensionAPI) {
   })
 
   pi.on("session_start", async (_event, context) => {
-    await loadDirenv(
-      context,
-      isLoaded,
-      setLoaded,
-      getSyncPromise,
-      setSyncPromise,
-      originalEnvironment,
-    )
+    await load(context)
   })
 
   pi.on("tool_call", async (_event, context) => {
-    await loadDirenv(
-      context,
-      isLoaded,
-      setLoaded,
-      getSyncPromise,
-      setSyncPromise,
-      originalEnvironment,
-    )
+    await load(context)
   })
 
   pi.on("user_bash", async (_event, context) => {
-    await loadDirenv(
-      context,
-      isLoaded,
-      setLoaded,
-      getSyncPromise,
-      setSyncPromise,
-      originalEnvironment,
-    )
+    await load(context)
   })
 
   pi.on("agent_settled", async (_event, context) => {
     // direnv checks its recorded watch list when `direnv export` runs, normally
     // at a shell prompt. Re-run that check only after Pi is idle, so changes to
     // watched files become available before the next user prompt.
-    await loadDirenv(
-      context,
-      isLoaded,
-      setLoaded,
-      getSyncPromise,
-      setSyncPromise,
-      originalEnvironment,
-      true,
-    )
+    await load(context, true)
   })
 
   pi.on("session_shutdown", () => {

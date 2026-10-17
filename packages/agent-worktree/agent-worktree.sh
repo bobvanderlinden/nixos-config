@@ -62,7 +62,7 @@ fi
 
 if [[ ${#context_parts[@]} -gt 0 ]]; then
   context_file="$(mktemp --suffix=.md)"
-  printf '%s\n' "${context_parts[@]}" > "$context_file"
+  printf '%s\n' "${context_parts[@]}" >"$context_file"
   # The OS cleans up this temporary file after Pi reads it.
 fi
 
@@ -86,4 +86,8 @@ if [[ -n "${github_issue_number-}" ]]; then
 fi
 
 cd "$worktree_directory" || fail "Could not change to worktree: $worktree_directory"
-exec direnv exec . "${command[@]}"
+# Pi loads direnv through its extension. Keep it for arbitrary commands.
+case "${command[0]##*/}" in
+agent | pi) exec "${command[@]}" ;;
+*) exec direnv exec . "${command[@]}" ;;
+esac
