@@ -87,6 +87,7 @@ in
     ./lsp.nix
     ./mcp.nix
     ./subagent.nix
+    ./web.nix
   ];
 
   programs.pi-coding-agent = {
@@ -165,7 +166,7 @@ in
         "npm:pi-background-tasks@2.6.10"
         "npm:pi-web-access@0.37.0"
         "npm:@ayulab/pi-rewind"
-        "pi-lens"
+        "npm:@ygncode/pi-web@0.0.1-beta.38"
       ];
     };
 
