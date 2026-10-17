@@ -1,7 +1,7 @@
 import { spawn, type ChildProcess } from "node:child_process"
 import { createWriteStream, promises as fileSystem } from "node:fs"
 import { hostname } from "node:os"
-import { join } from "node:path"
+import { join, resolve } from "node:path"
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent"
 import { StringEnum } from "@earendil-works/pi-ai"
 import { Type, type Static } from "typebox"
@@ -28,6 +28,12 @@ const nixBuildSchema = Type.Object({
       minimum: 1,
       maximum: MAX_LOG_LINES,
       description: "Number of trailing log lines to return for the logs action.",
+    }),
+  ),
+  outputLink: Type.Optional(
+    Type.String({
+      minLength: 1,
+      description: "Output symlink path for start-build, relative to the project directory or absolute. Defaults to a temporary result link. Nix adds numbered suffixes for additional outputs.",
     }),
   ),
   installables: Type.Optional(
@@ -235,12 +241,26 @@ function stopProcessGroup(childProcess: ChildProcess) {
 
 function parseCommandArguments(argumentsText: string): NixBuildInput {
   const argumentsList = argumentsText.trim().split(/\s+/)
-  const [action, firstArgument, secondArgument] = argumentsList
+  const [action, ...argumentsAfterAction] = argumentsList
   if (action === "start-build") {
-    return firstArgument ? { action, installables: argumentsList.slice(1) } : { action }
+    const installables: string[] = []
+    let outputLink: string | undefined
+    for (let index = 0; index < argumentsAfterAction.length; index += 1) {
+      const argument = argumentsAfterAction[index]
+      if (argument === "--out-link") {
+        const path = argumentsAfterAction[index + 1]
+        if (!path || path.startsWith("--")) throw new Error("--out-link requires a path")
+        if (outputLink !== undefined) throw new Error("--out-link can only be specified once")
+        outputLink = path
+        index += 1
+      } else {
+        installables.push(argument)
+      }
+    }
+    return { action, outputLink, ...(installables.length > 0 ? { installables } : {}) }
   }
   if (action === "stop" || action === "status" || action === "logs") return { action }
-  throw new Error("Usage: /nix-build start-build [installable]... | stop | status | logs")
+  throw new Error("Usage: /nix-build start-build [--out-link PATH] [installable]... | stop | status | logs")
 }
 
 export default function (pi: ExtensionAPI) {
@@ -312,18 +332,24 @@ export default function (pi: ExtensionAPI) {
     requestedHost?: string,
     requestedUser?: string,
     installables?: string[],
+    requestedOutputLink?: string,
   ): Promise<string> => {
     const kind: BuildKind = installables ? "expression" : "system"
     if (activeJobs.has(kind)) {
       throw new Error(`A background Nix ${kind} build is already running. Stop it before starting another ${kind} build.`)
     }
 
+    if (requestedOutputLink !== undefined && requestedOutputLink.trim().length === 0) {
+      throw new Error("Output symlink path must not be empty")
+    }
     const host = installables ? undefined : validateAttributeName(requestedHost ?? hostname(), "host")
     const user = installables ? undefined : validateAttributeName(requestedUser ?? process.env.USER ?? "", "user")
     const description = installables ? `installables ${installables.join(" ")}` : host!
     const directory = await fileSystem.mkdtemp("/tmp/pi-nixos-build-")
     const logPath = join(directory, "build.log")
-    const outputLink = join(directory, "result")
+    const outputLink = requestedOutputLink === undefined
+      ? join(directory, "result")
+      : resolve(context.cwd, requestedOutputLink)
     const logStream = createWriteStream(logPath, { flags: "a" })
     const childProcess = spawn(
       "nix",
@@ -398,7 +424,7 @@ export default function (pi: ExtensionAPI) {
       pi.sendMessage(
         {
           customType: MESSAGE_TYPE,
-          content: `${result}\nLog: ${logPath}`,
+          content: `${result}\nLog: ${logPath}${code === 0 && !job.stopping ? `\nOutput link: ${outputLink} (additional outputs use numbered suffixes)` : ""}`,
           display: true,
           details: { code, signal, logPath, outputLink },
         },
@@ -406,9 +432,10 @@ export default function (pi: ExtensionAPI) {
       )
     })
 
-    return installables
+    const message = installables
       ? `Started a background Nix build for ${installables.join(" ")}, using this flake's inputs. It does not activate the configuration. Log: ${logPath}`
       : `Started a background Nix build for ${host} and ${user}. It builds but does not activate the configuration. Log: ${logPath}`
+    return `${message}\nOutput link: ${outputLink} (additional outputs use numbered suffixes)`
   }
 
   const stop = (): string => {
@@ -452,7 +479,7 @@ export default function (pi: ExtensionAPI) {
     async execute(_toolCallId, parameters, _signal, _onUpdate, context) {
       let message: string
       if (parameters.action === "start-build") {
-        message = await start(context, parameters.host, parameters.user, parameters.installables)
+        message = await start(context, parameters.host, parameters.user, parameters.installables, parameters.outputLink)
       } else if (parameters.action === "stop") {
         message = stop()
       } else if (parameters.action === "status") {
@@ -466,12 +493,12 @@ export default function (pi: ExtensionAPI) {
   })
 
   pi.registerCommand("nix-build", {
-    description: "Build NixOS outputs or installables in the background without activation. Usage: /nix-build start-build [installable]... | stop | status | logs",
+    description: "Build NixOS outputs or installables in the background without activation. Usage: /nix-build start-build [--out-link PATH] [installable]... | stop | status | logs",
     handler: async (argumentsText, context) => {
       try {
         const parameters = parseCommandArguments(argumentsText)
         const message = parameters.action === "start-build"
-          ? await start(context, parameters.host, parameters.user, parameters.installables)
+          ? await start(context, parameters.host, parameters.user, parameters.installables, parameters.outputLink)
           : parameters.action === "stop"
             ? stop()
             : parameters.action === "status"
