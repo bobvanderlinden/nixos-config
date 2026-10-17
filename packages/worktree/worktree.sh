@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
 fail() {
   echo "$@" >&2
@@ -8,6 +9,9 @@ fail() {
 usage() {
   cat >&2 <<'EOF'
 Usage: worktree [--reuse-existing] <project-or-github-url>
+       worktree --root <repository>
+       worktree --managed --name <name> --branch <branch> --base-ref <ref> <repository>
+       worktree --prepare <source> <destination>
 
 Creates a Git worktree and prints its directory. With --reuse-existing, a pull
 request branch already checked out in a worktree is reused.
@@ -18,10 +22,52 @@ EOF
   exit 1
 }
 
-reuse_existing=false
-if [[ "${1:-}" == "--reuse-existing" ]]; then
-  reuse_existing=true
+if [[ "${1:-}" == "--prepare" ]]; then
   shift
+  [[ $# -eq 2 ]] || usage
+  exec python3 "$(dirname "${BASH_SOURCE[0]}")/worktree-prepare.py" "$@"
+fi
+
+reuse_existing=false
+managed=false
+print_root=false
+worktree_name=""
+managed_branch=""
+base_ref=""
+managed_directory=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+  --reuse-existing)
+    reuse_existing=true
+    shift
+    ;;
+  --root)
+    print_root=true
+    shift
+    ;;
+  --managed)
+    managed=true
+    shift
+    ;;
+  --name | --branch | --base-ref | --directory)
+    [[ $# -ge 2 && -n "$2" ]] || usage
+    case "$1" in
+    --name) worktree_name="$2" ;;
+    --branch) managed_branch="$2" ;;
+    --base-ref) base_ref="$2" ;;
+    --directory) managed_directory="$2" ;;
+    esac
+    shift 2
+    ;;
+  *) break ;;
+  esac
+done
+if [[ "$managed" == true ]]; then
+  [[ -n "$worktree_name" && -n "$managed_branch" && -n "$base_ref" ]] || usage
+  [[ "$worktree_name" != */* && "$worktree_name" != "." && "$worktree_name" != ".." ]] || usage
+  [[ -z "$managed_directory" || "$managed_directory" == /* ]] || usage
+elif [[ -n "$worktree_name$managed_branch$base_ref$managed_directory" ]]; then
+  usage
 fi
 
 [[ $# -eq 1 ]] || usage
@@ -48,10 +94,12 @@ if [[ -z "${project_path-}" ]]; then
 fi
 
 project_path="$(cd "$project_path" && pwd -P)" || fail "Could not change to project: $project_path"
-git -C "$project_path" rev-parse --is-inside-work-tree > /dev/null || fail "Not a Git repository: $project_path"
+git -C "$project_path" rev-parse --is-inside-work-tree >/dev/null || fail "Not a Git repository: $project_path"
+common_directory="$(git -C "$project_path" rev-parse --path-format=absolute --git-common-dir)"
+repository_path="$(dirname "$common_directory")"
 
 find_worktree_root() {
-  local directory="$project_path"
+  local directory="$repository_path"
 
   while :; do
     if [[ -d "$directory/.worktrees" ]]; then
@@ -64,14 +112,25 @@ find_worktree_root() {
   done
 }
 
-if ! git -C "$project_path" remote get-url upstream > /dev/null 2>&1; then
-  git -C "$project_path" remote add upstream "$(git -C "$project_path" remote get-url origin)"
+worktree_root="$(find_worktree_root)"
+worktree_root="${worktree_root:-/tmp/worktrees/$UID}"
+if [[ "$print_root" == true ]]; then
+  printf '%s\n' "$worktree_root"
+  exit 0
 fi
 
-git -C "$project_path" fetch upstream >&2
-git -C "$project_path" remote set-head upstream --auto >&2 || true
+if [[ "$managed" == false ]]; then
+  if ! git -C "$project_path" remote get-url upstream >/dev/null 2>&1; then
+    git -C "$project_path" remote add upstream "$(git -C "$project_path" remote get-url origin)"
+  fi
 
-if [[ -n "${github_pull_request_number-}" ]]; then
+  git -C "$project_path" fetch upstream >&2
+  git -C "$project_path" remote set-head upstream --auto >&2 || true
+fi
+
+if [[ "$managed" == true ]]; then
+  revision="$base_ref"
+elif [[ -n "${github_pull_request_number-}" ]]; then
   branch_name="$(gh pr view "$github_pull_request_number" --repo "$github_owner_name/$github_repository_name" --json headRefName --jq '.headRefName')"
 
   if [[ "$reuse_existing" == true ]]; then
@@ -81,11 +140,11 @@ if [[ -n "${github_pull_request_number-}" ]]; then
         worktree_directory=""
         while IFS= read -r line; do
           case "$line" in
-            "worktree "*) worktree_directory="${line#worktree }" ;;
-            "$expected_branch")
-              printf '%s\n' "$worktree_directory"
-              exit 0
-              ;;
+          "worktree "*) worktree_directory="${line#worktree }" ;;
+          "$expected_branch")
+            printf '%s\n' "$worktree_directory"
+            exit 0
+            ;;
           esac
         done
       }
@@ -104,16 +163,13 @@ else
   revision="upstream/HEAD"
 fi
 
-repository_name="$(basename "$project_path")"
-worktree_root="$(find_worktree_root)"
-if [[ -n "$worktree_root" ]]; then
-  worktree_base="$worktree_root/$repository_name"
-else
-  worktree_base="/tmp/worktrees/$UID/$repository_name"
-fi
+repository_name="$(basename "$repository_path")"
+worktree_base="$worktree_root/$repository_name"
 mkdir --parents "$worktree_base"
 
-if [[ -n "${github_pull_request_number-}" ]]; then
+if [[ "$managed" == true ]]; then
+  worktree_directory="${managed_directory:-$worktree_base/$worktree_name}"
+elif [[ -n "${github_pull_request_number-}" ]]; then
   worktree_directory="$worktree_base/pr-$github_pull_request_number"
 elif [[ -n "${github_issue_number-}" ]]; then
   worktree_directory="$worktree_base/issue-$github_issue_number"
@@ -127,14 +183,22 @@ fi
 
 [[ ! -e "$worktree_directory" ]] || fail "Worktree directory already exists: $worktree_directory"
 
-git -C "$project_path" worktree add "$worktree_directory" "$revision" >&2
+if [[ "$managed" == true ]]; then
+  WORKTREE_SOURCE_DIRECTORY="$project_path" git -C "$project_path" worktree add "$worktree_directory" -b "$managed_branch" "$revision" >&2
+else
+  WORKTREE_SOURCE_DIRECTORY="$project_path" git -C "$project_path" worktree add "$worktree_directory" "$revision" >&2
+  # Apply staged changes only for interactive worktrees. Managed callers own
+  # their base commit and require a clean source checkout.
+  git -C "$project_path" diff-index --patch --cached HEAD | (
+    cd "$worktree_directory" && git apply --index --allow-empty
+  )
+fi
 
-# Apply staged changes from the original checkout to the new worktree.
-git -C "$project_path" diff-index --patch --cached HEAD | (
-  cd "$worktree_directory" && git apply --index --allow-empty
-)
+# Refresh only during creation, after Git hooks. Older hooks may have copied
+# local files from the main checkout instead of the invoking worktree.
+python3 "$(dirname "${BASH_SOURCE[0]}")/worktree-prepare.py" --fresh "$project_path" "$worktree_directory" >/dev/null
 
-if [[ -f "$worktree_directory/.envrc" ]] && command -v direnv > /dev/null; then
+if [[ -f "$worktree_directory/.envrc" ]] && command -v direnv >/dev/null; then
   direnv allow "$worktree_directory" >&2
 fi
 
