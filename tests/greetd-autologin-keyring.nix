@@ -53,7 +53,6 @@ in
       };
 
       boot.loader.systemd-boot.enable = true;
-      boot.initrd.systemd.enable = true;
 
       users.defaultUserShell = pkgs.bashInteractive;
       users.users.alice = {
