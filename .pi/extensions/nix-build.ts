@@ -10,6 +10,7 @@ const STATUS_KEY = "nix-build"
 const MESSAGE_TYPE = "nix-build"
 const MAX_LOG_LINES = 500
 const MAX_REPORTS = 20
+const WARNING_BATCH_WINDOW_MS = 10_000
 
 const nixBuildSchema = Type.Object({
   action: StringEnum(["start-build", "stop", "status", "logs"] as const),
@@ -85,6 +86,8 @@ type BuildJob = {
   progress?: NixProgress
   reportedIssues: Set<string>
   reportCount: number
+  pendingWarnings: string[]
+  warningTimer?: NodeJS.Timeout
   startedAt: number
   stopping: boolean
 }
@@ -273,6 +276,29 @@ export default function (pi: ExtensionAPI) {
     statusTimer = undefined
   }
 
+  const flushWarnings = (job: BuildJob) => {
+    if (job.warningTimer) clearTimeout(job.warningTimer)
+    job.warningTimer = undefined
+    if (job.pendingWarnings.length === 0) return
+
+    const warnings = job.pendingWarnings.splice(0)
+    pi.sendMessage(
+      {
+        customType: MESSAGE_TYPE,
+        content: [
+          `Background Nix build warnings for ${job.description} (${warnings.length}):`,
+          "```text",
+          warnings.join("\n"),
+          "```",
+          `Log: ${job.logPath}`,
+        ].join("\n"),
+        display: true,
+        details: { kind: "warning", warnings, logPath: job.logPath },
+      },
+      { triggerTurn: true, deliverAs: "steer" },
+    )
+  }
+
   const notifyAgent = (context: ExtensionContext, job: BuildJob, kind: IssueKind, line: string) => {
     if (job.reportCount >= MAX_REPORTS) return
 
@@ -281,13 +307,18 @@ export default function (pi: ExtensionAPI) {
     job.reportedIssues.add(issueKey)
     job.reportCount += 1
 
-    const label = kind === "warning" ? "evaluation warning" : "build failure"
+    if (kind === "warning") {
+      job.pendingWarnings.push(line)
+      job.warningTimer ??= setTimeout(() => flushWarnings(job), WARNING_BATCH_WINDOW_MS)
+      return
+    }
+
     const contextLines = tail(job.recentLines, 12)
     pi.sendMessage(
       {
         customType: MESSAGE_TYPE,
         content: [
-          `Background Nix build ${label} for ${job.description}:`,
+          `Background Nix build failure for ${job.description}:`,
           "```text",
           contextLines,
           "```",
@@ -389,6 +420,8 @@ export default function (pi: ExtensionAPI) {
       progress: undefined,
       reportedIssues: new Set(),
       reportCount: 0,
+      pendingWarnings: [],
+      warningTimer: undefined,
       startedAt: Date.now(),
       stopping: false,
     }
@@ -411,6 +444,7 @@ export default function (pi: ExtensionAPI) {
       if (job.pendingStderr) appendOutput(context, job, logStream, "stderr", "\n")
       logStream.end()
       if (activeJobs.get(job.kind) !== job) return
+      flushWarnings(job)
 
       activeJobs.delete(job.kind)
       if (activeJobs.size === 0) clearStatusTimer()
@@ -470,7 +504,7 @@ export default function (pi: ExtensionAPI) {
     name: "nix_build",
     label: "Nix Build",
     description:
-      "Start, stop, inspect, or read logs from background NixOS, Home Manager, and targeted expression builds. It never activates a configuration. The build sends the agent a message on Nix diagnostics, failures, and completion, but not builder log warnings. Keep a broad build running while investigating failures, validate each fix with a targeted build, then start a new broad build.",
+      "Start, stop, inspect, or read logs from background NixOS, Home Manager, and targeted expression builds. It never activates a configuration. The build batches Nix warnings into 10-second windows and sends failures and completion immediately, but does not report builder log warnings. Keep a broad build running while investigating failures, validate each fix with a targeted build, then start a new broad build.",
     promptSnippet: "Run and monitor background NixOS builds without activating them",
     promptGuidelines: [
       "Use nix_build to start long NixOS builds, then return control. Do not poll it or use sleep. nix_build sends messages when the build warns, fails, or completes. When it reports a failure, leave the broad build running, edit the configuration, and use nix_build with action start-build and installables to validate the failed package or expression. Start a new broad build after the targeted build passes.",
@@ -515,6 +549,9 @@ export default function (pi: ExtensionAPI) {
     clearStatusTimer()
     for (const job of activeJobs.values()) {
       job.stopping = true
+      if (job.warningTimer) clearTimeout(job.warningTimer)
+      job.warningTimer = undefined
+      job.pendingWarnings = []
       stopProcessGroup(job.childProcess)
     }
     activeJobs.clear()

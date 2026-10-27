@@ -4,7 +4,7 @@ import { readFile } from "node:fs/promises"
 import { stripTypeScriptTypes } from "node:module"
 import * as path from "node:path"
 import { test } from "node:test"
-import { SourceTextModule, SyntheticModule } from "node:vm"
+import { createContext, SourceTextModule, SyntheticModule } from "node:vm"
 
 const source = stripTypeScriptTypes(await readFile(new URL("../.pi/extensions/nix-build.ts", import.meta.url), "utf8"))
 
@@ -38,13 +38,34 @@ async function createHarness() {
     "@earendil-works/pi-ai": { StringEnum: values => ({ enum: values }) },
     typebox: { Type: schemaType },
   }
-  const extension = new SourceTextModule(source)
+  let elapsed = 0
+  let nextTimer = 0
+  const timers = new Map()
+  const moduleContext = createContext({
+    process, setInterval, clearInterval,
+    setTimeout: (callback, delay) => {
+      const identifier = ++nextTimer
+      timers.set(identifier, { callback, deadline: elapsed + delay })
+      return identifier
+    },
+    clearTimeout: identifier => timers.delete(identifier),
+  })
+  const advanceTime = milliseconds => {
+    elapsed += milliseconds
+    for (const [identifier, timer] of timers) {
+      if (timer.deadline <= elapsed) {
+        timers.delete(identifier)
+        timer.callback()
+      }
+    }
+  }
+  const extension = new SourceTextModule(source, { context: moduleContext })
   await extension.link(async specifier => {
     assert.ok(imports[specifier], `Unexpected import: ${specifier}`)
     const exports = imports[specifier]
     return new SyntheticModule(Object.keys(exports), function () {
       for (const [name, value] of Object.entries(exports)) this.setExport(name, value)
-    })
+    }, { context: moduleContext })
   })
   await extension.evaluate()
   extension.namespace.default({
@@ -59,7 +80,8 @@ async function createHarness() {
     ui: { notify: (...argumentsList) => notifications.push(argumentsList) },
   }
   return {
-    calls, messages, notifications, child,
+    calls, messages, notifications, child, advanceTime,
+    emitEvent: event => child.stderr.emit("data", Buffer.from(`@nix ${JSON.stringify(event)}\n`)),
     tool: tools.get("nix_build"),
     execute: parameters => tools.get("nix_build").execute("test", parameters, undefined, undefined, context),
     command: argumentsText => commands.get("nix-build").handler(argumentsText, context),
@@ -133,6 +155,78 @@ test("reject missing, duplicate and empty paths without spawning", async () => {
   } finally {
     harness.cleanup()
   }
+})
+
+test("warnings use fixed 10-second windows and remain deduplicated", async () => {
+  const harness = await createHarness()
+  try {
+    await harness.execute({ action: "start-build" })
+    const warning = message => harness.emitEvent({ action: "msg", level: 1, msg: message })
+    warning("first warning")
+    harness.advanceTime(9_000)
+    warning("second warning")
+    warning("first warning")
+    assert.equal(harness.messages.length, 0)
+    harness.advanceTime(1_000)
+    assert.equal(harness.messages.length, 1)
+    assert.deepEqual(Array.from(harness.messages[0].details.warnings), ["first warning", "second warning"])
+    warning("third warning")
+    harness.advanceTime(9_999)
+    assert.equal(harness.messages.length, 1)
+    harness.advanceTime(1)
+    assert.equal(harness.messages.length, 2)
+    assert.deepEqual(Array.from(harness.messages[1].details.warnings), ["third warning"])
+  } finally {
+    harness.cleanup()
+  }
+})
+
+for (const exitCode of [0, 1]) {
+  test(`completion flushes pending warnings with exit code ${exitCode}`, async () => {
+    const harness = await createHarness()
+    try {
+      await harness.execute({ action: "start-build" })
+      harness.emitEvent({ action: "msg", level: 1, msg: "pending warning" })
+      harness.child.emit("close", exitCode, null)
+      assert.equal(harness.messages.length, 2)
+      assert.equal(harness.messages[0].details.kind, "warning")
+      assert.equal(harness.messages[1].details.code, exitCode)
+      harness.advanceTime(10_000)
+      assert.equal(harness.messages.length, 2)
+    } finally {
+      harness.cleanup()
+    }
+  })
+}
+
+test("errors are immediate and builder warnings do not trigger messages", async () => {
+  const harness = await createHarness()
+  try {
+    await harness.execute({ action: "start-build" })
+    harness.emitEvent({ action: "start", id: 1, type: 105, fields: ["/nix/store/example-package.drv"] })
+    harness.emitEvent({ action: "result", id: 1, type: 101, fields: ["warning: builder warning"] })
+    harness.advanceTime(10_000)
+    assert.equal(harness.messages.length, 0)
+    harness.emitEvent({ action: "msg", level: 1, msg: "pending warning" })
+    harness.emitEvent({ action: "msg", level: 0, msg: "immediate error" })
+    assert.equal(harness.messages.length, 1)
+    assert.equal(harness.messages[0].details.kind, "failure")
+    harness.advanceTime(10_000)
+    assert.equal(harness.messages.length, 2)
+    assert.equal(harness.messages[1].details.kind, "warning")
+  } finally {
+    harness.cleanup()
+  }
+})
+
+test("shutdown discards pending warning batches", async () => {
+  const harness = await createHarness()
+  await harness.execute({ action: "start-build" })
+  harness.emitEvent({ action: "msg", level: 1, msg: "pending warning" })
+  harness.cleanup()
+  harness.advanceTime(10_000)
+  harness.child.emit("close", 0, null)
+  assert.equal(harness.messages.length, 0)
 })
 
 test("failed builds do not report an output link as created", async () => {
