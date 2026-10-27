@@ -213,6 +213,17 @@
           #   ];
           # });
 
+          # Fix chrome_crashpad_handler failing to load libglib-2.0.so.0.
+          # Remove when https://github.com/NixOS/nixpkgs/issues/576668 is fixed.
+          _1password-gui = prev._1password-gui.overrideAttrs (oldAttrs: {
+            postInstall = (oldAttrs.postInstall or "") + ''
+              patchelf \
+                --set-interpreter "$(patchelf --print-interpreter "$out/share/1password/1password")" \
+                --set-rpath "$(patchelf --print-rpath "$out/share/1password/1password")" \
+                "$out/share/1password/chrome_crashpad_handler"
+            '';
+          });
+
           fwupd = prev.fwupd.overrideAttrs (oldAttrs: {
             postPatch = (oldAttrs.postPatch or "") + ''
               substituteInPlace libfwupdplugin/fu-path-store.c \
