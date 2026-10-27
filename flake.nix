@@ -204,22 +204,6 @@
         #   };
         # in
         {
-          # Determinate Nix 3.23 emits activity types that nom 2.2.0 does not
-          # recognise. Remove this when nixpkgs carries a newer nom release.
-          nix-output-monitor = prev.nix-output-monitor.override {
-            extraComposeFunctions = [
-              (final.haskell.lib.compose.overrideCabal (old: {
-                patches = (old.patches or [ ]) ++ [
-                  (final.fetchpatch {
-                    url = "https://github.com/maralorn/nix-output-monitor/pull/321.patch";
-                    hash = "sha256-c1WNOszQnxrJSUHMB1Bi+2hw/hmalRK78zyVPjPUq0Q=";
-                    stripLen = 1;
-                  })
-                ];
-              }))
-            ];
-          };
-
           # pasystray = prev.pasystray.overrideAttrs (prevAttrs: {
           #   patches = (prevAttrs.patches or [ ]) ++ [
           #     (prev.fetchpatch {
