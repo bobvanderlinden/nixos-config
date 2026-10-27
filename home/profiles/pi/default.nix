@@ -90,6 +90,8 @@ in
     ./web.nix
   ];
 
+  programs.nono.pi.enable = true;
+
   programs.pi-coding-agent = {
     enable = true;
     enableMcpIntegration = lib.mkDefault true;
@@ -132,8 +134,6 @@ in
       scheduledRuns.storeRoot = "~/.local/share/pi/subagents/schedules";
       worktreeSetupHook = "${subagentWorktreeSetup}/bin/pi-subagent-worktree-setup";
     };
-    package = pkgs.pi;
-
     extraPackages = [
       pkgs.python3
       pkgs.nodejs
