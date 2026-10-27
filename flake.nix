@@ -85,7 +85,14 @@
         pkgs.applyPatches {
           name = "nixpkgs-patched";
           src = inputs.nixpkgs;
-          patches = [ ];
+          patches = [
+            # Fix 1Password 8.12.42 failing to load libglib-2.0.so.0 in its crash handler.
+            # Source: https://github.com/NixOS/nixpkgs/pull/579025
+            (pkgs.fetchpatch {
+              url = "https://github.com/NixOS/nixpkgs/commit/ce4e383d1929094aba0723ba127e1ada5e885ac5.patch";
+              hash = "sha256-Q4GJgLMJ7CEc630i3ecl7Qg1GaEnmBdFLP8oYPAO8hI=";
+            })
+          ];
         };
 
       username = "bob.vanderlinden";
@@ -212,17 +219,6 @@
           #     })
           #   ];
           # });
-
-          # Fix chrome_crashpad_handler failing to load libglib-2.0.so.0.
-          # Remove when https://github.com/NixOS/nixpkgs/issues/576668 is fixed.
-          _1password-gui = prev._1password-gui.overrideAttrs (oldAttrs: {
-            postInstall = (oldAttrs.postInstall or "") + ''
-              patchelf \
-                --set-interpreter "$(patchelf --print-interpreter "$out/share/1password/1password")" \
-                --set-rpath "$(patchelf --print-rpath "$out/share/1password/1password")" \
-                "$out/share/1password/chrome_crashpad_handler"
-            '';
-          });
 
           fwupd = prev.fwupd.overrideAttrs (oldAttrs: {
             postPatch = (oldAttrs.postPatch or "") + ''
