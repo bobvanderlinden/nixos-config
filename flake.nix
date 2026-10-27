@@ -225,6 +225,12 @@
         };
 
       nixosModules = systemNixosModules // {
+        workarounds = {
+          # python3.14-fabric-3.2.3 is broken as part of azure-cli
+          problems.handlers = {
+            fabric.broken = "warn";
+          };
+        };
         overlays = {
           nixpkgs.overlays = defaultOverlays;
         };

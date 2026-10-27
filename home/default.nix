@@ -144,7 +144,8 @@ in
       oauth2c
       oauth2cli
       datadog-pup
-      azure-cli
+      # python3.14-fabric-3.2.3 as part of azure-cli is broken.
+      # azure-cli
 
       # Version Control
       hub
