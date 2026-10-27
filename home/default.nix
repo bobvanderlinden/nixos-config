@@ -164,7 +164,7 @@ in
       git-xargs
       git-pr-clean
       tig
-      jujutsu
+      # jujutsu
       hunk
       tuicr
 
