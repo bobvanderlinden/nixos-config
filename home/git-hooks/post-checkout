@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Git calls this hook after worktree creation with a null old HEAD. Ignore
-# ordinary branch switches, including repositories using SHA-256 object IDs.
+# Git calls this hook after cloning and worktree creation with a null old HEAD.
+# Ignore ordinary branch switches, including repositories using SHA-256 object IDs.
 if [[ ! "$1" =~ ^0+$ || "$3" != "1" ]]; then
   exit 0
 fi
@@ -20,4 +20,6 @@ if [[ -z "$original_worktree" ]]; then
 fi
 
 [[ -n "$original_worktree" ]] || exit 0
+# A clone has only one checkout, so there is no other worktree to copy from.
+[[ "$original_worktree" -ef "$PWD" ]] && exit 0
 worktree --prepare "$original_worktree" "$PWD" > /dev/null
