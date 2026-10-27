@@ -30,6 +30,7 @@ voxtype.overrideAttrs (oldAttrs: {
     ++ (with cudaPackages; [
       cccl
       cuda_cudart
+      cuda_culibos
       libcublas
     ]);
 })
