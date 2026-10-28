@@ -86,6 +86,12 @@
           name = "nixpkgs-patched";
           src = inputs.nixpkgs;
           patches = [
+            # Fix Hyprland 0.57.0 requiring hyprland-protocols >= 0.8.0.
+            # Source: https://github.com/NixOS/nixpkgs/commit/9be6f1804426651f78264b4b245a258f194ab9f0
+            (pkgs.fetchpatch {
+              url = "https://github.com/NixOS/nixpkgs/commit/9be6f1804426651f78264b4b245a258f194ab9f0.patch";
+              hash = "sha256-wlYkROxFOOKZMaLDWb+FhN+KifZPKcZLvU6q2lOsNN0=";
+            })
             # Fix Hyprland 0.57.0 requiring hyprutils >= 0.14.3.
             # Source: https://github.com/NixOS/nixpkgs/pull/579528
             (pkgs.fetchpatch {
