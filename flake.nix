@@ -86,6 +86,12 @@
           name = "nixpkgs-patched";
           src = inputs.nixpkgs;
           patches = [
+            # Fix Azure CLI evaluation failing because Fabric requires Invoke < 3.
+            # Source: https://github.com/NixOS/nixpkgs/commit/2415b61e7d6cf34170f3e75c2a68928434817f11.patch
+            (pkgs.fetchpatch {
+              url = "https://github.com/NixOS/nixpkgs/commit/2415b61e7d6cf34170f3e75c2a68928434817f11.patch";
+              hash = "sha256-6Cs+lB2337d10FmjKm/CqrRVpkdp7yz0aIqv2x/YfF8=";
+            })
             # Fix 1Password 8.12.42 failing to load libglib-2.0.so.0 in its crash handler.
             # Source: https://github.com/NixOS/nixpkgs/pull/579025
             (pkgs.fetchpatch {
