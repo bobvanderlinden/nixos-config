@@ -1,22 +1,5 @@
 # Pi environments and worktrees
 
-## Nono sandbox
-
-`programs.nono.pi.enable` wraps the installed `pi` command with nono. The
-Home Manager module lives in `home/modules/nono/default.nix`. Its profile is
-also installed at `~/.config/nono/profiles/pi.json`; the wrapper uses the
-immutable store copy.
-
-The current directory and Pi state are writable. Nix tools and Git
-configuration are readable, development caches are available, and network
-access is allowed. Nono's default sensitive-path restrictions still apply.
-Child processes inherit the sandbox. Configure `programs.nono.pi.settings`
-to grant access to worktrees or dependencies outside the current directory.
-Avoid starting Pi from your home directory, which would grant workspace
-access to the whole directory.
-
-This wraps the CLI, not `pi-web`, which runs Pi through its SDK.
-
 ## Environments and worktrees
 
 `agent-worktree` creates a worktree and starts `agent` there. For `agent` and
