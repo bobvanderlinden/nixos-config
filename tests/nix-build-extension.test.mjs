@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises"
 import { stripTypeScriptTypes } from "node:module"
 import * as path from "node:path"
 import { test } from "node:test"
+import { stripVTControlCharacters } from "node:util"
 import { createContext, SourceTextModule, SyntheticModule } from "node:vm"
 
 const source = stripTypeScriptTypes(await readFile(new URL("../.pi/extensions/nix-build.ts", import.meta.url), "utf8"))
@@ -35,6 +36,7 @@ async function createHarness() {
     },
     "node:os": { hostname: () => "test-host" },
     "node:path": { join: path.join, resolve: path.resolve },
+    "node:util": { stripVTControlCharacters },
     "@earendil-works/pi-ai": { StringEnum: values => ({ enum: values }) },
     typebox: { Type: schemaType },
   }
@@ -214,6 +216,64 @@ test("errors are immediate and builder warnings do not trigger messages", async 
     harness.advanceTime(10_000)
     assert.equal(harness.messages.length, 2)
     assert.equal(harness.messages[1].details.kind, "warning")
+  } finally {
+    harness.cleanup()
+  }
+})
+
+test("root failures are deduplicated by derivation without replaying earlier output", async () => {
+  const harness = await createHarness()
+  try {
+    await harness.execute({ action: "start-build" })
+    const failure = message => harness.emitEvent({ action: "msg", level: 0, msg: message })
+    harness.emitEvent({ action: "start", id: 1, type: 105, fields: ["/nix/store/hash-first.drv"] })
+    harness.emitEvent({ action: "result", id: 1, type: 101, fields: ["old builder output"] })
+    failure("\u001b[31merror:\u001b[0m Cannot build '/nix/store/hash-first.drv'.\nReason: builder failed with exit code 1.\nfirst diagnostic")
+    failure("error: Cannot build '/nix/store/hash-first.drv'.\nReason: builder failed with exit code 1.\nchanged diagnostic")
+    failure("error: Cannot build '/nix/store/hash-second.drv'.\nReason: builder failed with exit code 1.\nsecond diagnostic")
+    assert.equal(harness.messages.length, 2)
+    assert.ok(harness.messages[0].content.includes("first diagnostic"))
+    assert.ok(!harness.messages[0].content.includes("old builder output"))
+    assert.ok(!harness.messages[0].content.includes("\u001b"))
+    assert.ok(harness.messages[1].content.includes("second diagnostic"))
+    assert.ok(!harness.messages[1].content.includes("first diagnostic"))
+    harness.child.emit("close", 1, null)
+    assert.equal(harness.messages.length, 3)
+  } finally {
+    harness.cleanup()
+  }
+})
+
+test("dependent failures are counted once at completion and do not exhaust root reports", async () => {
+  const harness = await createHarness()
+  try {
+    await harness.execute({ action: "start-build" })
+    const failure = message => harness.emitEvent({ action: "msg", level: 0, msg: message })
+    for (let index = 0; index < 30; index += 1) {
+      const diagnostic = `error: Cannot build '/nix/store/hash-dependent-${index}.drv'.\nReason: ${index === 0 ? "1 dependency" : "2 dependencies"} failed.`
+      failure(diagnostic)
+      failure(`\u001b[31m${diagnostic}\u001b[0m`)
+    }
+    assert.equal(harness.messages.length, 0)
+    failure("error: Cannot build '/nix/store/hash-root.drv'.\nReason: builder failed with exit code 1.")
+    assert.equal(harness.messages.length, 1)
+    harness.child.emit("close", 1, null)
+    assert.equal(harness.messages.length, 2)
+    assert.equal(harness.messages[1].details.dependencyFailures, 30)
+    assert.ok(harness.messages[1].content.includes("30 dependent builds failed"))
+  } finally {
+    harness.cleanup()
+  }
+})
+
+test("unstructured errors remain immediate and deduplicate ANSI formatting", async () => {
+  const harness = await createHarness()
+  try {
+    await harness.execute({ action: "start-build" })
+    harness.emitEvent({ action: "msg", level: 0, msg: "\u001b[31merror: evaluation failed\u001b[0m" })
+    harness.emitEvent({ action: "msg", level: 0, msg: "error: evaluation failed" })
+    assert.equal(harness.messages.length, 1)
+    assert.ok(harness.messages[0].content.includes("error: evaluation failed"))
   } finally {
     harness.cleanup()
   }

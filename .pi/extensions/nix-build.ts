@@ -2,6 +2,7 @@ import { spawn, type ChildProcess } from "node:child_process"
 import { createWriteStream, promises as fileSystem } from "node:fs"
 import { hostname } from "node:os"
 import { join, resolve } from "node:path"
+import { stripVTControlCharacters } from "node:util"
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent"
 import { StringEnum } from "@earendil-works/pi-ai"
 import { Type, type Static } from "typebox"
@@ -85,6 +86,7 @@ type BuildJob = {
   transfers: Map<number, { done: number; expected: number }>
   progress?: NixProgress
   reportedIssues: Set<string>
+  dependencyFailures: Set<string>
   reportCount: number
   pendingWarnings: string[]
   warningTimer?: NodeJS.Timeout
@@ -300,9 +302,17 @@ export default function (pi: ExtensionAPI) {
   }
 
   const notifyAgent = (context: ExtensionContext, job: BuildJob, kind: IssueKind, line: string) => {
+    const diagnostic = stripVTControlCharacters(line).trim()
+    const derivation = kind === "failure"
+      ? diagnostic.match(/Cannot build '([^']+\.drv)'/i)?.[1]
+      : undefined
+    if (derivation && /\bReason:\s*\d+ dependenc(?:y|ies) failed\b/i.test(diagnostic)) {
+      job.dependencyFailures.add(derivation)
+      return
+    }
     if (job.reportCount >= MAX_REPORTS) return
 
-    const issueKey = `${kind}:${line}`
+    const issueKey = `${kind}:${derivation ?? diagnostic}`
     if (job.reportedIssues.has(issueKey)) return
     job.reportedIssues.add(issueKey)
     job.reportCount += 1
@@ -313,14 +323,13 @@ export default function (pi: ExtensionAPI) {
       return
     }
 
-    const contextLines = tail(job.recentLines, 12)
     pi.sendMessage(
       {
         customType: MESSAGE_TYPE,
         content: [
           `Background Nix build failure for ${job.description}:`,
           "```text",
-          contextLines,
+          diagnostic,
           "```",
           `The build is still running. Log: ${job.logPath}`,
           "You may edit the configuration while this broad build continues. Validate the fix first with a targeted build of the failing package or expression, then start a new broad build.",
@@ -419,6 +428,7 @@ export default function (pi: ExtensionAPI) {
       transfers: new Map(),
       progress: undefined,
       reportedIssues: new Set(),
+      dependencyFailures: new Set(),
       reportCount: 0,
       pendingWarnings: [],
       warningTimer: undefined,
@@ -455,12 +465,15 @@ export default function (pi: ExtensionAPI) {
         : code === 0
           ? `Background Nix build succeeded for ${job.description}. It did not activate the configuration.`
           : `Background Nix build failed for ${job.description} with ${signal ? `signal ${signal}` : `exit code ${code ?? "unknown"}`}.`
+      const dependencySummary = job.dependencyFailures.size === 0
+        ? ""
+        : `\n${job.dependencyFailures.size} dependent builds failed. Their diagnostics are in the log.`
       pi.sendMessage(
         {
           customType: MESSAGE_TYPE,
-          content: `${result}\nLog: ${logPath}${code === 0 && !job.stopping ? `\nOutput link: ${outputLink} (additional outputs use numbered suffixes)` : ""}`,
+          content: `${result}${dependencySummary}\nLog: ${logPath}${code === 0 && !job.stopping ? `\nOutput link: ${outputLink} (additional outputs use numbered suffixes)` : ""}`,
           display: true,
-          details: { code, signal, logPath, outputLink },
+          details: { code, signal, logPath, outputLink, dependencyFailures: job.dependencyFailures.size },
         },
         { triggerTurn: true, deliverAs: "steer" },
       )
@@ -504,7 +517,7 @@ export default function (pi: ExtensionAPI) {
     name: "nix_build",
     label: "Nix Build",
     description:
-      "Start, stop, inspect, or read logs from background NixOS, Home Manager, and targeted expression builds. It never activates a configuration. The build batches Nix warnings into 10-second windows and sends failures and completion immediately, but does not report builder log warnings. Keep a broad build running while investigating failures, validate each fix with a targeted build, then start a new broad build.",
+      "Start, stop, inspect, or read logs from background NixOS, Home Manager, and targeted expression builds. It never activates a configuration. The build batches Nix warnings into 10-second windows and sends each root failure once plus completion immediately. Dependent failures are counted in the completion summary. It does not report builder log warnings. Keep a broad build running while investigating failures, validate each fix with a targeted build, then start a new broad build.",
     promptSnippet: "Run and monitor background NixOS builds without activating them",
     promptGuidelines: [
       "Use nix_build to start long NixOS builds, then return control. Do not poll it or use sleep. nix_build sends messages when the build warns, fails, or completes. When it reports a failure, leave the broad build running, edit the configuration, and use nix_build with action start-build and installables to validate the failed package or expression. Start a new broad build after the targeted build passes.",
