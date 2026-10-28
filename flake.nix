@@ -41,7 +41,9 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     scrolloverview = {
-      url = "github:yayuuu/hyprland-scroll-overview";
+      # Hyprland 0.57 rendering, workspace events and mouse-bind API compatibility.
+      # Source: https://github.com/yayuuu/hyprland-scroll-overview/pull/83
+      url = "github:yayuuu/hyprland-scroll-overview/7af2497494be22661c093d3307f49fdf05874834";
       flake = false;
     };
     unisic = {
