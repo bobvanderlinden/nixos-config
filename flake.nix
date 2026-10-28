@@ -86,6 +86,12 @@
           name = "nixpkgs-patched";
           src = inputs.nixpkgs;
           patches = [
+            # Fix Hyprland 0.57.0 requiring hyprutils >= 0.14.3.
+            # Source: https://github.com/NixOS/nixpkgs/pull/579528
+            (pkgs.fetchpatch {
+              url = "https://github.com/NixOS/nixpkgs/commit/f78cc1dd16e79d32f063097c51c5593c3d9cdb86.patch";
+              hash = "sha256-XzT06TTtCJ87ikdW+eY7CmbEoxBlm1bfLsllvNN3gw0=";
+            })
             # Upgrade Hyprland and its official plugins to 0.57.0, with rtkit scheduling.
             # Source: https://github.com/NixOS/nixpkgs/pull/580006
             (pkgs.fetchurl {
