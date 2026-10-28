@@ -291,12 +291,12 @@
 
   services.avahi = {
     enable = true;
-    browseDomains = [ ];
+    settings.server.browse-domains = [ ];
 
     # Seems to be causing trouble/slowness when resolving hosts
     #nssmdns = true;
 
-    publish.enable = false;
+    settings.publish.disable-publishing = true;
   };
 
   location = {
