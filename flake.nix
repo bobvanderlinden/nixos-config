@@ -100,6 +100,13 @@
               url = "https://github.com/NixOS/nixpkgs/commit/f78cc1dd16e79d32f063097c51c5593c3d9cdb86.patch";
               hash = "sha256-XzT06TTtCJ87ikdW+eY7CmbEoxBlm1bfLsllvNN3gw0=";
             })
+            # Move and update the portal package before applying the Hyprland PR's portal changes.
+            # Source: https://github.com/NixOS/nixpkgs/commit/1b4b92c3af3ec1bff53c1a91d8db6d20a9a54b6a
+            # Preserve Git rename metadata, which fetchpatch strips.
+            (pkgs.fetchurl {
+              url = "https://github.com/NixOS/nixpkgs/commit/1b4b92c3af3ec1bff53c1a91d8db6d20a9a54b6a.patch";
+              hash = "sha256-O4ccfMBgmliR9ywjbEo2Vi3SMU4aw/wXMrc0gjW7eNg=";
+            })
             # Upgrade Hyprland and its official plugins to 0.57.0, with rtkit scheduling.
             # Source: https://github.com/NixOS/nixpkgs/pull/580006
             (pkgs.fetchurl {
@@ -246,6 +253,14 @@
           #     })
           #   ];
           # });
+
+          # Portal 1.5.0 needs EGL and libsystemd through hyprtoolkit and sdbus-c++.
+          xdg-desktop-portal-hyprland = prev.xdg-desktop-portal-hyprland.overrideAttrs (oldAttrs: {
+            buildInputs = (oldAttrs.buildInputs or [ ]) ++ [
+              prev.libGL
+              prev.systemdLibs
+            ];
+          });
 
           fwupd = prev.fwupd.overrideAttrs (oldAttrs: {
             postPatch = (oldAttrs.postPatch or "") + ''
