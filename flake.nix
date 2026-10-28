@@ -104,8 +104,8 @@
             # Source: https://github.com/NixOS/nixpkgs/pull/580006
             (pkgs.fetchurl {
               name = "hyprland-0.57.0.patch";
-              url = "https://github.com/NixOS/nixpkgs/compare/3e80146184cb3453db3423c422665335e9361e2f...48bba164e8d7eea5b1c9fbc420094a9d6f2f9946.patch";
-              hash = "sha256-Vq58AeKq9ttpWl2IYrJmFDCar+urW4OdIb2pFAgAGO0=";
+              url = "https://github.com/NixOS/nixpkgs/compare/3e80146184cb3453db3423c422665335e9361e2f...ca053bb97d1d25b09242b30afe974fffc55737c3.patch";
+              hash = "sha256-lVMD3eNHedXOP0OWfbYMIVkkpDI8DtIqhVjaKbLUD8o=";
             })
             # Fix Azure CLI evaluation failing because Fabric requires Invoke < 3.
             # Source: https://github.com/NixOS/nixpkgs/commit/2415b61e7d6cf34170f3e75c2a68928434817f11.patch
