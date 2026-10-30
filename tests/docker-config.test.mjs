@@ -8,10 +8,15 @@ const expression = `
   let
     flake = builtins.getFlake ${JSON.stringify(repositoryPath)};
     inspect = configuration: {
-      settings = configuration.config.virtualisation.docker.daemon.settings;
-      extraOptions = configuration.config.virtualisation.docker.extraOptions;
-      execStart = configuration.config.systemd.services.docker.serviceConfig.ExecStart;
-      autoPrune = configuration.config.virtualisation.docker.autoPrune.enable;
+      rootfulEnabled = configuration.config.virtualisation.docker.enable;
+      rootlessEnabled = configuration.config.virtualisation.docker.rootless.enable;
+      setSocketVariable = configuration.config.virtualisation.docker.rootless.setSocketVariable;
+      settings = configuration.config.virtualisation.docker.rootless.daemon.settings;
+      execStart = configuration.config.systemd.user.services.docker.serviceConfig.ExecStart;
+      hasSystemService = configuration.config.systemd.services ? docker;
+      trustedInterfaces = configuration.config.networking.firewall.trustedInterfaces;
+      userGroups = (builtins.getAttr configuration.config.suites.single-user.user
+        configuration.config.users.users).extraGroups;
       hasCustomOptions = configuration.options.virtualisation ? dockerConfig
         || configuration.options.virtualisation.docker ? daemonConfig
         || configuration.options.virtualisation.docker ? ipv6;
@@ -27,7 +32,7 @@ const expression = `
   }
 `;
 
-// Evaluate only Docker options and its service command, never build or activate.
+// Evaluate Docker configuration and its service command, never build or activate.
 const evaluated = JSON.parse(execFileSync("nix", [
   "eval", "--impure", "--json", "--expr", expression,
 ], { cwd: repositoryPath, encoding: "utf8", timeout: 90_000 }));
@@ -38,14 +43,16 @@ test("obsolete Docker module is no longer exported", () => {
 
 for (const [hostname, configurations] of Object.entries(evaluated.hosts)) {
   for (const [mode, configuration] of Object.entries(configurations)) {
-    test(`${hostname}: native Docker defaults survive with IPv6 ${mode}`, () => {
+    test(`${hostname}: rootless Docker is configured with IPv6 ${mode}`, () => {
       assert.equal(configuration.hasCustomOptions, false);
-      assert.equal(configuration.settings.group, "docker");
-      assert.deepEqual(configuration.settings.hosts, ["fd://"]);
-      assert.equal(configuration.settings["log-driver"], "journald");
-      assert.equal(configuration.autoPrune, true);
-      assert.equal(configuration.extraOptions, "");
+      assert.equal(configuration.rootfulEnabled, false);
+      assert.equal(configuration.rootlessEnabled, true);
+      assert.equal(configuration.setSocketVariable, true);
+      assert.equal(configuration.hasSystemService, false);
+      assert.equal(configuration.userGroups.includes("docker"), false);
+      assert.equal(configuration.trustedInterfaces.includes("docker0"), false);
       const command = [configuration.execStart].flat().join("\n");
+      assert.match(command, /\/dockerd-rootless\b/);
       assert.equal((command.match(/--config-file\b/g) ?? []).length, 1);
       if (mode === "enabled") {
         assert.equal(configuration.settings.ipv6, true);

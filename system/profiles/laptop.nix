@@ -350,18 +350,19 @@
 
   # virtualisation.virtualbox.host.enable = true;
   virtualisation.docker = {
-    enable = true;
-    # Keep Docker IPv6 aligned with the host, using the existing bridge subnet.
-    daemon.settings = lib.mkIf config.networking.enableIPv6 {
-      ipv6 = true;
-      "fixed-cidr-v6" = "fd00::/80";
+    enable = false;
+    rootless = {
+      enable = true;
+      setSocketVariable = true;
+      # Keep Docker IPv6 aligned with the host, using the existing bridge subnet.
+      daemon.settings = lib.mkIf config.networking.enableIPv6 {
+        ipv6 = true;
+        "fixed-cidr-v6" = "fd00::/80";
+      };
     };
-    autoPrune.enable = true;
   };
 
   networking.wireguardNmProfile.enable = true;
-
-  networking.firewall.trustedInterfaces = [ "docker0" ];
 
   users.defaultUserShell = pkgs.fish;
 

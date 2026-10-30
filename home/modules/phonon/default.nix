@@ -37,11 +37,12 @@ in
       Unit = {
         Description = "Local Phonon-2 transcription server";
         PartOf = [ "graphical-session.target" ];
-        After = [ "graphical-session.target" ];
+        After = [ "graphical-session.target" "docker.service" ];
+        Requires = [ "docker.service" ];
       };
 
       Service = {
-        # Docker must be enabled on the host and accessible to this user.
+        Environment = [ "DOCKER_HOST=unix://%t/docker.sock" ];
         # Only publish on loopback. The model cache survives container removal.
         ExecStartPre = "-${docker} rm --force ${containerName}";
         ExecStart = lib.escapeShellArgs [

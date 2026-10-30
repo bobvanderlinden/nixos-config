@@ -34,7 +34,6 @@ with lib;
           "dialout"
           "vboxusers"
           "networkmanager"
-          "docker"
           "audio"
           "video"
           "input"

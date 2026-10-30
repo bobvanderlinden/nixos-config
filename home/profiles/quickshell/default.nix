@@ -21,7 +21,10 @@
 
     Service = {
       ExecStart = lib.getExe pkgs.quickshell;
-      Environment = [ "QUICKSHELL_BAR_EDGE=bottom" ];
+      Environment = [
+        "QUICKSHELL_BAR_EDGE=bottom"
+        "DOCKER_HOST=unix://%t/docker.sock"
+      ];
       Restart = "on-failure";
       Slice = "session.slice";
     };
