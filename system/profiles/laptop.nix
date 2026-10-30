@@ -396,10 +396,7 @@
       download-buffer-size = 524288000;
 
       sandbox = true;
-      trusted-users = [
-        "root"
-        "${config.suites.single-user.user}"
-      ];
+      trusted-users = [ "root" ];
       substituters = [ "https://cachix.cachix.org" ];
       extra-substituters = [ "https://install.determinate.systems" ];
       extra-trusted-public-keys = [ "cache.flakehub.com-3:hJuILl5sVK4iKm86JzgdXW12Y2Hwd5G07qKtHTOcDCM=" ];
