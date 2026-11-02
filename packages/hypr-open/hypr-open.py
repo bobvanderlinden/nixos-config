@@ -61,7 +61,7 @@ def load_monitors():
 
 
 def is_special_workspace(workspace):
-    return workspace["name"].startswith("special:")
+    return workspace["type"] == "special"
 
 
 def current_workspace():
@@ -110,7 +110,9 @@ def matches_client(client):
 
 target_workspace = current_workspace()
 
-target_workspace_id = target_workspace["id"]
+# Hyprland 0.57 exposes IDs only for numbered workspaces.
+# Addresses identify numbered, named and special workspaces.
+target_workspace_address = target_workspace["address"]
 
 clients = load_clients()
 
@@ -118,7 +120,7 @@ matching_clients = sorted(
     (
         client
         for client in clients
-        if client["workspace"]["id"] == target_workspace_id
+        if client["workspace"]["address"] == target_workspace_address
         if matches_client(client)
     ),
     key=lambda client: client["focusHistoryID"],
@@ -168,7 +170,7 @@ def exec_new_window():
     if new_client is None:
         return
 
-    move_to_workspace(new_client["address"], target_workspace["name"])
+    move_to_workspace(new_client["address"], target_workspace_address)
     new_client_address = lua_string(new_client["address"])
     focus_command = (
         f'hl.dsp.focus({{ window = "address:{new_client_address}" }})'
