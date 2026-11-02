@@ -236,6 +236,9 @@ in
 
       # Communication & Collaboration
       slack
+      (writeShellScriptBin "slack-cli" ''
+        exec ${lib.getExe pkgs.slack-cli} "$@"
+      '')
       zoom-us
       signal-desktop
 
