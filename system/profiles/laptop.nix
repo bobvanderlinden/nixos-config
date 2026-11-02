@@ -390,6 +390,7 @@
   # ];
 
   nix = {
+    package = lib.mkForce pkgs.determinate-nix;
     registry.nixpkgs.flake = inputs.nixpkgs;
 
     settings = {

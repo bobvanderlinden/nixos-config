@@ -1,0 +1,124 @@
+# Fix Nix 2.35 impure evaluation under Landlock without granting read access to /.
+# Issue: https://github.com/NixOS/nix/issues/16703
+# Source: https://github.com/adrian-gierakowski/nix-landrun-repro/blob/d66e1a01ee38d366c92bee683165c5ccfecc230f/nix-directory-opath.patch
+--- a/src/libutil/posix-source-accessor.cc
++++ b/src/libutil/posix-source-accessor.cc
+@@ -81,6 +81,18 @@
+ void PosixSourceAccessorBase::anchor() {}
+ 
+ #ifndef _WIN32
++
++static AutoCloseFD openDirectoryForTraversal(const std::filesystem::path & path, FinalSymlink finalSymlink)
++{
++#  ifdef O_PATH
++    /* Path resolution and readlinkat do not require directory read permission.
++       Directory enumeration opens a separate readable descriptor. */
++    return AutoCloseFD{::open(
++        path.c_str(), O_PATH | O_DIRECTORY | O_CLOEXEC | (finalSymlink == FinalSymlink::Follow ? 0 : O_NOFOLLOW))};
++#  else
++    return openDirectory(path, finalSymlink);
++#  endif
++}
+ 
+ class PosixDirectorySourceAccessor;
+ 
+@@ -812,7 +824,13 @@
+ {
+ #ifndef _WIN32
+     assert(root.is_absolute());
++#  ifdef O_PATH
++    AutoCloseFD fd = openDirectoryForTraversal(root, finalSymlink);
++    if (!fd && errno == ENOTDIR)
++        fd = openFileReadonly(root, finalSymlink);
++#  else
+     AutoCloseFD fd = openFileReadonly(root, finalSymlink);
++#  endif
+ 
+     if (!fd) {
+         if (finalSymlink == FinalSymlink::Follow || errno != NIX_ERR_OPEN_SYMLINK)
+@@ -865,7 +883,7 @@
+            itself, but it's not portable. Note that file must have a parent directory
+            (it's required to be absolute and root directories can't fail with ELOOP). */
+ 
+-        auto parentFd = openDirectory(root.parent_path(), FinalSymlink::Follow);
++        auto parentFd = openDirectoryForTraversal(root.parent_path(), FinalSymlink::Follow);
+         std::time_t mtime = 0;
+         if (!parentFd)
+             throw SysError("opening %1%", PathFmt(root));
+--- a/src/libutil-tests/source-accessor.cc
++++ b/src/libutil-tests/source-accessor.cc
+@@ -1,6 +1,7 @@
+ #include "nix/util/fs-sink.hh"
+ #include "nix/util/file-system.hh"
+ #include "nix/util/processes.hh"
++#include "nix/util/finally.hh"
+ 
+ #include <gtest/gtest.h>
+ #include <gmock/gmock.h>
+@@ -111,6 +112,10 @@
+         makeFSSourceAccessor(tmpDir),
+         HasDirectory(CanonPath::root, std::set<std::string>{"file1", "subdir", "rootlink", "a"}));
+     EXPECT_THAT(makeFSSourceAccessor(tmpDir / "subdir"), HasDirectory(CanonPath::root, std::set<std::string>{"file2"}));
++    EXPECT_THAT(makeFSSourceAccessor(tmpDir / "a" / "dirlink"), HasSymlink(CanonPath::root, "../subdir"));
++    EXPECT_THAT(
++        makeFSSourceAccessor(tmpDir / "a" / "dirlink", false, FinalSymlink::Follow),
++        HasDirectory(CanonPath::root, std::set<std::string>{"file2"}));
+ 
+     {
+         auto accessor = makeFSSourceAccessor(tmpDir);
+@@ -137,6 +142,55 @@
+         EXPECT_GT(accessor->getLastModified(), 0);
+     }
+ }
++
++#ifdef __linux__
++TEST_F(FSSourceAccessorTest, directoryWithoutReadPermission)
++{
++    writeFile(tmpDir / "file", "content");
++    createDirs(tmpDir / "subdir");
++    writeFile(tmpDir / "subdir" / "nested", "nested content");
++    createSymlink("file", tmpDir / "link");
++    createSymlink("subdir", tmpDir / "dirlink");
++    createSymlink("missing", tmpDir / "dangling");
++    createSymlink("loop", tmpDir / "loop");
++    auto restorePermissions =
++        Finally([&]() { std::filesystem::permissions(tmpDir, std::filesystem::perms::owner_all); });
++    std::filesystem::permissions(tmpDir, std::filesystem::perms::owner_exec);
++
++    if (openDirectory(tmpDir))
++        GTEST_SKIP() << "Directory read permissions are not enforced for this user";
++
++    auto accessor = makeFSSourceAccessor(tmpDir);
++    EXPECT_THAT(accessor, HasContents(CanonPath("file"), "content"));
++    EXPECT_THAT(accessor, HasContents(CanonPath("subdir/nested"), "nested content"));
++    EXPECT_THAT(accessor, HasSymlink(CanonPath("link"), "file"));
++    EXPECT_THAT(accessor, HasDirectory(CanonPath("subdir"), std::set<std::string>{"nested"}));
++    EXPECT_EQ(accessor->lstat(CanonPath::root).type, SourceAccessor::tDirectory);
++    EXPECT_THROW(accessor->readDirectory(CanonPath::root), SysError);
++
++    EXPECT_THAT(makeFSSourceAccessor(tmpDir / "file"), HasContents(CanonPath::root, "content"));
++    EXPECT_THAT(
++        makeFSSourceAccessor(tmpDir / "subdir"), HasDirectory(CanonPath::root, std::set<std::string>{"nested"}));
++    for (bool trackLastModified : {false, true}) {
++        for (auto [name, target] :
++             {std::pair{"link", "file"}, {"dirlink", "subdir"}, {"dangling", "missing"}, {"loop", "loop"}}) {
++            auto link = makeFSSourceAccessor(tmpDir / name, trackLastModified, FinalSymlink::DontFollow);
++            EXPECT_THAT(link, HasSymlink(CanonPath::root, target));
++            if (trackLastModified)
++                EXPECT_GT(link->getLastModified(), 0);
++            else
++                EXPECT_EQ(link->getLastModified(), std::nullopt);
++        }
++    }
++    EXPECT_THAT(
++        makeFSSourceAccessor(tmpDir / "link", false, FinalSymlink::Follow), HasContents(CanonPath::root, "content"));
++    EXPECT_THAT(
++        makeFSSourceAccessor(tmpDir / "dirlink", false, FinalSymlink::Follow),
++        HasDirectory(CanonPath::root, std::set<std::string>{"nested"}));
++    EXPECT_THROW(makeFSSourceAccessor(tmpDir / "dangling", false, FinalSymlink::Follow), SysError);
++    EXPECT_THROW(makeFSSourceAccessor(tmpDir / "loop", false, FinalSymlink::Follow), SysError);
++}
++#endif
+ 
+ TEST_F(FSSourceAccessorTest, invalidateCacheDropsStaleDirFds)
+ {

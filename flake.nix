@@ -245,6 +245,19 @@
         #   };
         # in
         {
+          # Fixes Nix 2.35 opening / during impure evaluation under Landlock.
+          # Source: https://github.com/NixOS/nix/issues/16703
+          # Candidate patch: https://github.com/adrian-gierakowski/nix-landrun-repro/blob/d66e1a01ee38d366c92bee683165c5ccfecc230f/nix-directory-opath.patch
+          determinate-nix =
+            inputs.determinate.inputs.nix.packages.${final.stdenv.hostPlatform.system}.default.overrideSource
+              (
+                final.applyPatches {
+                  name = "determinate-nix-landlock-source";
+                  src = inputs.determinate.inputs.nix;
+                  patches = [ ./patches/nix-directory-opath.patch ];
+                }
+              );
+
           # pasystray = prev.pasystray.overrideAttrs (prevAttrs: {
           #   patches = (prevAttrs.patches or [ ]) ++ [
           #     (prev.fetchpatch {
