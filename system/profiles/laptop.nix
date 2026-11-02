@@ -367,12 +367,6 @@
   users.defaultUserShell = pkgs.fish;
 
   nixpkgs.config.allowUnfree = true;
-  nixpkgs.config.permittedInsecurePackages = [
-    "electron-25.9.0"
-    # Bitwarden desktop depends on Electron 39 until upstream/nixpkgs moves it to a supported Electron.
-    # See https://github.com/NixOS/nixpkgs/issues/526914
-    "electron-39.8.10"
-  ];
 
   documentation.man.cache.enable = false;
   documentation.nixos.enable = false;
