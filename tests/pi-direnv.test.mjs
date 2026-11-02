@@ -15,7 +15,7 @@ const javascript = stripTypeScriptTypes(source).replace(
 );
 const { default: register } = await import(`data:text/javascript;base64,${Buffer.from(javascript).toString("base64")}`);
 
-for (const scenario of ["loaded", "failed", "absent"]) {
+for (const scenario of ["loaded", "sandbox-path", "failed", "absent"]) {
   test(`headless child direnv: ${scenario}`, async () => {
     const directory = mkdtempSync(join(tmpdir(), "pi-direnv-test-"));
     const previousEnvironment = { ...process.env };
@@ -30,10 +30,14 @@ for (const scenario of ["loaded", "failed", "absent"]) {
       delete process.env.DIRENV_DIFF;
       delete process.env.DIRENV_WATCHES;
       delete process.env.PI_DIRENV_TEST_VALUE;
+      delete process.env.PI_NONO_NIX_BIN;
+      if (scenario === "sandbox-path") {
+        process.env.PI_NONO_NIX_BIN = join(directory, "sandbox-bin");
+      }
       if (scenario !== "absent") {
         writeFileSync(join(directory, ".envrc"), scenario === "failed"
           ? "exit 1\n"
-          : "export PI_DIRENV_TEST_VALUE=child-environment\n");
+          : "export PI_DIRENV_TEST_VALUE=child-environment\nexport PATH=\"/project/bin:$PATH\"\n");
         // direnv records watch timestamps in seconds. Make the later edit distinct
         // without sleeping or depending on which second the test started in.
         const initialTimestamp = new Date(Date.now() - 5000);
@@ -45,7 +49,11 @@ for (const scenario of ["loaded", "failed", "absent"]) {
       });
       await handlers.get("session_start")({}, context);
       const prompt = await handlers.get("before_agent_start")({ systemPrompt: "Worker instructions" }, context);
-      if (scenario === "loaded") {
+      if (scenario === "loaded" || scenario === "sandbox-path") {
+        if (scenario === "sandbox-path") {
+          assert.equal(process.env.PATH.split(":")[0], process.env.PI_NONO_NIX_BIN);
+          assert.equal(process.env.PATH.split(":")[1], "/project/bin");
+        }
         assert.equal(process.env.PI_DIRENV_TEST_VALUE, "child-environment");
         assert.match(prompt.systemPrompt, /^Worker instructions\n\n.*automatically loaded/);
         assert.match(prompt.systemPrompt, /Do not source .envrc/);

@@ -43,7 +43,12 @@ function applyEnvDiff(
       continue
     }
 
-    process.env[key] = value
+    // Project shells can replace PATH, including a cached direnv export.
+    // Keep the sandbox's compatible Nix ahead of the host's unpatched Nix.
+    const sandboxNixBin = process.env.PI_NONO_NIX_BIN
+    process.env[key] = key === "PATH" && sandboxNixBin
+      ? [sandboxNixBin, ...value.split(":").filter((directory) => directory !== sandboxNixBin)].join(":")
+      : value
   }
 }
 

@@ -90,8 +90,11 @@ in
     ./web.nix
   ];
 
+  programs.nono.pi.enable = false;
+
   programs.pi-coding-agent = {
     enable = true;
+    package = pkgs.pi;
     enableMcpIntegration = lib.mkDefault true;
     lsp.settings = {
       languages = {
@@ -132,8 +135,6 @@ in
       scheduledRuns.storeRoot = "~/.local/share/pi/subagents/schedules";
       worktreeSetupHook = "${subagentWorktreeSetup}/bin/pi-subagent-worktree-setup";
     };
-    package = pkgs.pi;
-
     extraPackages = [
       pkgs.python3
       pkgs.nodejs

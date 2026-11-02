@@ -1,5 +1,50 @@
 # Pi environments and worktrees
 
+## Nono sandbox
+
+`programs.nono.pi.enable` wraps both `pi` and `pi-bolt` with
+[nono](https://nono.sh). The module is `home/modules/nono/default.nix`.
+The generated profile is also available at `~/.config/nono/profiles/pi.json`;
+the launcher uses its immutable Nix store copy.
+
+The project and Pi state are writable. Ancestor instructions and skill
+directories are readable without exposing sibling projects. The launcher
+refuses `/`, `/home`, and your home directory as workspaces. Start it from
+the smallest project directory you need. Access to worktrees or shared virtual
+environments outside that directory needs an additional explicit grant.
+
+Patched Determinate Nix is first on PATH inside the sandbox. The local
+`patches/nix-directory-opath.patch` fixes Nix 2.35 opening `/` for reading
+during impure evaluation under Landlock. See
+[#16703](https://github.com/NixOS/nix/issues/16703). The system configuration
+also selects this patched Nix; the Determinate Nixd supervisor is unchanged.
+
+Pathname Unix sockets are denied unless explicitly granted. The profile grants
+the Nix daemon, rootless Docker, and 1Password CLI/app sockets. Direct 1Password
+desktop authentication still fails because `no_new_privs` suppresses the CLI's
+setgid group change. Those socket grants do not fix it. Credential injection
+or a host-side broker is needed before this can replace the current workflow.
+It does not grant the session D-Bus, SSH agent, or Wayland sockets. Existing `DOCKER_HOST` values
+are preserved, but a non-default socket needs its own profile grant.
+
+These compatibility exceptions limit the protection:
+
+- Docker can ask its unsandboxed daemon to mount files outside the project.
+  Rootless Docker prevents host-root access, not access to your own home files.
+- `op` can retrieve credentials you authorize. Secrets already in the environment
+  or project files are also accessible. Network access is unrestricted.
+- Pi state is shared and writable, including extensions and authentication state.
+  This allows persistence across sessions. It is not a disposable agent identity.
+- MCP servers and other external command brokers can perform actions outside
+  the sandbox. Do not treat their tools as sandboxed child processes.
+- `pi-web` embeds Pi through its SDK and is **not** sandboxed by this CLI wrapper.
+  Other launchers using a raw store path also bypass it.
+
+The profile deliberately avoids granting all of `~/.cache`, the runtime
+directory, or your home directory. Do not add those broad grants to resolve a
+single permission error. A Docker-free profile with isolated Pi state would
+provide a stronger boundary, but would change the current workflow.
+
 ## Environments and worktrees
 
 `agent-worktree` creates a worktree and starts `agent` there. For `agent` and
