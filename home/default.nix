@@ -269,6 +269,8 @@ in
       xdg-utils
       nixpkgs-review
       tabiew
+      t3code-desktop
+      t3code-server
       vex-tui
 
       # Fonts
