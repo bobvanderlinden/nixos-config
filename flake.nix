@@ -228,6 +228,7 @@
         in
         packages
         // {
+          pi = final.pi-bolt;
           scrolloverview = final.callPackage ./packages/scrolloverview/package.nix {
             src = inputs.scrolloverview;
           };
