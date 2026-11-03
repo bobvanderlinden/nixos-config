@@ -52,17 +52,6 @@
     };
   };
 
-  nixConfig = {
-    extra-substituters = [
-      "https://install.determinate.systems"
-      "https://cache.numtide.com"
-    ];
-    extra-trusted-public-keys = [
-      "cache.flakehub.com-3:hJuILl5sVK4iKm86JzgdXW12Y2Hwd5G07qKtHTOcDCM="
-      "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
-    ];
-  };
-
   outputs =
     {
       self,

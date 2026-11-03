@@ -394,8 +394,15 @@
       sandbox = true;
       trusted-users = [ "root" ];
       substituters = [ "https://cachix.cachix.org" ];
-      extra-substituters = [ "https://install.determinate.systems" ];
-      extra-trusted-public-keys = [ "cache.flakehub.com-3:hJuILl5sVK4iKm86JzgdXW12Y2Hwd5G07qKtHTOcDCM=" ];
+      # Configure caches in the daemon, not through restricted flake client settings.
+      extra-substituters = [
+        "https://install.determinate.systems"
+        "https://cache.numtide.com"
+      ];
+      extra-trusted-public-keys = [
+        "cache.flakehub.com-3:hJuILl5sVK4iKm86JzgdXW12Y2Hwd5G07qKtHTOcDCM="
+        "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
+      ];
       extra-experimental-features = [
         "nix-command"
         "flakes"
