@@ -8,7 +8,6 @@
   wayland.windowManager.hyprland = {
     enable = true;
     configType = "lua";
-    plugins = [ pkgs.scrolloverview ];
     extraLuaFiles.config = impurity.link ./hyprland.lua;
   };
 
