@@ -157,14 +157,24 @@ hl.workspace_rule({
   workspace = "special:vault",
   gaps_in = 10,
   gaps_out = 60,
-  on_created_empty = [[sh -lc "bitwarden > /dev/null 2>&1 & 1password > /dev/null 2>&1 &"]],
 })
 hl.workspace_rule({
   workspace = "special:slack",
   gaps_in = 10,
   gaps_out = 60,
-  on_created_empty = "slack",
 })
+
+hl.on("workspace.created", function(workspace)
+  if not workspace.is_empty then
+    return
+  end
+
+  if workspace.name == "special:vault" then
+    hl.dispatch(run([[sh -lc "bitwarden > /dev/null 2>&1 & 1password > /dev/null 2>&1 &"]]))
+  elseif workspace.name == "special:slack" then
+    hl.dispatch(run("slack"))
+  end
+end)
 
 bind_mod("T", run("ghostty --working-directory=$HOME"))
 bind_mod("W", run("chromium"))
