@@ -94,12 +94,6 @@
               url = "https://github.com/NixOS/nixpkgs/commit/2415b61e7d6cf34170f3e75c2a68928434817f11.patch";
               hash = "sha256-6Cs+lB2337d10FmjKm/CqrRVpkdp7yz0aIqv2x/YfF8=";
             })
-            # Fix 1Password 8.12.42 failing to load libglib-2.0.so.0 in its crash handler.
-            # Source: https://github.com/NixOS/nixpkgs/pull/579025
-            (pkgs.fetchpatch {
-              url = "https://github.com/NixOS/nixpkgs/commit/ce4e383d1929094aba0723ba127e1ada5e885ac5.patch";
-              hash = "sha256-Q4GJgLMJ7CEc630i3ecl7Qg1GaEnmBdFLP8oYPAO8hI=";
-            })
           ];
         };
 
