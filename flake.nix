@@ -88,32 +88,6 @@
           name = "nixpkgs-patched";
           src = inputs.nixpkgs;
           patches = [
-            # Fix Hyprland 0.57.0 requiring hyprland-protocols >= 0.8.0.
-            # Source: https://github.com/NixOS/nixpkgs/commit/9be6f1804426651f78264b4b245a258f194ab9f0
-            (pkgs.fetchpatch {
-              url = "https://github.com/NixOS/nixpkgs/commit/9be6f1804426651f78264b4b245a258f194ab9f0.patch";
-              hash = "sha256-wlYkROxFOOKZMaLDWb+FhN+KifZPKcZLvU6q2lOsNN0=";
-            })
-            # Fix Hyprland 0.57.0 requiring hyprutils >= 0.14.3.
-            # Source: https://github.com/NixOS/nixpkgs/pull/579528
-            (pkgs.fetchpatch {
-              url = "https://github.com/NixOS/nixpkgs/commit/f78cc1dd16e79d32f063097c51c5593c3d9cdb86.patch";
-              hash = "sha256-XzT06TTtCJ87ikdW+eY7CmbEoxBlm1bfLsllvNN3gw0=";
-            })
-            # Move and update the portal package before applying the Hyprland PR's portal changes.
-            # Source: https://github.com/NixOS/nixpkgs/commit/1b4b92c3af3ec1bff53c1a91d8db6d20a9a54b6a
-            # Preserve Git rename metadata, which fetchpatch strips.
-            (pkgs.fetchurl {
-              url = "https://github.com/NixOS/nixpkgs/commit/1b4b92c3af3ec1bff53c1a91d8db6d20a9a54b6a.patch";
-              hash = "sha256-O4ccfMBgmliR9ywjbEo2Vi3SMU4aw/wXMrc0gjW7eNg=";
-            })
-            # Upgrade Hyprland and its official plugins to 0.57.0, with rtkit scheduling.
-            # Source: https://github.com/NixOS/nixpkgs/pull/580006
-            (pkgs.fetchurl {
-              name = "hyprland-0.57.0.patch";
-              url = "https://github.com/NixOS/nixpkgs/compare/3e80146184cb3453db3423c422665335e9361e2f...ca053bb97d1d25b09242b30afe974fffc55737c3.patch";
-              hash = "sha256-lVMD3eNHedXOP0OWfbYMIVkkpDI8DtIqhVjaKbLUD8o=";
-            })
             # Fix Azure CLI evaluation failing because Fabric requires Invoke < 3.
             # Source: https://github.com/NixOS/nixpkgs/commit/2415b61e7d6cf34170f3e75c2a68928434817f11.patch
             (pkgs.fetchpatch {
