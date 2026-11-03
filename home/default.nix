@@ -286,12 +286,6 @@ in
       home-manager
     ];
 
-    i18n.inputMethod = {
-      enable = true;
-      type = "fcitx5";
-      fcitx5.waylandFrontend = true;
-    };
-
     programs.rofi = {
       enable = true;
       plugins = [
