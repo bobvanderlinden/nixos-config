@@ -32,6 +32,8 @@
 - For PR or issue work, set the session status label to "<repository>#<number> <action>" and keep it within 32 characters. For example: "nixos-config#482 update" or "api#104 review". Never use a generic label such as "Update PR".
 - Never approve/reject/comment a PR review. You may start a review, leave review comments, but never normal PR comments. Always let me handle submitting and let me review the comments you wrote.
 
+- Prefer writing for readers without conversation context. Explain behavior, constraints, and necessary actions, not the history of our decisions.
+
 ## Scripting
 
 When creating one-off large temporary scripts:
