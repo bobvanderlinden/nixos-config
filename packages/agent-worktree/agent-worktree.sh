@@ -50,7 +50,11 @@ if [[ "$project" =~ github\.com[:/]([^/]+)/([^/.]+) ]]; then
   fi
 fi
 
-worktree_directory="$(worktree --reuse-existing "$project")" || fail "Could not create worktree"
+worktree_directory="$(worktree --reuse-existing "$project")" || {
+  exit_status=$?
+  printf 'Could not create worktree (exit status %s)\n' "$exit_status" >&2
+  exit "$exit_status"
+}
 
 context_parts=()
 if [[ -n "${github_pull_request_number-}" ]]; then

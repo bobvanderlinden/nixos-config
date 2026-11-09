@@ -1,5 +1,15 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -Eeuo pipefail
+
+report_error() {
+  local exit_status="$1"
+  local failed_command="$2"
+  printf 'worktree: command failed (exit status %s): %s\n' "$exit_status" "$failed_command" >&2
+  exit "$exit_status"
+}
+
+# Include command substitutions so failures captured for stdout still reach stderr.
+trap 'report_error "$?" "$BASH_COMMAND"' ERR
 
 fail() {
   echo "$@" >&2

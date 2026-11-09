@@ -1,7 +1,7 @@
 // Run with: node --test tests/worktree.test.mjs
 // Set WORKTREE_COMMAND and PI_SUBAGENTS_PACKAGE to test the Nix-built integration.
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -83,6 +83,34 @@ test("worktree uses shared paths and prepares local configuration and caches", (
     assert.equal(grandchild, join(directory, ".worktrees/project/grandchild"));
     assert.equal(worktree(["--root", grandchild], environment), join(directory, ".worktrees"));
     assert.equal(readFileSync(join(grandchild, ".envrc.local"), "utf8"), "child-only changes\n");
+  } finally {
+    context.cleanup();
+  }
+});
+
+test("worktree reports silent failures inside command substitutions", () => {
+  const context = fixture();
+  try {
+    const executableDirectory = join(context.directory, "bin");
+    mkdirSync(executableDirectory);
+    const executable = join(executableDirectory, "gh");
+    writeFileSync(executable, "#!/usr/bin/env bash\nexit 42\n");
+    chmodSync(executable, 0o755);
+    const zoxide = join(executableDirectory, "zoxide");
+    writeFileSync(zoxide, '#!/usr/bin/env bash\nprintf "%s\\n" "$TEST_REPOSITORY"\n');
+    chmodSync(zoxide, 0o755);
+    git(context.repository, "remote", "add", "origin", context.repository);
+    const result = spawnSync("bash", [worktreeCommand, "--reuse-existing", "https://github.com/example/project/pull/1"], {
+      env: {
+        ...context.environment,
+        PATH: `${executableDirectory}:${process.env.PATH}`,
+        TEST_REPOSITORY: context.repository,
+      },
+      encoding: "utf8",
+    });
+    assert.equal(result.status, 42);
+    assert.equal(result.stdout, "");
+    assert.match(result.stderr, /worktree: command failed \(exit status 42\): gh pr view/);
   } finally {
     context.cleanup();
   }
