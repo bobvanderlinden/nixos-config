@@ -33,6 +33,8 @@
 - Never approve/reject/comment a PR review. You may start a review, leave review comments, but never normal PR comments. Always let me handle submitting and let me review the comments you wrote.
 
 - Prefer writing for readers without conversation context. Explain behavior, constraints, and necessary actions, not the history of our decisions.
+- Match content to its destination and audience. Add explanations to shared project files only when they help readers use or maintain the project.
+- Prefer to keep task-specific findings and rationale unpublished unless readers need them.
 
 ## Scripting
 
