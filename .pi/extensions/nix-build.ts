@@ -117,6 +117,10 @@ function issueKindForEvent(event: Record<string, unknown>): IssueKind | undefine
   // Nix diagnostics are messages; builder output is a result event (type 101).
   // Nix verbosity levels are 0 for errors and 1 for warnings.
   if (event.action !== "msg" || typeof event.msg !== "string") return undefined
+  const diagnostic = stripVTControlCharacters(event.msg).trim()
+  // Download retries remain in the log; only exhausted retries need attention.
+  if (/^warning:.*\bretrying in\b/is.test(diagnostic)) return undefined
+  if (/^warning:/i.test(diagnostic)) return "warning"
   if (event.level === 1) return "warning"
   if (event.level === 0) return "failure"
   return undefined
@@ -281,6 +285,7 @@ export default function (pi: ExtensionAPI) {
   const flushWarnings = (job: BuildJob) => {
     if (job.warningTimer) clearTimeout(job.warningTimer)
     job.warningTimer = undefined
+    if (job.stopping) job.pendingWarnings = []
     if (job.pendingWarnings.length === 0) return
 
     const warnings = job.pendingWarnings.splice(0)
@@ -302,6 +307,7 @@ export default function (pi: ExtensionAPI) {
   }
 
   const notifyAgent = (context: ExtensionContext, job: BuildJob, kind: IssueKind, line: string) => {
+    if (job.stopping) return
     const diagnostic = stripVTControlCharacters(line).trim()
     const derivation = kind === "failure"
       ? diagnostic.match(/Cannot build '([^']+\.drv)'/i)?.[1]

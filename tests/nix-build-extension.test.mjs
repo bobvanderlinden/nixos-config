@@ -279,6 +279,39 @@ test("unstructured errors remain immediate and deduplicate ANSI formatting", asy
   }
 })
 
+test("download retries stay silent even when Nix reports them at error level", async () => {
+  const harness = await createHarness()
+  try {
+    await harness.execute({ action: "start-build" })
+    for (const level of [0, 1]) {
+      harness.emitEvent({ action: "msg", level, msg: "warning: unable to download 'https://cache.example/file': connection closed; retrying in 77 ms (attempt 1/5)" })
+    }
+    harness.advanceTime(10_000)
+    assert.equal(harness.messages.length, 0)
+    harness.emitEvent({ action: "msg", level: 0, msg: "error: unable to download: retries exhausted" })
+    assert.equal(harness.messages.length, 1)
+    assert.equal(harness.messages[0].details.kind, "failure")
+  } finally {
+    harness.cleanup()
+  }
+})
+
+test("intentional stops discard warnings and do not report interruption as failure", async () => {
+  const harness = await createHarness()
+  try {
+    await harness.execute({ action: "start-build" })
+    harness.emitEvent({ action: "msg", level: 1, msg: "pending warning" })
+    await harness.execute({ action: "stop" })
+    harness.emitEvent({ action: "msg", level: 0, msg: "error: interrupted by the user" })
+    harness.advanceTime(10_000)
+    harness.child.emit("close", 1, null)
+    assert.equal(harness.messages.length, 1)
+    assert.ok(harness.messages[0].content.includes("stopped"))
+  } finally {
+    harness.cleanup()
+  }
+})
+
 test("shutdown discards pending warning batches", async () => {
   const harness = await createHarness()
   await harness.execute({ action: "start-build" })
