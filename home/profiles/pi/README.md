@@ -45,6 +45,27 @@ directory, or your home directory. Do not add those broad grants to resolve a
 single permission error. A Docker-free profile with isolated Pi state would
 provide a stronger boundary, but would change the current workflow.
 
+## Ancestor MCP configuration
+
+`parent-mcp.ts` loads `.pi/mcp.json` from every ancestor of the session's
+working directory, up to the filesystem root. Nearer ancestors replace servers
+with the same name. Entries without a transport override only `enabled`,
+`exposure`, and `toolExposure` of an inherited server. Pi's built-in loader
+still owns the current directory's config and user config; those file-defined
+servers take precedence over extension registrations.
+
+Installing this extension trusts ancestor MCP configs, regardless of Pi's
+project-trust decision. They can launch processes and evaluate command-backed
+credentials. Only use it under directories whose configs you trust.
+
+Run `/reload` after changing a config. Inherited servers appear in `/mcp` as
+extension registrations. Connection settings remain in the ancestor file;
+changes made through `/mcp` apply only to the session. Top-level settings such
+as `autoEnableCodemode` are not inherited. `pi-bolt mcp list` does not load
+extensions, so it does not list inherited servers.
+
+Test with `node --test tests/pi-parent-mcp.test.mjs`.
+
 ## Environments and worktrees
 
 `agent-worktree` creates a worktree and starts `agent` there. For `agent` and
