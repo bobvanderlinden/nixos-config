@@ -153,7 +153,7 @@ elif [[ -n "${github_pull_request_number-}" ]]; then
           "worktree "*) worktree_directory="${line#worktree }" ;;
           "$expected_branch")
             printf '%s\n' "$worktree_directory"
-            exit 0
+            # Drain the pipe so Git can finish without SIGPIPE.
             ;;
           esac
         done

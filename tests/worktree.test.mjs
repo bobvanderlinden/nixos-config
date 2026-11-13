@@ -32,7 +32,7 @@ function fixture() {
   write("tracked.txt", "committed\n");
   write("packages/example/package.json", "{}\n");
   write(".pi/settings.json", "{}\n");
-  write(".gitignore", ".nix/\n.envrc.local\n.envrc\n.env\nnode_modules/\n.venv/\n.cache/\n.devenv/\n.agents/\n.pi/skills/\n.pi/tasks/\n");
+  write(".gitignore", ".nix/\n.envrc.local\n.envrc\n.env\nnode_modules\n.venv\n.cache/\n.devenv/\n.agents/\n.pi/skills/\n.pi/tasks/\n");
   git(repository, "add", ".");
   git(repository, "commit", "--quiet", "--message", "Initial commit");
   write(".envrc", 'source_env_if_exists .envrc.local\n');
@@ -116,6 +116,47 @@ test("worktree reports silent failures inside command substitutions", () => {
   }
 });
 
+test("worktree reuse drains large listings without SIGPIPE", () => {
+  const context = fixture();
+  try {
+    const executableDirectory = join(context.directory, "bin");
+    mkdirSync(executableDirectory);
+    const realGit = execFileSync("bash", ["-c", "command -v git"], { encoding: "utf8" }).trim();
+    const scripts = {
+      gh: '#!/usr/bin/env bash\nprintf "%s\\n" "$TEST_BRANCH"\n',
+      zoxide: '#!/usr/bin/env bash\nprintf "%s\\n" "$TEST_REPOSITORY"\n',
+      git: `#!/usr/bin/env bash
+set -euo pipefail
+if [[ "\${3:-}" == worktree && "\${4:-}" == list ]]; then
+  printf 'worktree %s\\nbranch refs/heads/%s\\n\\n' "$TEST_REPOSITORY" "$TEST_BRANCH"
+  # Exceed the pipe buffer after the matching entry to expose early reader exit.
+  for ((index = 0; index < 10000; index++)); do
+    printf 'worktree /unused/worktree-%s\\nHEAD %040d\\ndetached\\n\\n' "$index" 0
+  done
+else
+  exec "$TEST_GIT" "$@"
+fi
+`,
+    };
+    for (const [name, script] of Object.entries(scripts)) {
+      const executable = join(executableDirectory, name);
+      writeFileSync(executable, script);
+      chmodSync(executable, 0o755);
+    }
+    git(context.repository, "remote", "add", "origin", context.repository);
+    const environment = {
+      ...context.environment,
+      PATH: `${executableDirectory}:${process.env.PATH}`,
+      TEST_GIT: realGit,
+      TEST_REPOSITORY: context.repository,
+      TEST_BRANCH: git(context.repository, "symbolic-ref", "--short", "HEAD"),
+    };
+    assert.equal(worktree(["--reuse-existing", "https://github.com/example/project/pull/1"], environment), context.repository);
+  } finally {
+    context.cleanup();
+  }
+});
+
 test("interactive worktree retains upstream and staged-change behavior", () => {
   const context = fixture();
   try {
@@ -187,6 +228,18 @@ test("pi-subagents allocates through worktree and excludes synthetic files from 
     assert.ok(setup.worktrees[0].syntheticPaths.includes("node_modules"));
     const loaded = execFileSync("direnv", ["exec", destination, "bash", "-c", 'printf "%s" "$WORKTREE_TEST_ENV"'], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
     assert.equal(loaded, "loaded");
+    const siblingPath = join(context.directory, ".worktrees/project/pi-worktree-sibling-test-0");
+    assert.equal(resolveExpectedWorktreeAgentCwd(destination, "sibling-test", 0), siblingPath);
+    assert.throws(
+      () => resolveExpectedWorktreeAgentCwd(destination, "unsafe-test", 0, destination),
+      /inside the repository checkout/,
+    );
+    assert.equal(git(destination, "status", "--porcelain"), "");
+    const siblingSetup = await createWorktrees(destination, "sibling-test", 1, {
+      provider: "native", setupHook: { hookPath: hook },
+    });
+    assert.equal(siblingSetup.worktrees[0].path, siblingPath);
+    assert.equal(readFileSync(join(siblingPath, ".agents/skills/local/SKILL.md"), "utf8"), "Local instructions\n");
     writeFileSync(join(destination, "tracked.txt"), "child implementation\n");
     const diffs = diffWorktrees(setup, ["worker"], join(context.directory, "diffs"));
     assert.equal(diffs.length, 1);

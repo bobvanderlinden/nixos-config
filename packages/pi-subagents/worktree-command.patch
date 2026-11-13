@@ -26,7 +26,26 @@ index 979f823..ba8ac4a 100644
  }
  /**
   * Creates the project folder (parents included) so `git worktree add` can create
-@@ -781,7 +783,12 @@ async function createNativeWorktree(tx, toplevel, cwdRelative, runId, index, bas
+@@ -563,8 +565,6 @@ function assertSafeWorktreeLocation(worktreePath, repoRoot, dedicatedRoot) {
+     const resolvedLeaf = normalizeComparableCwd(worktreePath);
+     const resolvedRepoRoot = normalizeComparableCwd(repoRoot);
+     const projectDir = normalizeComparableCwd(buildNativeProjectPath(dedicatedRoot, repoRoot));
+-    const repoParent = normalizeComparableCwd(path.dirname(resolvedRepoRoot));
+-    const leafParent = normalizeComparableCwd(path.dirname(resolvedLeaf));
+     const extensionsDir = normalizeComparableCwd(path.join(getAgentDir(), "extensions"));
+     if (isPathInside(extensionsDir, projectDir) || isPathInside(extensionsDir, resolvedLeaf)) {
+         throw new Error(`worktree path cannot be inside Pi extensions directory: ${extensionsDir}. Choose a directory outside it.`);
+@@ -573,9 +573,6 @@ function assertSafeWorktreeLocation(worktreePath, repoRoot, dedicatedRoot) {
+     if (isPathInside(resolvedRepoRoot, resolvedLeaf)) {
+         throw new Error(`worktree path would land inside the repository checkout: ${resolvedLeaf}`);
+     }
+-    if (leafParent === repoParent) {
+-        throw new Error(`worktree path would be a direct child of the repository parent: ${resolvedLeaf}`);
+-    }
+     if (!isStrictChildPath(projectDir, resolvedLeaf)) {
+         throw new Error(`worktree path must be a strict child of the project worktree directory ${projectDir}: ${resolvedLeaf}`);
+     }
+@@ -781,7 +778,12 @@ async function createNativeWorktree(tx, toplevel, cwdRelative, runId, index, bas
      tx.attempt(index, naming.requestedBranch, worktreePath);
      ensureProjectWorktreeDir(dedicatedRoot, toplevel);
      const recordedBaseDir = normalizeComparableCwd(path.dirname(worktreePath));
