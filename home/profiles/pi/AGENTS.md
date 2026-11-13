@@ -36,6 +36,10 @@
 - Match content to its destination and audience. Add explanations to shared project files only when they help readers use or maintain the project.
 - Prefer to keep task-specific findings and rationale unpublished unless readers need them.
 
+- Ask before introducing substantial test infrastructure.
+- Code comments should explain behavior, constraints or non-obvious implementation choices.
+- Keep issue/PR references, task history, investigation notes and notes about where information came from in PR descriptions, not code comments.
+
 ## Scripting
 
 When creating one-off large temporary scripts:
