@@ -150,6 +150,8 @@ async function sendDesktopNotification(
 }
 
 export default function (pi: ExtensionAPI) {
+  if (process.env.PI_SUBAGENT_CHILD === "1") return
+
   pi.on("agent_settled", async (_event, context) => {
     if (await isWindowFocused(pi)) return
 

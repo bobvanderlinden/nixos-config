@@ -102,6 +102,7 @@ export function getSessionStatusStore(): SessionStatusStore {
 }
 
 export default function (pi: ExtensionAPI) {
+  const isSubagent = process.env.PI_SUBAGENT_CHILD === "1"
   const uid = process.getuid?.() ?? Number(process.env.UID ?? 0)
   const socketPath = `/run/user/${uid}/statebus-pub.sock`
   const windowAddress = process.env.HYPR_WINDOW_ADDRESS ?? null
@@ -128,7 +129,7 @@ export default function (pi: ExtensionAPI) {
   }
 
   function updateTerminalTitle(context: ExtensionContext) {
-    if (context.mode !== "tui") return
+    if (isSubagent || context.mode !== "tui") return
 
     context.ui.setTitle(["pi", sessionTitle(context)].filter(Boolean).join(" — "))
   }
@@ -216,7 +217,8 @@ export default function (pi: ExtensionAPI) {
   }
 
   function connect() {
-    if (socket || reconnectTimer) return
+    // Subagents retain the status tool without publishing desktop session entries.
+    if (isSubagent || socket || reconnectTimer) return
 
     const nextSocket = net.createConnection(socketPath)
 
