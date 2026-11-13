@@ -16,6 +16,9 @@ rustPlatform.buildRustPackage rec {
 
   cargoHash = "sha256-+pC8wnNCKDV0Hdnwl9t0abNgeFsG8XSABQkzXE9nW44=";
 
+  # Build the Cargo.lock versions of native libraries, including prefixed jemalloc.
+  dontCargoUseSystemLibs = true;
+
   doCheck = false;
 
   meta = {
