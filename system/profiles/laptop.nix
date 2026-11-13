@@ -393,7 +393,7 @@
 
       sandbox = true;
       trusted-users = [ "root" ];
-      substituters = [ "https://cachix.cachix.org" ];
+      substituters = [ "https://cache.nixos.org" ];
       # Configure caches in the daemon, not through restricted flake client settings.
       extra-substituters = [
         "https://install.determinate.systems"
