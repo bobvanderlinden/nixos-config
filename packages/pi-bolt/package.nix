@@ -3,6 +3,7 @@
   stdenv,
   fetchurl,
   autoPatchelfHook,
+  patchelfUnstable,
   libxcb,
   makeWrapper,
   fd,
@@ -32,6 +33,7 @@ stdenv.mkDerivation {
   };
 
   nativeBuildInputs = [
+    patchelfUnstable
     autoPatchelfHook
     makeWrapper
   ];
