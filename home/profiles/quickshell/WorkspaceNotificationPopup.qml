@@ -32,67 +32,44 @@ PopupWindow {
     Rectangle {
         id: card
         anchors.fill: parent
-        implicitHeight: content.implicitHeight + 24
+        implicitHeight: content.implicitHeight + 16
         radius: 12
-        color: "#1e1e2e"
+        color: "#b31e1e2e"
         border.color: root.notification?.urgency === 2 ? "#ff5555" : "#44475a"
         border.width: 1
 
-        ColumnLayout {
+        RowLayout {
             id: content
             anchors {
                 fill: parent
-                margins: 12
+                margins: 8
             }
             spacing: 6
 
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: 8
-
-                Text {
-                    text: root.notification?.appName ?? ""
-                    color: "#8be9fd"
-                    font.bold: true
-                    font.pixelSize: 11
-                    Layout.fillWidth: true
-                    elide: Text.ElideRight
-                }
-
-                Text {
-                    text: "✕"
-                    color: "#6272a4"
-                    font.pixelSize: 11
-
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.notification.dismiss()
-                    }
-                }
-            }
-
             Text {
                 Layout.fillWidth: true
-                text: root.notification?.summary ?? ""
-                color: "#f8f8f2"
-                font.bold: true
-                font.pixelSize: 13
-                wrapMode: Text.WordWrap
-                maximumLineCount: 2
-                elide: Text.ElideRight
-            }
-
-            Text {
-                Layout.fillWidth: true
-                visible: (root.notification?.body ?? "") !== ""
-                text: root.notification?.body ?? ""
+                text: (root.notification?.body ?? "").trim() !== ""
+                    ? root.notification.body
+                    : (root.notification?.summary ?? "")
                 color: "#cdd6f4"
                 font.pixelSize: 12
                 wrapMode: Text.WordWrap
                 maximumLineCount: 4
                 elide: Text.ElideRight
                 textFormat: Text.StyledText
+            }
+
+            Text {
+                Layout.alignment: Qt.AlignTop
+                text: "✕"
+                color: "#6272a4"
+                font.pixelSize: 11
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.notification.dismiss()
+                }
             }
         }
 
