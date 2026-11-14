@@ -498,27 +498,9 @@ in
       enableDefaultConfig = false;
       settings."*" = { };
       extraConfig = ''
-        Host 127.0.0.1
-          ForwardAgent no
-          User bob.vanderlinden
-          IdentityFile ~/.ssh/nedap_rsa
-          VerifyHostKeyDNS no
-
-        Host beheer1.ioservice.net beheer1.stpst.nl beheer2.ioservice.net beheer2.stpst.nl
-          ForwardAgent no
-          User bob.vanderlinden
-          IdentityFile ~/.ssh/nedap_rsa
-
         Host github.com gist.github.com
           User git
           IdentityFile ~/.ssh/github_ed25519
-
-        Host nl12* nl14* nl22* nl24* vm* nvs* nas* *.healthcare.nedap.local *.consul
-          ForwardAgent no
-          User bob.vanderlinden
-          IdentityFile ~/.ssh/nedap_rsa
-          ProxyJump beheer1.ioservice.net
-          VerifyHostKeyDNS no
 
         Host *
           ServerAliveInterval 180
